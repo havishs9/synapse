@@ -45,6 +45,10 @@ def main(job_path: str) -> int:
 
     t_start = time.perf_counter()
     train = stratified_fraction(load_split(Path(job["train_path"])), job["data_frac"], job["seed"])
+    if job.get("bootstrap"):
+        # Seed reruns: resample the training set with replacement so seeds measure data variance.
+        rng = random.Random(job["seed"])
+        train = [rng.choice(train) for _ in range(len(train))]
     val = load_split(Path(job["val_path"]))
     if job["family"] in LLM_FAMILIES or job.get("max_eval"):
         cap = job.get("max_eval") or 150
@@ -71,9 +75,14 @@ def main(job_path: str) -> int:
     batch_s = time.perf_counter() - t0
     m = M.classification_metrics(y, P, job["labels"], primary=job["primary_metric"], positive=job.get("positive"),
                                  fpr_target=job.get("fpr_target"))
+    secondary = m.get("pr_auc") if job.get("positive") else m["macro_f1"]
     emit(**base, event="progress", step="val", **{f"val_{job['primary_metric']}": m["primary"]})
 
     usage = model.usage_stats()
+    if job.get("score_only"):
+        emit(**base, event="done", primary=m["primary"], secondary=secondary, ms_per_item=None, cost_per_1m_usd=None,
+             fit_s=round(t_fit, 2), metrics_path=None, usage=None)
+        return 0
     if job["family"] in LLM_FAMILIES and usage:
         p50, p99 = usage["p50_ms"], usage["p99_ms"]
         throughput = 1000.0 / p50 if p50 else 0.0
@@ -109,11 +118,11 @@ def main(job_path: str) -> int:
                                     "accuracy", "per_class", "calibration_error", "n")},
                "pr_auc": m.get("pr_auc"), "recall_at_fpr": m.get("recall_at_fpr"), "fpr_target": m.get("fpr_target"),
                "p50_ms": p50, "p99_ms": p99, "throughput_per_s": throughput, "model_size_mb": size_mb,
-               "cost_per_1m_usd": cost, "cost_formula": formula, "split": "val"}
+               "cost_per_1m_usd": cost, "cost_formula": formula, "split": "val", "secondary": secondary}
     (out / "metrics.json").write_text(json.dumps(metrics, indent=2))
     np.save(out / "val_proba.npy", P)
     (out / "val_ids.json").write_text(json.dumps([r["id"] for r in val]))
-    emit(**base, event="done", primary=m["primary"], ms_per_item=p50, cost_per_1m_usd=cost,
+    emit(**base, event="done", primary=m["primary"], secondary=secondary, ms_per_item=p50, cost_per_1m_usd=cost,
          fit_s=round(t_fit, 2), metrics_path=str(out / "metrics.json"), usage=usage)
     return 0
 

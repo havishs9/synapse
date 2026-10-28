@@ -85,10 +85,11 @@ class Orchestrator:
              data: dict | None = None) -> None:
         e = Event(ts=time.time(), agent=agent, stage=stage, message=message, data_ref=data_ref,
                   spend_usd=round(self.spend(), 6), kind=kind, data=data)
-        with self._lock, (self.dir / "events.jsonl").open("a") as f:
-            f.write(e.model_dump_json() + "\n")
-        self.state.stage, self.state.updated, self.state.spend_usd = stage, e.ts, e.spend_usd
-        self.state.write(self.dir / "run_state.json")
+        with self._lock:
+            with (self.dir / "events.jsonl").open("a") as f:
+                f.write(e.model_dump_json() + "\n")
+            self.state.stage, self.state.updated, self.state.spend_usd = stage, e.ts, e.spend_usd
+            self.state.write(self.dir / "run_state.json")
 
     def _check_budget(self):
         if self.spend() >= self.budget:
@@ -195,7 +196,7 @@ class Orchestrator:
         report.chosen = chosen_id
 
         if self.opt.seeds:
-            report.seeds = self._seeds(trainer, finalists, labels)
+            report.seeds = self._seeds(trainer, winner, report)
         report.more_data_curve = self._more_data(trainer, winner, schedule)
 
         # ---- final exam: exactly once for this version ---------------------------------
@@ -249,7 +250,8 @@ class Orchestrator:
             cls = FAMILIES.get(r.family)
             uses_cloud = bool(cls and cls.uses_cloud) or r.config.get("backend") == "cloud"
             pts.append({"cand": r.cand, "family": r.family, "rung": (cls.rung if cls else 0), "round": r.round_reached,
-                        "data_frac": r.data_frac, "val_primary": m["primary"], "cost_per_1m_usd": m["cost_per_1m_usd"],
+                        "data_frac": r.data_frac, "val_primary": m["primary"], "val_secondary": m.get("secondary"),
+                        "cost_per_1m_usd": m["cost_per_1m_usd"],
                         "p50_ms": m["p50_ms"], "p99_ms": m["p99_ms"], "eliminated": r.status == "eliminated",
                         "final_round": r.status == "done" and r.round_reached == len(schedule),
                         "uses_cloud": uses_cloud, "n_val": m["n"], "metrics_path": r.metrics_path})
@@ -354,18 +356,20 @@ class Orchestrator:
                                      "cascade breaks a latency or deployment constraint")
         return model, winner.cand
 
-    def _seeds(self, trainer, finalists, labels) -> dict:
-        cpu = [r for r in sorted(finalists, key=lambda r: -(r.val_score or -1)) if r.family not in LLM_FAMILIES][:2]
+    def _seeds(self, trainer, winner, report) -> dict:
+        """Rerun the final 2 (the shipped single model and the best alternative) with 3 bootstrap seeds."""
+        alts = [trainer.runs[f.cand] for f in report.frontier if f.cand in trainer.runs and f.cand != winner.cand]
+        final2 = [r for r in [winner] + alts if r.family not in LLM_FAMILIES][:2]
         out = {}
-        for r in cpu:
+        for r in final2:
             scores = []
             for seed in (1, 2, 3):
-                res = trainer.retrain([r], tag=f"seed{seed}", seed=seed)[0]
+                res = trainer.retrain([r], tag=f"seed{seed}", seed=seed, score_only=True, bootstrap=True)[0]
                 if res["status"] == "done":
                     scores.append(res["primary"])
             if scores:
                 out[r.cand] = {"mean": float(np.mean(scores)), "std": float(np.std(scores)), "n_seeds": len(scores),
-                               "scores": scores}
+                               "scores": scores, "method": "bootstrap resample of the training set per seed"}
         if out:
             self.emit("Evaluator", "seeds", "Evaluator: seed reruns " + "; ".join(
                 f"{k} {v['mean']:.3f} ± {v['std']:.3f}" for k, v in out.items()))
@@ -375,7 +379,7 @@ class Orchestrator:
         pts = {h["data_frac"]: h["val"] for h in winner.history if h.get("val") is not None}
         for frac in (0.1, 0.4):
             if frac not in pts:
-                res = trainer.retrain([winner], tag=f"curve{int(frac * 100)}", frac=frac)[0]
+                res = trainer.retrain([winner], tag=f"curve{int(frac * 100)}", frac=frac, score_only=True)[0]
                 if res["status"] == "done":
                     pts[frac] = res["primary"]
         if 1.0 not in pts and winner.val_score is not None:

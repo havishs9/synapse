@@ -18,13 +18,13 @@ VERIFICATION.md); Serverless endpoint deployed in Phase 2 after the user logs in
 
 ## Phase 2: agents and evaluation
 
-- [ ] Planner with structured output plus deterministic fallback
-- [ ] Search rounds (10% / 40% / 100%), Trainer error-fix loop, capped repair loop
-- [ ] Calibration, cascade (H), frontier + seed reruns
-- [ ] Feature-based reasons and teacher-explains-flags
-- [ ] Narration feed and report card (per-class metrics, validation vs. sealed, "more data" curve)
-- [ ] Task 2 (HDFS logs) through the same pipeline: windowing, template parsing, E features; planner picks a different winner
-- [ ] Shared specialist server on the Nebius Serverless endpoint: per-specialist routes and API keys, versioned routes; artifacts in storage
+- [x] Planner with structured output plus deterministic fallback — llm_plan (Nemotron Ultra, json_schema) validated against the ladder; adds K when cloud_ok so H can be evaluated
+- [x] Search rounds (10% / 40% / 100%), Trainer error-fix loop, capped repair loop — run p2-procurement-a: 27 → 7 → 3 configs; repair loop exercised by the integration test
+- [~] Calibration, cascade (H), frontier + seed reruns — implemented and run; open issues below (ECE got worse for kNN; I-06 picked as 'cheapest')
+- [x] Feature-based reasons and teacher-explains-flags — reasons in J/A/E/I; `explain: true` calls Nemotron Ultra (labeled as a cloud call); not yet shown in the UI
+- [x] Narration feed and report card (per-class metrics, validation vs. sealed, "more data" curve)
+- [~] Task 2 (HDFS logs) through the same pipeline: windowing, template parsing, E features; planner picks a different winner — runs end to end (p2-logs-b: sealed recall@1%FPR 1.000), but the winner is A (TF-IDF), same family as procurement; see VERIFICATION.md 'Logs winner'
+- [ ] Shared specialist server on the Nebius Serverless endpoint: per-specialist routes and API keys, versioned routes; artifacts in storage — server + keys done and tested locally (fallback works); endpoint NOT created yet: needs `nebius` CLI login (see handoff)
 - [x] Unit test proving sealed-test isolation — backend/tests/test_sealed_isolation.py (written in Phase 1)
 
 ## Phase 3: product and demo
@@ -41,3 +41,25 @@ VERIFICATION.md); Serverless endpoint deployed in Phase 2 after the user logs in
 - [ ] `docs/DEVPOST.md` and `docs/VIDEO_SCRIPT.md`
 - [ ] Record the 3-minute video (human)
 - [ ] Acceptance criteria check (file 05 section 5)
+
+## Handoff notes (2026-10-28, end of session 1)
+
+Legend: `[x]` done, `[~]` done with open issues, `[ ]` not started.
+
+### Set up on a new machine
+1. `make setup` (needs Python 3.12 and Node 22; macOS also needs `brew install libomp` for LightGBM).
+2. Copy `.env` from a teammate (never commit it). Keys used: NEBIUS_API_KEY, NEBIUS_PROJECT_ID, NEBIUS_BASE_URL, API_KEY_PEPPER, SPECIALIST_ADMIN_TOKEN; TRAINING_BACKEND=local.
+3. `make demo-data` (~10 min: USAspending API, PSC workbook, HDFS from Zenodo). `data/`, `runs/` and `artifacts/` are gitignored, so no runs or specialists come with the repo.
+4. `make test` (32 tests, ~25 s), then `.venv/bin/python -m backend.cli build procurement` / `build hdfs_logs`, then `make dev` and open http://127.0.0.1:8000.
+
+### Open issues found in the last runs (fix before recording)
+1. **Last procurement run failed** (`p2-procurement-b`): `APIConnectionError` after the seed stage, during the sealed exam (cloud I-06 embeddings and/or cascade K calls). Add retry/backoff around the final exam, then rerun.
+2. **Recommendation picked cloud I-06 as "cheapest that meets target".** Check its `cost_per_1m_usd`: the embedding-token part may be missing when vectors come from the cache (`mean_tokens_per_text` is None → falls back to CPU-only cost). Cloud candidates must always include their token cost.
+3. **Calibration made ECE worse for kNN (I)**: 0.060 → 0.241. The kNN probabilities are already softmax-sharpened; temperature scaling on them behaves badly. Skip calibration when cross-fit ECE doesn't improve (keep T=1 and record it).
+4. **Cascade I-06 → K-03** escalated 47% for +0.014: that passes the 0.01 rule but costs a lot. Consider requiring the gain to justify the cost.
+5. **Logs vs procurement winners are both family A** (acceptance criterion "different winner" currently fails). Don't force it; report honestly or see whether the cascade changes procurement's winner.
+6. UI polish noted in Phase 1 screenshots: "Building…" button stays after the build, cost per record format ($1.1e-9), clearer "Ultra vs specialist" stat label.
+
+### Next steps
+- Phase 2: create the Serverless endpoint. Install the CLI (`curl -sSL https://artifacts.nebius.cloud/cli/install.sh | bash`), run `nebius profile create` (browser login), then `make deploy` (deploy/serverless/deploy.sh; needs the repo pushed to GitHub because the endpoint downloads it at startup). Endpoint compute is billed to Nebius AI Cloud, not Token Factory credits. Then mark Phase 2 complete and commit "Phase 2 complete".
+- Phase 3 is not started. Stubs to fill: frontend/src/components/PanelOverlays.tsx (Compare, Use dialog), PanelExtras.tsx (version history, corrections, improve), TrainingExtras.tsx (agent lanes, bracket, budget meter), lib/useIntake.ts (clarifying questions → editable task card). Backend still needs intake endpoints, `/compare`, `/corrections`, `/improve`. `scripts/snapshot_demo.py` is written for replay recordings but not yet run.

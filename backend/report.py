@@ -91,7 +91,14 @@ def to_markdown(rc: dict) -> str:
     lines += ["", "## Nemotron Ultra zero-shot baseline", "",
               f"On the same {b.get('n')} sealed records: Nemotron Ultra {pm} {_fmt((b.get('metrics') or {}).get('primary'))} "
               f"vs specialist {_fmt((fs.get('metrics') or {}).get('primary'))}.",
-              f"Baseline p50 latency {_fmt(b.get('p50_ms'), 0)} ms, ${_fmt(b.get('cost_per_1m_usd'), 2)} per 1M predictions.", "",
+              f"Baseline p50 latency {_fmt(b.get('p50_ms'), 0)} ms, ${_fmt(b.get('cost_per_1m_usd'), 2)} per 1M predictions.", ""]
+    pos = (rc["sealed"] or {}).get("positive_label") or next((k for k in ("anomaly",) if k in ((b.get("metrics") or {}).get("per_class") or {})), None)
+    if pos:
+        bp, sp = b["metrics"]["per_class"][pos], (fs.get("metrics") or {}).get("per_class", {}).get(pos, {})
+        lines += [f"At their own labels ({pos} class): Nemotron Ultra recall {bp['recall']:.3f}, precision {bp['precision']:.3f}; "
+                  f"specialist recall {sp.get('recall', 0):.3f}, precision {sp.get('precision', 0):.3f}. Ultra's self-reported "
+                  "confidence is too coarse to rank windows, which is why its recall at a fixed 1% FPR is so low.", ""]
+    lines += [
               f"Agreement with Nemotron Ultra (agreement, not accuracy): {ta.get('agreement_rate', 0):.1%} on {ta.get('n')} records.", ""]
     if rc.get("seeds"):
         lines += ["## Seed error bars (3 seeds, validation)", ""]

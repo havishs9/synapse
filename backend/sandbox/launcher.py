@@ -54,8 +54,8 @@ class LocalLauncher:
                 ev.setdefault("cand", job["cand"])
                 on_event(ev)
                 if ev.get("event") == "done":
-                    result.update(status="done", **{k: ev[k] for k in ("primary", "metrics_path", "cost_per_1m_usd",
-                                                                    "ms_per_item")})
+                    result.update(status="done", **{k: ev.get(k) for k in ("primary", "secondary", "metrics_path",
+                                                                        "cost_per_1m_usd", "ms_per_item")})
                 elif ev.get("event") == "error":
                     result["error"] = ev["error"]
                     result["traceback"] = ev.get("traceback")

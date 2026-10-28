@@ -111,17 +111,29 @@ def allowed(p: dict, card: TaskCard) -> tuple[bool, str]:
 
 
 def choose_frontier(points: list[dict], card: TaskCard) -> tuple[list[FrontierEntry], str, str]:
-    """Recommend the cheapest allowed candidate that meets the target; else the most accurate allowed one."""
+    """Pick the recommended candidate from the task card's priorities.
+
+    balanced / precision_first: the cheapest allowed candidate that meets the target.
+    recall_first: the best detector that meets the target (primary metric, then the secondary metric:
+    PR-AUC for binary tasks), with cost only breaking ties. If nothing meets the target: the most accurate
+    allowed candidate (within 0.005 of the best, the cheaper one).
+    """
     ok = [p for p in points if allowed(p, card)[0]] or points
     passing = [p for p in ok if p["val_primary"] >= card.thresholds.primary_min]
-    best = max(ok, key=lambda p: (p["val_primary"], -p["cost_per_1m_usd"]))
+    sec = lambda p: p.get("val_secondary") or 0.0
+    best = max(ok, key=lambda p: (p["val_primary"], sec(p), -p["cost_per_1m_usd"]))
     cheapest = min(ok, key=lambda p: (p["cost_per_1m_usd"], -p["val_primary"]))
-    if passing:
+    sec_name = "PR-AUC" if card.positive_definition else "macro-F1"
+    if passing and card.error_preference == "recall_first":
+        rec = max(passing, key=lambda p: (p["val_primary"], sec(p), -p["cost_per_1m_usd"]))
+        why = (f"misses cost more than false alarms (task card), so among candidates meeting the "
+               f"{card.optimization_metric} target of {card.thresholds.primary_min:.2f} this is the best detector: "
+               f"{rec['val_primary']:.3f}, {sec_name} {sec(rec):.4f} on validation")
+    elif passing:
         rec = min(passing, key=lambda p: (p["cost_per_1m_usd"], -p["val_primary"]))
         why = (f"cheapest candidate that meets the {card.optimization_metric} target of "
                f"{card.thresholds.primary_min:.2f} on validation ({rec['val_primary']:.3f})")
     else:
-        # Within 0.005 of the best score, prefer the cheaper one.
         near = [p for p in ok if p["val_primary"] >= best["val_primary"] - 0.005]
         rec = min(near, key=lambda p: p["cost_per_1m_usd"])
         why = (f"no candidate met the target of {card.thresholds.primary_min:.2f}; this is the most accurate "

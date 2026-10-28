@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import threading
 from pathlib import Path
 from typing import Any, Literal, Optional, TypeVar
 
@@ -15,7 +17,7 @@ class Schema(BaseModel):
 
     def write(self, path: Path) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp = path.with_suffix(f"{path.suffix}.{os.getpid()}.{threading.get_ident()}.tmp")
         tmp.write_text(self.model_dump_json(indent=2))
         tmp.replace(path)
         return path
@@ -139,6 +141,7 @@ class CandidateRun(Schema):
     metrics_path: Optional[str] = None
     elimination_reason: Optional[str] = None
     val_score: Optional[float] = None
+    val_secondary: Optional[float] = None     # tie-breaker: PR-AUC (binary) or macro-F1 (multiclass)
     history: list[dict[str, Any]] = Field(default_factory=list)
 
 
@@ -189,7 +192,7 @@ class EvalReport(Schema):
     cascade: Optional[dict[str, Any]] = None
     final: Optional[dict[str, Any]] = None              # sealed-test metrics of the chosen model
     final_sample: Optional[dict[str, Any]] = None       # chosen model on the baseline's sealed sample
-    seeds: dict[str, dict[str, float]] = Field(default_factory=dict)
+    seeds: dict[str, dict[str, Any]] = Field(default_factory=dict)
     val_vs_sealed: Optional[dict[str, float]] = None
     teacher_agreement: Optional[dict[str, Any]] = None
     baseline: Optional[dict[str, Any]] = None

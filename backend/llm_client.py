@@ -82,6 +82,8 @@ class LLMClient:
 
     @property
     def client(self) -> OpenAI:
+        if self._client is None and config.env("SYNAPSE_FAKE_LLM") == "1":
+            self._client = FakeOpenAI()
         if self._client is None:
             self._client = OpenAI(api_key=config.env("NEBIUS_API_KEY"), base_url=config.env("NEBIUS_BASE_URL"),
                                   timeout=120, max_retries=0)
@@ -212,3 +214,44 @@ class LLMClient:
                        "prompt_tokens": resp.usage.prompt_tokens, "completion_tokens": 0, "n_inputs": len(batch),
                        "latency_ms": round(dt, 1), "cost_usd": c, "list_cost_usd": c, "cached": False})
         return out, {"new_tokens": tokens, "new_cost_usd": cost, "api_latency_ms": latency}
+
+
+class FakeOpenAI:
+    """Deterministic offline stand-in for tests (SYNAPSE_FAKE_LLM=1). Never used otherwise.
+
+    JSON-schema calls with an enum get a label chosen by word overlap with the input; other JSON calls get an
+    empty object, so callers exercise their fallbacks. Embeddings are hashed random vectors.
+    """
+
+    def __init__(self):
+        from types import SimpleNamespace as NS
+        self._NS = NS
+        self.chat = NS(completions=NS(create=self._chat))
+        self.embeddings = NS(create=self._embed)
+
+    def _chat(self, **kw):
+        NS = self._NS
+        text = kw["messages"][-1]["content"].lower()
+        rf = kw.get("response_format") or {}
+        content = "ok"
+        if rf.get("type") == "json_schema":
+            props = rf["json_schema"]["schema"].get("properties", {})
+            enum = props.get("label", {}).get("enum")
+            if enum:
+                score = lambda l: sum(w in text for w in l.lower().split()) + (hash(l) % 7) / 100
+                content = json.dumps({"label": max(enum, key=score), "confidence": 0.6, "reason": "fake"})
+            else:
+                content = "{}"
+        elif rf.get("type") == "json_object":
+            content = "{}"
+        if kw.get("stream"):
+            return iter([NS(choices=[NS(delta=NS(content=content))], usage=None),
+                         NS(choices=[], usage=NS(prompt_tokens=10, completion_tokens=2))])
+        usage = NS(prompt_tokens=len(text) // 4 + 10, completion_tokens=8, prompt_tokens_details=None)
+        return NS(choices=[NS(message=NS(content=content, tool_calls=None))], usage=usage)
+
+    def _embed(self, model, input):
+        import numpy as np
+        NS = self._NS
+        data = [NS(embedding=np.random.default_rng(abs(hash(t)) % 2**32).normal(size=32).tolist()) for t in input]
+        return NS(data=data, usage=NS(prompt_tokens=sum(len(t) // 4 + 1 for t in input)))

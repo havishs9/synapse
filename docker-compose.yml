@@ -1,0 +1,11 @@
+# Local dev: main app on :8000, standalone specialist server on :8081. Secrets come from .env.
+services:
+  app:
+    build: .
+    env_file: .env
+    environment: { ARTIFACTS_DIR: ./artifacts/demo, RUNS_DIR: ./runs }
+    ports: ["8000:8000"]
+  specialists:
+    build: { context: ., dockerfile: Dockerfile.serving }
+    env_file: .env
+    ports: ["8081:8081"]

@@ -68,7 +68,26 @@ class Predictor:
         k = int(np.argmax(p))
         return self.labels[k], float(p[k])
 
-    def predict(self, texts: list[str], with_reason: bool | None = None) -> list[dict]:
+    def explain(self, text: str, pred: dict) -> str | None:
+        """Teacher explains a flag: Nemotron Ultra reads the input plus the specialist's feature-based reason.
+
+        This is a cloud call and is labeled as such wherever it's shown.
+        """
+        llm = self.model.ctx.llm
+        if llm is None:
+            return None
+        from backend.candidates.prompted_k import clip_window
+        shown = clip_window(text) if self.meta["input_type"] == "log_window" else text
+        prompt = (f"A small specialist model for this task: {self.meta['task_name']} labeled the input below as "
+                  f"\"{pred['label']}\" ({pred['confidence']:.0%} confidence). Its feature-based reason: "
+                  f"{pred.get('reason') or 'none'}.\n\nInput:\n{shown}\n\nIn at most three sentences, explain to an "
+                  "operator what in the input supports or contradicts this label. Quote the specific evidence. "
+                  "If the label looks wrong, say so.")
+        res = llm.chat("main_chat_planner_teacher_baseline", [{"role": "user", "content": prompt}], agent="Evaluator",
+                       purpose="teacher_explains_flag", max_tokens=300, temperature=0.2, thinking=False)
+        return res.content.strip()
+
+    def predict(self, texts: list[str], with_reason: bool | None = None, explain: bool = False) -> list[dict]:
         texts = [validate(t, self.meta["input_type"]) for t in texts]
         with_reason = self.meta.get("needs_reason", False) if with_reason is None else with_reason
         t0 = time.perf_counter()
@@ -87,5 +106,12 @@ class Predictor:
                     item["reason"] = self.model.reason(t, p)
                 except Exception:
                     item["reason"] = None
+            flagged = self.meta.get("positive") is None or label == self.meta.get("positive")
+            if explain and flagged:
+                try:
+                    item["teacher_explanation"] = self.explain(t, item)
+                    item["teacher_model"] = "Nemotron Ultra (cloud call)"
+                except Exception as exc:
+                    item["teacher_explanation_error"] = f"Explanation unavailable ({type(exc).__name__})"
             out.append(item)
         return out

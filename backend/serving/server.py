@@ -21,6 +21,7 @@ from backend.versions import registry
 class PredictIn(BaseModel):
     input: str
     reason: bool | None = None
+    explain: bool = False        # teacher explains flags (Nemotron Ultra, cloud call)
 
 
 class BatchIn(BaseModel):
@@ -79,14 +80,14 @@ def require_admin(authorization: str | None = Header(None)):
         raise HTTPException(403, "Admin token required.")
 
 
-def _predict(v, version: int, texts: list[str], reason):
+def _predict(v, version: int, texts: list[str], reason, explain: bool = False):
     if not any(r.version == version for r in v.versions):
         raise HTTPException(404, f"{v.specialist_id} has no version {version}.")
     rec = next(r for r in v.versions if r.version == version)
     if rec.gate_result == "rejected":
         raise HTTPException(409, f"v{version} was rejected by the version gate and is not served.")
     try:
-        preds = predictor(v.specialist_id, version).predict(texts, with_reason=reason)
+        preds = predictor(v.specialist_id, version).predict(texts, with_reason=reason, explain=explain)
     except InputError as exc:
         raise HTTPException(422, str(exc))
     return {"specialist_id": v.specialist_id, "version": version, "predictions": preds}
@@ -109,7 +110,7 @@ def health():
 
 @router.post("/v1/specialists/{sid}/predict")
 def predict_live(sid: str, body: PredictIn, v=Depends(require_key)):
-    out = _predict(v, _live_version(v), [body.input], body.reason)
+    out = _predict(v, _live_version(v), [body.input], body.reason, body.explain)
     pred = out.pop("predictions")[0]
     return {**out, **pred}
 
@@ -121,7 +122,7 @@ def predict_batch(sid: str, body: BatchIn, v=Depends(require_key)):
 
 @router.post("/v1/specialists/{sid}/v{version}/predict")
 def predict_pinned(sid: str, version: int, body: PredictIn, v=Depends(require_key)):
-    out = _predict(v, version, [body.input], body.reason)
+    out = _predict(v, version, [body.input], body.reason, body.explain)
     pred = out.pop("predictions")[0]
     return {**out, **pred}
 

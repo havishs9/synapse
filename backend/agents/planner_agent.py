@@ -166,6 +166,16 @@ def llm_plan(card: TaskCard, stats: DatasetStats, llm, emit: Emit, max_configs: 
         if not cands or len(cands) > max_configs * 2:
             raise ValueError(f"plan had {len(cands)} configs")
         chosen = {c.family for c in cands}
+        if card.deployment == "cloud_ok" and not chosen & {"K", "L"}:
+            # The cascade (H) is always evaluated on top of the best single candidate; it needs an LLM rung.
+            k = next(c for c in fallback.candidates if c.family == "K")
+            space = k.search_space
+            for i, params in enumerate(expand("K", space), 1):
+                cands.append(CandidateSpec(id=f"K-{i:02d}", family="K", rung=RUNG["K"], params=params,
+                                           search_space=space, reason="added so the cascade (H) can escalate "
+                                           "uncertain items to a prompted Nemotron model"))
+            chosen.add("K")
+            raw["summary"] += "; prompted Nemotron (K) added so the cascade can be evaluated"
         for f, why in raw.get("excluded", {}).items():
             if f not in chosen:
                 excluded[f] = why

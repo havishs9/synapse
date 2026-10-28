@@ -125,7 +125,7 @@ class Trainer:
             for res in results:
                 run = self.runs[res["cand"]]
                 if res["status"] == "done":
-                    run.status, run.val_score = "done", res["primary"]
+                    run.status, run.val_score, run.val_secondary = "done", res["primary"], res.get("secondary")
                     run.metrics_path = res["metrics_path"]
                     continue
                 run.status, run.error_log = res["status"], res.get("error_log")
@@ -150,14 +150,21 @@ class Trainer:
                                           "cands": [r.cand for r in active]})
             t0 = time.time()
             self._run_round(active, round_no, frac)
-            done = sorted([r for r in active if r.status == "done"], key=lambda r: -(r.val_score or -1))
+            # Rank on the primary metric; PR-AUC (binary) or macro-F1 breaks ties when the primary saturates.
+            done = sorted([r for r in active if r.status == "done"],
+                          key=lambda r: (-(r.val_score or -1), -(r.val_secondary or -1)))
             keep = keep_count(i, len(schedule), len(done))
             survivors = done[:keep]
             for r in done[keep:]:
                 r.status = "eliminated"
-                cut = survivors[-1].val_score if survivors else 0.0
-                r.elimination_reason = (f"{self.card.optimization_metric} {r.val_score:.3f} < {cut:.3f} "
-                                        f"(round {round_no} cutoff)")
+                cut = survivors[-1] if survivors else None
+                if cut and abs((cut.val_score or 0) - (r.val_score or 0)) < 1e-9:
+                    r.elimination_reason = (f"tied on {self.card.optimization_metric} ({r.val_score:.3f}); lost the "
+                                            f"tie-break {r.val_secondary or 0:.3f} < {cut.val_secondary or 0:.3f} "
+                                            f"({'PR-AUC' if self.card.positive_definition else 'macro-F1'})")
+                else:
+                    r.elimination_reason = (f"{self.card.optimization_metric} {r.val_score:.3f} < "
+                                            f"{(cut.val_score if cut else 0):.3f} (round {round_no} cutoff)")
                 self.emit("Trainer", "train", "", kind="candidate", data={
                     "cand": r.cand, "family": r.family, "status": "eliminated", "reason": r.elimination_reason,
                     "round": round_no})
@@ -172,12 +179,15 @@ class Trainer:
         self._write_runs()
         return [r for r in self.runs.values() if r.status == "done" and r.round_reached == len(schedule)] or active
 
-    def retrain(self, runs: list[CandidateRun], tag: str, seed: int | None = None, frac: float = 1.0) -> list[dict]:
-        """Retrain configs on the current training set (repair, seeds, improve). Returns worker results."""
+    def retrain(self, runs: list[CandidateRun], tag: str, seed: int | None = None, frac: float = 1.0,
+                score_only: bool = False, bootstrap: bool = False) -> list[dict]:
+        """Retrain configs on the current training set (repair, seeds, improve, curve). Returns worker results."""
         jobs = []
         for r in runs:
             rr = CandidateRun(cand=r.cand, family=r.family, config=r.config, seed=r.seed if seed is None else seed)
-            jobs.append(self._job(rr, 99, frac, f"{r.cand}/{tag}"))
+            job = self._job(rr, 99, frac, f"{r.cand}/{tag}")
+            job.update(score_only=score_only, bootstrap=bootstrap)
+            jobs.append(job)
         return self.launcher.run(jobs, lambda ev: None)
 
 

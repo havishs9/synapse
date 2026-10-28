@@ -43,6 +43,23 @@ SYSTEM = ("You are the main assistant in Synapse, an app that builds small, chea
           "questions first. Be concise.")
 
 
+# ---- public demo spend guard -----------------------------------------------------------
+_guard = {"day": "", "spend": 0.0}
+
+
+def demo_guard(extra_usd: float = 0.0) -> None:
+    """Cap cloud LLM spend from interactive use (chat, compare, explanations) per day on a public deployment."""
+    day = time.strftime("%Y-%m-%d")
+    if _guard["day"] != day:
+        _guard.update(day=day, spend=0.0)
+    _guard["spend"] += extra_usd
+    cap = float(config.env("DEMO_DAILY_BUDGET_USD", "3"))
+    used = _chat_llm.spend.spent_usd + spec_server._get_llm().spend.spent_usd
+    if used >= cap:
+        raise HTTPException(429, f"The demo's daily LLM budget (${cap:.2f}) is used up. Specialist predictions "
+                                 "still work; chat, compare and explanations resume tomorrow.")
+
+
 # ---- app info ----------------------------------------------------------------------
 @app.get("/api/app")
 def app_info():
@@ -66,6 +83,7 @@ class ChatIn(BaseModel):
 
 @app.post("/api/chat")
 async def chat(body: ChatIn):
+    demo_guard()
     msgs = [{"role": "system", "content": SYSTEM}] + [m for m in body.messages if m.get("role") in ("user", "assistant")][-20:]
     q: asyncio.Queue = asyncio.Queue()
     loop = asyncio.get_running_loop()
@@ -244,16 +262,17 @@ def specialist(sid: str):
 class PredictIn(BaseModel):
     input: str
     version: int | None = None
+    explain: bool = False
 
 
-def _local_predict(sid: str, texts: list[str], version: int | None = None) -> dict:
+def _local_predict(sid: str, texts: list[str], version: int | None = None, explain: bool = False) -> dict:
     v = _spec(sid)
     ver = version or (registry.live(v).version if registry.live(v) else None)
     if ver is None:
         raise HTTPException(503, "This specialist has no live version yet.")
     t0 = time.perf_counter()
     try:
-        preds = spec_server.predictor(sid, ver).predict(texts)
+        preds = spec_server.predictor(sid, ver).predict(texts, explain=explain)
     except InputError as exc:
         raise HTTPException(422, str(exc))
     return {"version": ver, "predictions": preds, "wall_ms": (time.perf_counter() - t0) * 1000}
@@ -261,7 +280,9 @@ def _local_predict(sid: str, texts: list[str], version: int | None = None) -> di
 
 @app.post("/api/specialists/{sid}/predict")
 def panel_predict(sid: str, body: PredictIn):
-    out = _local_predict(sid, [body.input], body.version)
+    if body.explain:
+        demo_guard()
+    out = _local_predict(sid, [body.input], body.version, body.explain)
     return {"version": out["version"], **out["predictions"][0], "wall_ms": out["wall_ms"]}
 
 
