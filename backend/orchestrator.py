@@ -165,8 +165,12 @@ class Orchestrator:
         yv = np.array([labels.index(by_id[i]["label"]) for i in ids])
         calibrator, cal = ev.calibration_report(P, yv)
         report.calibration = {**cal, "candidate": winner_id}
-        self.emit("Evaluator", "validate", f"Evaluator: calibrated confidence (ECE {cal['ece_before']:.3f} → "
-                  f"{cal['ece_after_crossfit']:.3f})")
+        if cal.get("skipped"):
+            self.emit("Evaluator", "validate", f"Evaluator: kept raw confidence; temperature scaling would not improve "
+                      f"calibration (ECE {cal['ece_before']:.3f}, {cal['ece_after_crossfit']:.3f} after, cross-fit)")
+        else:
+            self.emit("Evaluator", "validate", f"Evaluator: calibrated confidence (ECE {cal['ece_before']:.3f} → "
+                      f"{cal['ece_after_crossfit']:.3f})")
 
         patterns = ev.error_patterns(card, [by_id[i] for i in ids], calibrator.apply(P), labels,
                                      self.llm, self.emit)

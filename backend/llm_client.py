@@ -108,16 +108,21 @@ class LLMClient:
         with self._log_lock, (self.run_dir / "llm_calls.jsonl").open("a") as f:
             f.write(json.dumps(record) + "\n")
 
+    # Backoff 2, 4, 8, 16, 30, 30 s: rides out about 90 s of dropped connections (a run once failed in the
+    # sealed exam after a ~50 s outage when the total wait was 15 s).
+    RETRY_ATTEMPTS = 7
+    RETRY_MAX_DELAY_S = 30.0
+
     def _with_retries(self, fn):
-        delay = 1.0
-        for attempt in range(5):
+        delay = 2.0
+        for attempt in range(self.RETRY_ATTEMPTS):
             try:
                 return fn()
             except RETRYABLE:
-                if attempt == 4:
+                if attempt == self.RETRY_ATTEMPTS - 1:
                     raise
                 time.sleep(delay)
-                delay *= 2
+                delay = min(delay * 2, self.RETRY_MAX_DELAY_S)
 
     # ---- chat ----------------------------------------------------------
     def chat(self, role: str, messages: list[dict], *, agent: str, purpose: str, max_tokens: int = 1024,

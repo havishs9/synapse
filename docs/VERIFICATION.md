@@ -11,7 +11,7 @@ No secret values are recorded here or in `runs/verify/`.
 | 1 | Exact API model IDs; tool calling + JSON output | **PASS** (all 5 models; 13/13 test calls passed) |
 | 2 | Sandboxes: whoami, base image, one timed training run | **FAIL: no permissions on our account.** Fallback applied: `TRAINING_BACKEND=local` |
 | 3 | Prices for every model + Serverless CPU preset | **PASS** (`config/pricing.yaml`) |
-| 4 | Serverless: CPU hello-world endpoint with token auth | **BLOCKED**: needs `nebius` CLI with interactive login (team action) |
+| 4 | Serverless: CPU hello-world endpoint with token auth | **BLOCKED**: CLI installed and logged in (session 2), but the Nebius AI Cloud tenant is suspended: `endpoint create --dry-run` → PermissionDenied (see section 4) |
 | 5 | Object Storage reachable from the endpoint | **BLOCKED**: depends on 4; no bucket or credentials in `.env` yet |
 | 6 | USAspending download path; 20k–50k rows; draft `psc_categories.yaml` | **PASS** (42,000 awards, 100% mapped to 19 categories) |
 | 7 | HDFS download, label files, license terms; Banking77 | **PASS** (downloaded and checked); HDFS license **needs human approval** |
@@ -89,6 +89,10 @@ Object Storage Standard: $0.0147 per GiB-month, $0.015 per GiB egress ([nebius.c
 Fine-tuning and dedicated endpoints: not priced (G is STRETCH and off).
 
 ## 4. Serverless endpoint: BLOCKED
+
+**Session 2 (2026-10-28):** `nebius` CLI 0.12.296 is installed and logged in (profile `RajHavishHacks`, project `default-project-eu-west2`, region eu-west2). `nebius ai endpoint list` works (no endpoints). `DRY_RUN=1 ./deploy/serverless/deploy.sh` (cpu-d3, 2vcpu-8gb, 40 GiB) fails with `PermissionDenied: you do not have permission to access the requested object` (trace IDs 2f28e87b90b3119989b99b0bc5a0881f, 19bfb1b98296eff4cf0500505c83635e). `nebius iam tenant list` reports the tenant `orange-chinchilla-tenant-s5f` with `suspension_state: SUSPENDED` (`iam v2 tenant get` shows `tenant_state: ACTIVE`). Needs a human to activate billing in the console. Whether cpu-d3 is offered in eu-west2 is still unverified.
+
+Session 1 notes:
 
 Not attempted. Creating an endpoint needs the `nebius` CLI (not installed), an interactive browser login (`nebius profile create`), and creates a billed resource. These are team actions.
 
@@ -191,3 +195,16 @@ Decision: classification calls (rungs K/L, the Ultra baseline, bulk labeling) se
 - **Fake LLM for tests.** `SYNAPSE_FAKE_LLM=1` swaps in a deterministic offline client (used only by the integration test, which must run without network).
 - **Public deployment without Docker.** No Docker on the build machine. The Serverless endpoint uses the public `python:3.12-slim` image, an injected `bootstrap.sh` (`--inject-file`, ≤64 KiB) that downloads this public repo, installs requirements and starts the app. One CPU endpoint serves the whole app: main chat, builds (replay by default) and the shared specialist server routes. Dockerfiles are included but were not built locally.
 - **Public spend guard.** Interactive cloud calls on the deployed app (chat, compare, teacher explanations) stop at `DEMO_DAILY_BUDGET_USD` (default $3) per day; specialist predictions keep working.
+- **Search keeps the cost frontier (session 2).** Each successive-halving round keeps the top-ranked configs (as before) plus every config on that round's cost/score frontier (no other config is both cheaper and at least as good). Without this, `p2-procurement-b` cut every TF-IDF config early and shipped cloud kNN I-06 ($0.46/1M) as "cheapest that meets the target", although A-05 met the target in `p2-procurement-a` at $0.0009/1M.
+- **Calibration is skipped when it doesn't help (session 2).** If the 2-fold cross-fit ECE is not lower than the uncalibrated ECE, T = 1 is kept and `eval_report.json` records `skipped: true` (kNN in `p2-procurement-b`: 0.060 → 0.241 when forced).
+- **Cascade threshold (session 2).** Among thresholds within 0.005 of the best cascade score on the shared sample, the one that escalates least is used, since every escalation is a paid LLM call. The ship rule (gain > 0.01 over the base) is unchanged.
+- **Network retries (session 2).** Every Token Factory call retries transient errors with backoff 2, 4, 8, 16, 30, 30 s (~90 s total) before failing the run.
+
+## Serverless endpoint deploy script (session 2, 2026-10-28)
+
+Checked against `nebius` CLI 0.12.296 (`nebius ai endpoint create --help`) on the team's logged-in profile (`nebius ai endpoint list` works: no endpoints exist yet):
+
+- `--env` is a repeatable flag taking one `KEY=VALUE` each. The session 1 script passed all variables comma-joined in a single `--env`, which would have set one variable. Fixed: one flag per variable.
+- `--auth none` is the default (set explicitly); `--dry-run` validates without creating (`DRY_RUN=1 make deploy`).
+- `--env-secret` reads values from MysteryBox, and `--volume s3://BUCKET:/path` mounts Object Storage. Neither is used yet; secrets go in as `--env` values, which project members can read in the endpoint spec.
+- Platform, preset and disk are read from `config/pricing.yaml` (`cpu-d3`, `2vcpu-8gb`, 40 GiB), so cost-per-1M figures use the hourly rate of the endpoint that is actually deployed. Session 1's script used `4vcpu-16gb` while every recorded cost used `2vcpu-8gb`. The pricing formula now counts the 40 GiB disk, not the 20 GiB minimum (+$0.0019/h); runs before session 2 used 20 GiB.

@@ -31,6 +31,12 @@ def schedule_for(n_train: int, full: bool = True) -> list[float]:
     return fracs + [1.0]
 
 
+def cost_frontier(scored: list[tuple[str, float, float]]) -> set[str]:
+    """IDs not dominated on (higher score, lower cost) among (id, score, cost_per_1m) triples."""
+    return {i for i, s, c in scored
+            if not any(s2 >= s and c2 <= c and (s2 > s or c2 < c) for _, s2, c2 in scored)}
+
+
 def keep_count(round_idx: int, n_rounds: int, n: int) -> int:
     remaining = n_rounds - round_idx - 1
     if remaining <= 0:
@@ -69,6 +75,12 @@ class Trainer:
             "budget_remaining_usd": max(self.budget_usd - self.spend(), 0.0),
             "log_templates": self.templates,
         }
+
+    @staticmethod
+    def _cost(run: CandidateRun) -> float:
+        if not run.metrics_path or not Path(run.metrics_path).exists():
+            return float("inf")
+        return json.loads(Path(run.metrics_path).read_text())["cost_per_1m_usd"]
 
     def _write_runs(self):
         Runs(runs=list(self.runs.values())).write(self.run_dir / "runs.json")
@@ -154,17 +166,28 @@ class Trainer:
             done = sorted([r for r in active if r.status == "done"],
                           key=lambda r: (-(r.val_score or -1), -(r.val_secondary or -1)))
             keep = keep_count(i, len(schedule), len(done))
-            survivors = done[:keep]
+            top = done[:keep]
+            # Ranking on the score alone would cut a cheap model that is nearly as good before the final
+            # "cheapest that meets the target" choice, so candidates on this round's cost frontier also go on.
+            front = cost_frontier([(r.cand, r.val_score or 0.0, self._cost(r)) for r in done])
+            on_front = [r for r in done[keep:] if r.cand in front]
+            survivors = top + on_front
+            if on_front:
+                self.emit("Trainer", "train", "Trainer: also keeping " + ", ".join(r.cand for r in on_front) +
+                          " (cheaper than the leaders for a lower score: on the cost frontier)")
             for r in done[keep:]:
+                if r in on_front:
+                    continue
                 r.status = "eliminated"
-                cut = survivors[-1] if survivors else None
+                cut = top[-1] if top else None
                 if cut and abs((cut.val_score or 0) - (r.val_score or 0)) < 1e-9:
                     r.elimination_reason = (f"tied on {self.card.optimization_metric} ({r.val_score:.3f}); lost the "
                                             f"tie-break {r.val_secondary or 0:.3f} < {cut.val_secondary or 0:.3f} "
                                             f"({'PR-AUC' if self.card.positive_definition else 'macro-F1'})")
                 else:
                     r.elimination_reason = (f"{self.card.optimization_metric} {r.val_score:.3f} < "
-                                            f"{(cut.val_score if cut else 0):.3f} (round {round_no} cutoff)")
+                                            f"{(cut.val_score if cut else 0):.3f} (round {round_no} cutoff), and a "
+                                            "cheaper candidate scores at least as well")
                 self.emit("Trainer", "train", "", kind="candidate", data={
                     "cand": r.cand, "family": r.family, "status": "eliminated", "reason": r.elimination_reason,
                     "round": round_no})

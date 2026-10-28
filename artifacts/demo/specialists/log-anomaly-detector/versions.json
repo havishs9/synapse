@@ -1,0 +1,50 @@
+{
+  "specialist_id": "log-anomaly-detector",
+  "display_name": "Log Anomaly Detector",
+  "monogram": "LA",
+  "color": "#0E8F6E",
+  "task_id": "hdfs_logs",
+  "api_route": "/v1/specialists/log-anomaly-detector/predict",
+  "api_keys": [],
+  "versions": [
+    {
+      "version": 1,
+      "run_id": "p2-logs-c",
+      "sealed_metrics": {
+        "primary": 1.0,
+        "primary_metric": "recall_at_fpr",
+        "macro_f1": 0.9494553394078885,
+        "accuracy": 0.9936842105263158,
+        "pr_auc": 0.9997165131112686,
+        "recall_at_fpr": 1.0,
+        "per_class": {
+          "anomaly": {
+            "precision": 0.8217821782178217,
+            "recall": 1.0,
+            "f1": 0.9021739130434783,
+            "support": 83
+          },
+          "normal": {
+            "precision": 1.0,
+            "recall": 0.9934947596675099,
+            "f1": 0.9967367657722987,
+            "support": 2767
+          }
+        },
+        "at_val_threshold": {
+          "threshold": 0.0015604431964265377,
+          "recall": 1.0,
+          "fpr": 0.006505240332490061
+        },
+        "escalation_rate": null,
+        "n": 2850
+      },
+      "gate_result": "deployed",
+      "reason": "first version; meets the target with recall_at_fpr 1.000",
+      "artifact_uri": "artifacts/specialists/log-anomaly-detector/v1",
+      "created": 1793165419.601642,
+      "live": true,
+      "candidate": "A-12"
+    }
+  ]
+}

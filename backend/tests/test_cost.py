@@ -25,5 +25,6 @@ def test_serverless_hourly_from_components():
     s = config.pricing()["serverless_cpu"]
     pr = s["presets"][s["chosen_preset"]]
     expected = pr["vcpus"] * s["vcpu_hour"] + pr["ram_gib"] * s["ram_gib_hour"] + \
-        s["min_disk_gib"] * s["network_ssd_gib_month"] / s["hours_per_month"]
+        s["disk_gib"] * s["network_ssd_gib_month"] / s["hours_per_month"]
+    assert s["disk_gib"] >= s["min_disk_gib"]
     assert config.serverless_hourly_usd() == pytest.approx(expected)

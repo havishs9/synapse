@@ -24,6 +24,20 @@ KEEP_ALWAYS = {"task_card.json", "dataset_manifest.json", "dataset_stats.json", 
 DATA_FILES = {"train.jsonl", "val.jsonl", "holdback.jsonl", "synthetic_eval.jsonl"}
 DEST_RUNS = ROOT / "runs"
 DEST_ART = ROOT / "artifacts" / "demo" / "specialists"
+# Families whose model file keeps raw training texts (kNN pool, retrieval pool, or a cascade wrapping one).
+STORES_TEXTS = {"I", "K", "L", "H"}
+
+
+def copy_bundle(src: Path, dest: Path) -> None:
+    """Copy a version bundle. For log specialists, keep raw log lines out of the repo (team rule)."""
+    meta = json.loads((src / "bundle.json").read_text())
+    if meta["input_type"] == "log_window":
+        if meta["family"] in STORES_TEXTS:
+            raise SystemExit(f"{src}: family {meta['family']} stores raw training log windows in model.joblib; "
+                             "not committing it")
+        meta.pop("example_input", None)    # a raw HDFS window
+    shutil.copytree(src, dest, ignore=shutil.ignore_patterns("bundle.json"))
+    (dest / "bundle.json").write_text(json.dumps(meta, indent=2))
 
 
 def snapshot(run_id: str) -> None:
@@ -55,7 +69,7 @@ def snapshot(run_id: str) -> None:
         for r in v["versions"]:
             b = vfile.parent / f"v{r['version']}"
             if b.exists() and not (sdest / f"v{r['version']}").exists():
-                shutil.copytree(b, sdest / f"v{r['version']}")
+                copy_bundle(b, sdest / f"v{r['version']}")
         v["api_keys"] = []          # deployed instances create their own keys
         (sdest / "versions.json").write_text(json.dumps(v, indent=2))
         print(f"specialist {v['specialist_id']}: {len(v['versions'])} version(s)")

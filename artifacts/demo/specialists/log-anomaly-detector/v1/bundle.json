@@ -1,0 +1,21 @@
+{
+  "task_name": "Log Anomaly Detector",
+  "task_id": "hdfs_logs",
+  "labels": [
+    "anomaly",
+    "normal"
+  ],
+  "input_type": "log_window",
+  "positive": "anomaly",
+  "threshold": 0.0015604431964265377,
+  "calibrator_T": 1.0,
+  "needs_reason": true,
+  "candidate": "A-12",
+  "family": "A",
+  "uses_cloud": false,
+  "run_id": "p2-logs-c",
+  "cost_per_1m_usd": 0.00838512632143431,
+  "p50_ms": 1.0780629818327725,
+  "p99_ms": 1.7856040713377421,
+  "expected_format": "One HDFS block's log lines (one window), e.g. lines containing blk_\u2026"
+}

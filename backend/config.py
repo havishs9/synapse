@@ -59,7 +59,7 @@ def serverless_hourly_usd(preset: str | None = None) -> float:
     s = pricing()["serverless_cpu"]
     p = s["presets"][preset or s["chosen_preset"]]
     compute = p["vcpus"] * s["vcpu_hour"] + p["ram_gib"] * s["ram_gib_hour"]
-    disk = s["min_disk_gib"] * s["network_ssd_gib_month"] / s["hours_per_month"]
+    disk = s.get("disk_gib", s["min_disk_gib"]) * s["network_ssd_gib_month"] / s["hours_per_month"]
     return compute + disk
 
 

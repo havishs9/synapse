@@ -51,7 +51,10 @@ class TemperatureCalibrator:
 
 
 def calibration_report(P: np.ndarray, y: np.ndarray, seed: int = 0) -> tuple[TemperatureCalibrator, dict]:
-    """Fit on all of val; report ECE before/after with 2-fold cross-fitting so 'after' isn't fit-on-test."""
+    """Fit on all of val; report ECE before/after with 2-fold cross-fitting so 'after' isn't fit-on-test.
+
+    If cross-fit ECE doesn't improve (e.g. kNN scores that are already softmax-sharpened), keep T = 1.
+    """
     rng = np.random.default_rng(seed)
     idx = rng.permutation(len(y))
     halves = np.array_split(idx, 2)
@@ -61,9 +64,14 @@ def calibration_report(P: np.ndarray, y: np.ndarray, seed: int = 0) -> tuple[Tem
         Q = cal.apply(P[b])
         after.append(M.expected_calibration_error(Q.max(1), Q.argmax(1) == y[b]))
     before = M.expected_calibration_error(P.max(1), P.argmax(1) == y)
+    after_mean = float(np.mean(after))
+    if after_mean >= before:
+        return TemperatureCalibrator(1.0), {
+            "method": "none (temperature scaling skipped: cross-fit ECE did not improve)", "temperature": 1.0,
+            "ece_before": before, "ece_after_crossfit": after_mean, "skipped": True}
     cal = TemperatureCalibrator().fit(P, y)
     return cal, {"method": "temperature scaling (fit on validation)", "temperature": cal.T,
-                 "ece_before": before, "ece_after_crossfit": float(np.mean(after))}
+                 "ece_before": before, "ece_after_crossfit": after_mean}
 
 
 # ---- helpers -------------------------------------------------------------------
@@ -213,9 +221,16 @@ def error_patterns(card: TaskCard, val: list[dict], P: np.ndarray, labels: list[
 
 
 # ---- cascade (H) -----------------------------------------------------------------------
+CASCADE_TOLERANCE = 0.005
+
+
 def fit_cascade(card: TaskCard, labels: list[str], val: list[dict], base_P: np.ndarray, base_ids: list[str],
                 llm_P: np.ndarray, llm_ids: list[str], calibrator: TemperatureCalibrator) -> dict | None:
-    """Pick the escalation threshold on the LLM's validation sample, where both models have predictions."""
+    """Pick the escalation threshold on the LLM's validation sample, where both models have predictions.
+
+    Every escalation is a paid LLM call, so among thresholds scoring within CASCADE_TOLERANCE of the best,
+    take the one that escalates least.
+    """
     pos = {i: k for k, i in enumerate(base_ids)}
     common = [i for i in llm_ids if i in pos]
     if len(common) < 30:
@@ -227,15 +242,17 @@ def fit_cascade(card: TaskCard, labels: list[str], val: list[dict], base_P: np.n
     kw = metric_kwargs(card)
     base_score = M.classification_metrics(y, Pb, labels, **kw)["primary"]
     llm_score = M.classification_metrics(y, Pl, labels, **kw)["primary"]
-    best = None
+    tried = []
     for tau in np.round(np.arange(0.3, 0.96, 0.05), 2):
         esc = Pb.max(1) < tau
         Pc = np.where(esc[:, None], Pl, Pb)
         s = M.classification_metrics(y, Pc, labels, **kw)["primary"]
-        cand = {"tau": float(tau), "primary": s, "escalation_rate": float(esc.mean())}
-        if best is None or s > best["primary"] + 1e-9 or (abs(s - best["primary"]) < 1e-9 and esc.mean() < best["escalation_rate"]):
-            best = cand
+        tried.append({"tau": float(tau), "primary": s, "escalation_rate": float(esc.mean())})
+    top = max(t["primary"] for t in tried)
+    best = min((t for t in tried if t["primary"] >= top - CASCADE_TOLERANCE),
+               key=lambda t: (t["escalation_rate"], -t["primary"]))
     return {**best, "n": len(common), "base_primary_same_sample": base_score, "llm_primary_same_sample": llm_score,
+            "best_primary_any_tau": top, "tau_rule": f"least escalation within {CASCADE_TOLERANCE} of the best tau",
             "sample": "the LLM rung's capped validation sample"}
 
 

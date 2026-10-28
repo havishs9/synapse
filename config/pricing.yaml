@@ -28,7 +28,8 @@ serverless_cpu:
   presets:                            # hourly compute = vcpus * vcpu_hour + ram_gib * ram_gib_hour (derived, not a listed price)
     2vcpu-8gb:  {vcpus: 2, ram_gib: 8}
     4vcpu-16gb: {vcpus: 4, ram_gib: 16}
-  chosen_preset: 2vcpu-8gb            # provisional; confirm when the endpoint is created
+  chosen_preset: 2vcpu-8gb            # what deploy/serverless/deploy.sh creates, so cost numbers match the endpoint
+  disk_gib: 40                        # deployed disk (torch + requirements are installed at startup); >= min_disk_gib
 
 object_storage:
   # https://nebius.com/prices, read 2026-10-27
