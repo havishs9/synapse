@@ -154,3 +154,28 @@ The mapping's source and lookup rules must be copied into `dataset_manifest.json
 2. **Nano access type.** Spec 04 lists `NVIDIA-Nemotron-3-Nano-30B-A3B` as Dedicated-only and `Nemotron-3-Nano-30B-A3B` as Public. The public API has only one Nano: ID `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`, display name "Nemotron-3-Nano-30B-A3B", serverless per-token pricing, and it served our calls. It is used as rung K primary.
 3. `.env.example` has no defaults or comments, unlike spec 02 §2. Not a Phase 0 item; flagged only.
 4. Spec 02 requires Python 3.11+, but the machine only had 3.9.6. Python 3.12.16 was installed via Homebrew; the project venv is `.venv/` (gitignored).
+
+## Decisions taken at the start of Phase 1 (user, 2026-10-27)
+
+- **HDFS license: approved** for the logs showcase task. Obligations: link https://github.com/logpai/loghub, cite Zhu et al. (ISSRE 2023) and Xu et al. (SOSP 2009) in the README and report card, never commit raw logs.
+- **Recipient (vendor) name: excluded** as a feature. Procurement specialists use description text and NAICS only; candidate J uses learned keyword rules, not vendor lookups.
+- **spec/03 missing sections:** built from what files 00, 01, 02 and 05 say. Assumptions are listed under "Assumptions for missing spec/03 sections" below as they are made.
+- **Serverless endpoint:** the user will log in to the nebius CLI when asked in Phase 2.
+
+## Assumptions for missing spec/03 sections
+
+## Reasoning control (tested at the start of Phase 1)
+
+Prompt: "Category for 'box of printer paper'? Answer with one word.", `max_tokens=512`.
+
+| Model | Default | `reasoning_effort=low` | `extra_body={"chat_template_kwargs":{"enable_thinking":false}}` |
+|---|---|---|---|
+| Nano | 85 completion tokens, 2,147 ms | 67 tokens | **3 tokens, 496 ms** |
+| Lightning | 512 tokens (hit the cap), **thinking text leaked into `content`** | 512 tokens, same leak | **3 tokens, 225 ms** |
+| Ultra | 18 tokens (reasoning returned separately in `reasoning_content`) | 18 tokens | **3 tokens, 427 ms** |
+
+Decision: classification calls (rungs K/L, the Ultra baseline, bulk labeling) send `enable_thinking: false` (`no_thinking_extra_body` in `config/models.yaml`). Planner, error analysis and chat keep reasoning on.
+- **Procurement target (demo default).** The first task card used a placeholder target of macro-F1 0.70, chosen before any run. Phase 1 run `phase1-procurement` showed Nemotron Ultra zero-shot at 0.401 (150 validation records) and 0.456 (298 sealed records), and the best specialist at 0.619 on validation. The demo default is now **0.60**, still well above the frontier model. It's disclosed here because it was set after seeing results. In the product, the user sets the target at intake.
+- **Validation sample for LLM rungs.** K, L and the Ultra baseline are scored on a stratified 150-record validation sample (the same rows for every LLM config); CPU candidates use all of validation. Scores on different samples are labeled with their n.
+- **Ultra baseline sizes.** The baseline runs on a stratified sample of 300 sealed records (≈298 after rounding); for the binary logs task every sealed anomaly is kept so recall is measurable. The specialist is also scored on exactly those rows, and teacher agreement is measured there.
+- **Cost per 1M predictions.** CPU candidates: Serverless hourly cost (cpu-d3 2vcpu-8gb, derived from published component rates) × time for 1M items at the measured single-thread throughput. LLM candidates: measured mean prompt/completion tokens × list price. Latency and throughput are measured with caches bypassed.

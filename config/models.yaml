@@ -38,3 +38,10 @@ roles:
     rate_limit: {requests_per_minute: 10000, tokens_per_minute: 600000}
   local_embeddings:                     # candidate C and offline I (runs in our process, not Token Factory)
     model: sentence-transformers MiniLM-class model   # exact checkpoint chosen in Phase 1
+
+# Request body that turns hidden reasoning off (VERIFIED 2026-10-27 on Ultra, Nano and Lightning:
+# a one-word answer drops from 18-512 completion tokens to 3). Without it, Lightning writes its
+# "thinking process" into the visible content. Used for classification calls (rungs K/L, baseline, labeling).
+no_thinking_extra_body:
+  chat_template_kwargs:
+    enable_thinking: false

@@ -8,7 +8,7 @@ datasets:
     license_source: https://github.com/fedspendingtransparency/usaspending-website/blob/master/src/js/components/about/Licensing.jsx
     citation: "USAspending.gov, U.S. Department of Treasury, Bureau of the Fiscal Service, https://www.usaspending.gov. Accessed 27 October 2026."
     license_ok: true
-    notes: "Avoid D&B-derived recipient identifiers (DUNS). Recipient name use is pending human review."
+    notes: "Recipient name and other D&B-derived fields are excluded as features (team decision 2026-10-27)."
   psc_manual:
     task: procurement_categorization
     source: https://www.acquisition.gov/sites/default/files/manual/PSC%20April%202025.xlsx
@@ -23,7 +23,7 @@ datasets:
     citation:
       - "Jieming Zhu, Shilin He, Pinjia He, Jinyang Liu, Michael R. Lyu. Loghub: A Large Collection of System Log Datasets for AI-driven Log Analytics. ISSRE 2023."
       - "Wei Xu, Ling Huang, Armando Fox, David Patterson, Michael Jordan. Detecting Large-Scale System Problems by Mining Console Logs. SOSP 2009."
-    license_ok: needs_human_review   # is a hackathon demo "research or academic work"?
+    license_ok: true   # approved by the team 2026-10-27 for the hackathon demo; cite both papers
     notes: "Do not redistribute the raw logs in the repo; download via make demo-data."
   banking77:
     task: support_ticket_routing

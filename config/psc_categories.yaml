@@ -22,6 +22,55 @@ categories:
 - Transportation and Logistics Services
 - Travel & Lodging
 - Weapons & Ammunition
+category_definitions:
+  IT: 'Includes: Capability As a Service; IT Consulting; IT Professional Service (Labor);
+    Product'
+  Medical: 'Includes: Drugs and Pharmaceutical Products; Healthcare Services; Medical
+    Equipment and Accessories and Supplies'
+  Aircraft, Ships/Submarines & Land Vehicles: 'Includes: Aircraft; Land Combat Vehicles;
+    Ships & Submarines'
+  Weapons & Ammunition: 'Includes: Ammunition & Explosives; Fire Control; Guided Missiles;
+    Guns; Nuclear Ordnance; Weapons'
+  Electronic & Communication Equipment: 'Includes: Communication Equipment; Detection
+    & Coherent Radiation Eq; Electrical & Electronics Equipment; Night Vision Eq'
+  Sustainment S&E: 'Includes: Drones; Engines, Components & Spt Eq; Materials; Supply
+    Parts; Support Ships & Small Craft; Training Aids and Devices'
+  Clothing, Textiles & Subsistence S&E: 'Includes: Subsistence; Textiles, Clothing
+    & Equipage'
+  Miscellaneous S&E: 'Includes: S&E Not Classifed Elsewhere'
+  Equipment Related Services: 'Includes: Equipment Modification; Installation of Equipment;
+    Maintenance, Repair and Overhaul; Purchases & Leases; Quality Control; Salvage
+    Services; Technical Representative Services'
+  Electronic & Communication Services: 'Includes: Equipment Leases; Equipment Maintenance'
+  Professional Services: 'Includes: Business Administration Services; Business administration
+    services; Financial Services; Financial services; Legal Services; Legal services;
+    Management Advisory Services; Marketing and Distribution; Public Relations and
+    Professional Communications Services; Real Estate Services; Social Services; Technical
+    and Engineering Services (non-IT); Trade Policy and Services'
+  Security and Protection: 'Includes: Security Animals & Related Svcs; Security Services;
+    Security Systems'
+  Facilities & Construction: 'Includes: Construction Related Materials; Construction
+    Related Services; Facilities Purchase & Lease; Facility Related Materials; Facility
+    Related Services'
+  Industrial Products & Services: 'Includes: Basic Materials; Fire/Rescue/Safety/Environmental
+    Protection Equipment; Hardware & Tools; Industrial Products Install / Maintenance
+    / Repair; Machinery & Components; Oils, Lubricants, and Waxes; Test & Measurement
+    Supplies'
+  Office Management: 'Includes: Furniture; Office Management Products; Office Management
+    Services'
+  Transportation and Logistics Services: 'Includes: Fuels; Logistics Support Services;
+    Motor Vehicles; Package Delivery & Packaging; Transportation Equipment; Transportation
+    of Things'
+  Travel & Lodging: 'Includes: Lodging; Passenger Travel; Travel Agent & Misc Svcs'
+  Human Capital: 'Includes: Human Resources Services; Specialized educational services;
+    Vocational Training'
+  Research and Development: 'Includes: Agriculture R&D Services; Community And Regional
+    Development R&D Services; C – National Defense R&D Services; Education, Training,
+    Employment, And Social Services R&D Services; Energy R&D Services; Natural Resources
+    And Environment R&D Services; General Science And Technology R&D Services; Commerce
+    And Housing Credit R&D Services; Income Security R&D Services; International Affairs
+    R&D Services; N – Health R&D Services; Space R&D Services; Transportation R&D
+    Services'
 unmapped_psc_codes:
 - '1810'
 - '1820'

@@ -43,9 +43,20 @@ prefix2 = {**majority_by_prefix(2), **{k: v["category"] for k, v in LEGACY_PREFI
 all_codes = set(df.loc[df["PSC CODE"].str.len() == 4, "PSC CODE"])
 unmapped = sorted(c for c in all_codes - set(mapping) if c[:3] not in prefix3 and c[:2] not in prefix2)
 
+# Definitions: the Level 2 category names under each Level 1 category, straight from the workbook.
+level2 = (df.dropna(subset=["Level 1 Category Code", "Level 2 Category"])
+            .groupby("Level 1 Category Code")["Level 2 Category"].agg(lambda s: sorted(set(s))).to_dict())
+definitions = {names[c]: "Includes: " + "; ".join(v) for c, v in sorted(level2.items())}
+# Categories without Level 2 entries (R&D) use the names of the active 2-character PSC groups they contain.
+groups = df[(df["PSC CODE"].str.len() == 2) & df["END DATE"].isna()].set_index("PSC CODE")["PRODUCT AND SERVICE CODE NAME"]
+for cat in sorted(set(mapping.values()) - set(definitions)):
+    members = sorted({code[:2] for code, c in mapping.items() if c == cat} & set(groups.index))
+    definitions[cat] = "Includes: " + "; ".join(groups[g].strip().title() for g in members)
+
 doc = {
     "source": {"name": "PSC Manual April 2025 (FY2025), Level 1 Category column", "url": SOURCE_URL},
     "categories": sorted(set(mapping.values())),
+    "category_definitions": definitions,
     "unmapped_psc_codes": unmapped,   # 4-char codes with no category even after prefix fallback
     "psc_to_category": mapping,
     "prefix3_to_category": prefix3,

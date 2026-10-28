@@ -226,3 +226,7 @@ runs/*
 !runs/verify/
 node_modules/
 .venv/
+/artifacts/*
+!/artifacts/demo/
+frontend/dist/
+*.tsbuildinfo

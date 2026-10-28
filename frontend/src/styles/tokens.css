@@ -1,0 +1,15 @@
+/* Design tokens (docs/DESIGN.md). Every color is a variable with light and dark values. */
+:root {
+  --bg: #F6F7F9; --surface: #FFFFFF; --surface-2: #EEF0F3; --border: #DADDE3;
+  --ink: #16181D; --ink-2: #4A4F5A; --ink-3: #6B7180;
+  --danger: #B42318; --ok: #067647; --focus: #2F6FDE;
+  --rung-1: #64748B; --rung-2: #0891B2; --rung-3: #D97706; --rung-h: #DB2777; --star: #16181D;
+  color-scheme: light;
+}
+[data-theme="dark"] {
+  --bg: #1C1D21; --surface: #232429; --surface-2: #2A2B31; --border: #383A41;
+  --ink: #E8E9EC; --ink-2: #A9ADB6; --ink-3: #8A8F99;
+  --danger: #F97066; --ok: #47CD89; --focus: #7AA5F0;
+  --rung-1: #94A3B8; --rung-2: #22D3EE; --rung-3: #FBBF24; --rung-h: #F472B6; --star: #E8E9EC;
+  color-scheme: dark;
+}
