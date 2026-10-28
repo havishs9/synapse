@@ -11,8 +11,8 @@ No secret values are recorded here or in `runs/verify/`.
 | 1 | Exact API model IDs; tool calling + JSON output | **PASS** (all 5 models; 13/13 test calls passed) |
 | 2 | Sandboxes: whoami, base image, one timed training run | **FAIL: no permissions on our account.** Fallback applied: `TRAINING_BACKEND=local` |
 | 3 | Prices for every model + Serverless CPU preset | **PASS** (`config/pricing.yaml`) |
-| 4 | Serverless: CPU hello-world endpoint with token auth | **BLOCKED**: CLI installed and logged in (session 2), but the Nebius AI Cloud tenant is suspended: `endpoint create --dry-run` → PermissionDenied (see section 4) |
-| 5 | Object Storage reachable from the endpoint | **BLOCKED**: depends on 4; no bucket or credentials in `.env` yet |
+| 4 | Serverless: CPU endpoint, reachable URL | **PASS** (session 2): `synapse` endpoint on cpu-d3 / 2vcpu-8gb, public HTTPS URL, Nebius auth off, per-specialist keys enforced by our server (section 4) |
+| 5 | Object Storage reachable from the endpoint | **NOT USED**: fallback applied: the endpoint downloads the public repo (with `artifacts/demo/`) at startup. `--volume s3://…` exists if we switch later (needs endpoint recreation, new URL) |
 | 6 | USAspending download path; 20k–50k rows; draft `psc_categories.yaml` | **PASS** (42,000 awards, 100% mapped to 19 categories) |
 | 7 | HDFS download, label files, license terms; Banking77 | **PASS** (downloaded and checked); HDFS license **needs human approval** |
 | 8 | Public repo, MIT license, README stub | **PASS** |
@@ -88,7 +88,35 @@ Object Storage Standard: $0.0147 per GiB-month, $0.015 per GiB egress ([nebius.c
 
 Fine-tuning and dedicated endpoints: not priced (G is STRETCH and off).
 
-## 4. Serverless endpoint: BLOCKED
+## 4. Serverless endpoint: PASS (session 2, 2026-10-28)
+
+After billing was activated (tenant `suspension_state` NONE), `DRY_RUN=1 make deploy` passed and `make deploy` created endpoint `aiendpoint-e04txwn4spe6v76nes` (`synapse`): image `python:3.12-slim` + injected `bootstrap.sh`, cpu-d3 / 2vcpu-8gb, 40 GiB network SSD, `--auth none`, region eu-west2.
+
+- URL: https://port8000-b3arav7mmzek3n6.tunnel.applications.eu-west2.nebius.cloud (managed HTTPS; `status.public_endpoints`). `/health` answered 62 s after create returned: `{"ok": true, "specialists": 2}`.
+- Reachable without Nebius auth, as designed (our server enforces per-specialist keys).
+- Checks from a laptop against the live URL (keys created via the app's key route; never printed):
+
+| Check | Result |
+|---|---|
+| Procurement live route, own key | 200, v1, "Facilities & Construction" 0.96 |
+| Procurement pinned `/v1/predict`, own key | 200, "IT" 0.99 |
+| Procurement route with the logs specialist's key | 403 |
+| Logs route with the procurement key | 403 |
+| Logs route, no key | 401 |
+| Logs route, a purchase record (wrong format) | 422 |
+| Logs `/versions`, own key | 200 |
+| Old procurement key after regenerating | 403; new key 200 |
+| Admin route without token | 404 (admin router is not mounted in the main app) |
+| Logs window, true anomaly / true normal (validation rows) | anomaly 1.0 / normal 0.001, feature-based reasons |
+| Procurement record the cascade escalates (holdback row) | 200 "IT" 0.92, answered by Nemotron Nano from inside the endpoint, 2,284 ms round trip |
+| Round trip from the laptop, non-escalated record, 20 calls | p50 120 ms, max 204 ms (network included; the model's own p50 is in the report card) |
+
+- **Autoscaling: not available in the CLI/spec.** `nebius ai endpoint get` shows one instance (`instances[0].state RUNNING`) and no replica or scaling fields. Treat it as a single fixed instance.
+- Cost while running: cpu-d3 2vcpu-8gb + 40 GiB = $0.0699/hour by the component rates in `config/pricing.yaml` (derived, not a listed price). `nebius ai endpoint stop aiendpoint-e04txwn4spe6v76nes` stops billing; the URL survives stop/start and restart, but not delete.
+- Keys and any new versions live on the instance's disk: a restart reloads `artifacts/demo` from GitHub and clears keys.
+- No web UI yet: `/` returns 404 because `bootstrap.sh` doesn't build the frontend (Phase 3).
+
+### Session 2 blocked attempt (before billing was activated)
 
 **Session 2 (2026-10-28):** `nebius` CLI 0.12.296 is installed and logged in (profile `RajHavishHacks`, project `default-project-eu-west2`, region eu-west2). `nebius ai endpoint list` works (no endpoints). `DRY_RUN=1 ./deploy/serverless/deploy.sh` (cpu-d3, 2vcpu-8gb, 40 GiB) fails with `PermissionDenied: you do not have permission to access the requested object` (trace IDs 2f28e87b90b3119989b99b0bc5a0881f, 19bfb1b98296eff4cf0500505c83635e). `nebius iam tenant list` reports the tenant `orange-chinchilla-tenant-s5f` with `suspension_state: SUSPENDED` (`iam v2 tenant get` shows `tenant_state: ACTIVE`). Needs a human to activate billing in the console. Whether cpu-d3 is offered in eu-west2 is still unverified.
 
