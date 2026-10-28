@@ -126,19 +126,29 @@ embedding responses) makes specialist predictions that hit embeddings or Nano fr
 | `APP_MODE`, `TRAINING_BACKEND=local` | | defaults are fine; `make replay` sets replay itself |
 | `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | Vercel and login (later) | endpoint URL; Supabase values from Raj (public, safe for the browser) |
 
-## 5. Inputs needed before Claude can do each part
+## 5. Inputs and status (decisions by Raj, 2026-10-28)
 
 **Raj's track**
 
-| # | What | Who | Blocks |
-|---|---|---|---|
-| R-a | Supabase project: project URL, anon key, service-role key, JWT secret (or JWKS URL), Postgres connection string (pooler) in `.env` | Raj (supabase.com) | step 1 |
-| R-b | Login methods: email magic link (default) and/or Google (needs a Google OAuth client ID and secret set in the Supabase dashboard). Who can sign up during the hackathon: open, or invite-only to protect credits (recommended) | Raj, decision | step 1 |
-| R-c | Nebius Object Storage: bucket name, access key ID + secret (service-account static key), endpoint URL. Or approve Claude creating them with the CLI | Raj (console) | step 2 |
-| R-d | Nebius service account that can create AI Jobs (and its authorized key), plus a Container Registry. Or approve Claude creating them | Raj | steps 3-4 |
-| R-e | Approval for billed resources: one AI Job per build, registry storage, bucket storage | Raj | steps 2-4 |
-| R-f | Limits: concurrent builds (default 2 overall, 1 per user), per-user build budget (default $5, like `CREDIT_BUDGET_USD`), daily demo budget | Raj, decision | step 3, 5 |
-| R-g | `TAVILY_API_KEY` (and optional `HF_TOKEN`) | Raj | step 6 |
+| # | What | Status |
+|---|---|---|
+| R-a | Supabase project: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_DB_URL` in `.env` | **To do (Raj)**: create the project at supabase.com, region close to eu-west2 (e.g. London) |
+| R-b | Login: **Google sign-in, open sign-up** | Decided. **To do (Raj)**: set up Google OAuth (steps below) |
+| R-c | Object Storage bucket | **Done**: `synapse-artifacts-e04crhvwbc` (eu-west2, 50 GiB cap, endpoint `https://storage.eu-west2.nebius.cloud`) |
+| R-d | Container Registry | **Done**: `registry-e04cjwm2bdv5k5b8hc` (`cr.eu-west2.nebius.cloud/e04cjwm2bdv5k5b8hc`; push/pull path VERIFY on first push) |
+| R-d2 | Service account `synapse-backend` (editors group), its S3 access key and authorized key | **To do (Raj)**: Claude's CLI call was blocked by the permission check (it grants tenant-wide edit rights). Review and run `bash scripts/setup_service_account.sh`: it writes the S3 keys into `.env` and the credentials file to `~/.config/synapse/` without printing them; keys expire after 60 days |
+| R-e | Billed resources (AI Jobs, registry, bucket) | Approved |
+| R-f | Limits and budgets | Decided: §6 and `.env.example` |
+| R-g | `TAVILY_API_KEY` | In `.env` (Raj) |
+
+**Google sign-in setup (Raj, ~10 min, browser):**
+1. Google Cloud console → APIs & Services → OAuth consent screen: External, app name "Synapse", your email;
+   publish it (In production), or every user must be added as a test user.
+2. Credentials → Create credentials → OAuth client ID → Web application. Authorized redirect URI:
+   `https://<project-ref>.supabase.co/auth/v1/callback`.
+3. Supabase → Authentication → Providers → Google: paste the client ID and secret, enable.
+4. Supabase → Authentication → URL Configuration: Site URL = the Vercel URL (Havish); add redirect URLs
+   `http://localhost:5173/**`, `http://127.0.0.1:8000/**` and the Vercel URL.
 
 **Havish's track**
 
@@ -146,17 +156,40 @@ embedding responses) makes specialist predictions that hit embeddings or Nano fr
 |---|---|---|---|
 | H-a | `.env` with a Token Factory key (see §4) | Havish / Raj | live predictions, compare, chat |
 | H-b | Vercel account linked to the GitHub repo | Havish | hosting |
-| H-c | Supabase project URL and anon key | from Raj (after R-a) | login screens only |
+| H-c | `frontend/.env.local` (template `frontend/.env.example`): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` | from Raj after R-a | login screens only |
 | H-d | `CORS_ORIGINS` with the Vercel URL set on the endpoint | Raj redeploys | public URL calling the API |
 | H-e | Exact example record for compare mode in the video (`TEAM_INPUTS.md`) | Havish, decision | video |
 | H-f | YouTube channel for the public video | Havish | submission |
 
-**Team, for `TEAM_INPUTS.md`:** current Token Factory credit balance, the budget per run for the final demo
-recordings, and the Tavily credits available.
+## 6. Budgets (credits: Token Factory $25, Nebius AI Cloud $25, Tavily $25)
 
-## 6. Running costs to keep in mind
+Budgets are enforced by the backend (Raj, step 5) from the `.env` values in `.env.example`. With open sign-up
+the hard totals matter most: when one is reached, live builds and chat pause and replay keeps working.
 
-- Nebius endpoint: ~$0.07/h while running (`docs/VERIFICATION.md` §4). Stop it when not needed:
-  `~/.nebius/bin/nebius ai endpoint stop aiendpoint-e04txwn4spe6v76nes`. Restarts clear API keys until
-  Raj's step 1 lands.
-- Builds: Phase 2b runs cost $0.07 to $0.31 of Token Factory credits each.
+**Token Factory ($25).** Measured: Phase 2b builds cost $0.07 to $0.31 each (`docs/VERIFICATION.md`).
+
+| Use | Limit | Variable |
+|---|---|---|
+| Kept for the final demo recordings and rehearsals | $8 (outside the app's total) | |
+| Hard total for everything live (builds, chat, compare, escalations) | $17 | `TOKEN_FACTORY_TOTAL_BUDGET_USD` |
+| One build | $1.00 | `CREDIT_BUDGET_USD` |
+| One user's builds per day | $1.00, at most 3 builds | `USER_DAILY_BUILD_BUDGET_USD`, `MAX_BUILDS_PER_USER_PER_DAY` |
+| All users' builds per day | $3.00 | `GLOBAL_DAILY_BUILD_BUDGET_USD` |
+| Public chat, compare, cascade escalations per day | $1.00 | `DEMO_DAILY_BUDGET_USD` |
+| Builds running at once | 2 overall, 1 per user (rate limit is shared) | `MAX_CONCURRENT_BUILDS`, `MAX_CONCURRENT_BUILDS_PER_USER` |
+
+**Nebius AI Cloud ($25).** Rates from `config/pricing.yaml` (`docs/VERIFICATION.md` §3): endpoint 2 vCPU / 8 GB
+$0.0699/h; a 4 vCPU / 16 GB worker $0.1359/h.
+
+| Use | Budget | What it buys |
+|---|---|---|
+| API endpoint | $12 | ~170 hours: **not** 24/7 for the whole hackathon (24/7 is ~$1.68/day). Stop it between work sessions; run it continuously only during judging |
+| Build workers (AI Jobs, 4 vCPU / 16 GB) | $6, enforced (`WORKER_TOTAL_BUDGET_USD`) | ~44 worker-hours; a build is estimated at 20 to 60 min on 4 vCPUs (VERIFY on the first worker run) |
+| Object Storage and registry | < $1 | 50 GiB cap at $0.0147/GiB-month; images a few GB |
+| Reserve | $6 | |
+
+Spend so far: the endpoint has been running since its creation on 2026-10-28; check the balance in the console.
+
+**Tavily ($25).** At most 5 searches per build and 100 per day for all users (`TAVILY_MAX_SEARCHES_PER_BUILD`,
+`TAVILY_DAILY_SEARCH_LIMIT`). Price per search: VERIFY on Tavily's pricing page when Raj's step 6 starts. The demo never
+depends on live search results (spec file 03 §1.2).

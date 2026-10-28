@@ -197,6 +197,17 @@ Findings while building this:
 - **Live endpoint after restart (2026-10-28).** `/health` reported 3 specialists ~10 min after `nebius ai endpoint restart` (dependency install at startup). Live routes: support "I am still waiting on my card?" → card_arrival, answered_by A-11 (13.7 ms server-side); "Is there any way to see where my new card is in the delivery process?" → card_arrival, answered_by B-02 (242 ms, one Qwen3 embedding call); procurement v2 "SUPPORT SERVICES FOR THE PROGRAM OFFICE" → answered_by K-11 (306 ms). Support key on the procurement route: 403; no key: 401. Round trips from the laptop 0.45 to 0.79 s. Keys created for these checks exist only as hashes; regenerate in the app.
 - **Banking77 split.** The source's train and test files are merged, deduplicated (60 duplicates) and resplit like the other tasks: 2,474 sealed, 2,475 validation; training oversampled to 150 per intent.
 
+## Phase 3 resources (2026-10-28)
+
+| Resource | Result |
+|---|---|
+| Object Storage bucket | Created with the CLI: `synapse-artifacts-e04crhvwbc` (`storagebucket-e048651816618565103364`), project `project-e04crhvwbc00syvb9v6f5s`, versioning off, 50 GiB cap. S3 endpoint `https://storage.eu-west2.nebius.cloud` (docs give the template `https://storage.<region_ID>.nebius.cloud`; VERIFY with the first upload) |
+| Container Registry | Created with the CLI: `registry-e04cjwm2bdv5k5b8hc`, state ACTIVE, FQDN `cr.eu-west2.nebius.cloud` |
+| Service account | Not created: Claude's CLI call (create `synapse-backend` + add to the tenant `editors` group) was blocked by its permission check because it grants tenant-wide edit rights. `scripts/setup_service_account.sh` is for a human to review and run. Docs: Object Storage access for a service account requires the `editors` group (https://docs.nebius.com/object-storage/interfaces/aws-cli) |
+| S3 access keys | `nebius iam v2 access-key create`; the ID and secret are read from `.status.aws_access_key_id` / `.status.secret` of `access-key get` (same docs page). `iam static-key issue` only covers CONTAINER_REGISTRY and OBSERVABILITY |
+| AI Jobs | `nebius ai job create` exists with `--image`, `--inject-file`, `--env`/`--env-secret`, `--volume`, `--preemptible`, `--timeout` (1 h to 168 h, default 24 h), `--restart-policy` (default never). Pricing and start time: VERIFY on the first worker run |
+| Nebius frontend hosting | None: the CLI's services are ai, applications, compute, dns, iam, kms, logging, mk8s, msp, mysterybox, registry, storage, vpc and others; no static-site hosting. Frontend goes to Vercel |
+
 ## Spec conflicts and issues found
 
 1. **`spec/03_ML_PIPELINE.md` is corrupted and incomplete.** Line 59 contains a stray shell heredoc (`EOFcat > spec/03_ML_PIPELINE.md << 'EOF'`), the content is duplicated after it, and the file ends after the candidate ladder. The planner rules, search schedule, sandbox, repair, cascade and evaluation-rule sections that `00_START_HERE.md` promises are missing. These are needed before Phase 2.
