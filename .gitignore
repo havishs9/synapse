@@ -221,7 +221,8 @@ __marimo__/
 
 # Project
 .env
-data/
-runs/
+/data/
+runs/*
+!runs/verify/
 node_modules/
 .venv/

@@ -1,0 +1,40 @@
+# Model roles. api_id values VERIFIED 2026-10-27 via GET /v1/models on Token Factory,
+# and each chat model passed a plain, tool-calling and json_schema test call
+# (raw results: runs/verify/models_list_verbose.json, runs/verify/model_tests.json).
+# Base URL comes from NEBIUS_BASE_URL in .env, not from this file.
+roles:
+  main_chat_planner_teacher_baseline:   # planner, clarifying questions, synthetic data, error analysis, baseline, top of cascade
+    display_name: Nemotron-3-Ultra-550b-a55b
+    api_id: nvidia/Nemotron-3-Ultra-550b-a55b
+    context_length: 1048576
+    supports: [tools, json_schema, reasoning]
+    rate_limit: {requests_per_minute: 1000, tokens_per_minute: 2000000}
+  ladder_K_primary:                     # prompted rung K, bulk labeling
+    display_name: Nemotron-3-Nano-30B-A3B
+    api_id: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
+    context_length: 262144
+    supports: [tools, json_schema, reasoning]
+    rate_limit: {requests_per_minute: 100, tokens_per_minute: 800000}   # low RPM: matters for bulk labeling
+  ladder_K_alternative:                 # test against Nano; keep the cheaper/faster one
+    display_name: Nemotron-3.5-Lightning
+    api_id: nvidia/Nemotron-3_5-Lightning
+    context_length: 1048576
+    supports: [tools, json_schema, reasoning]
+    rate_limit: {requests_per_minute: 1000, tokens_per_minute: 2000000}
+  ladder_L:                             # prompted rung L
+    display_name: Nemotron-3-Super-120b-a12b
+    api_id: nvidia/nemotron-3-super-120b-a12b
+    context_length: 262144
+    supports: [tools, json_schema, reasoning]
+    rate_limit: {requests_per_minute: 1000, tokens_per_minute: 1000000}
+  trainer_error_fixer:                  # reads crash logs, proposes patches
+    display_name: Nemotron-3-Nano-30B-A3B
+    api_id: nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B
+  embeddings:                           # candidates B and cloud I
+    display_name: Qwen3-Embedding-8B
+    api_id: Qwen/Qwen3-Embedding-8B
+    context_length: 40960
+    dimensions: 4096
+    rate_limit: {requests_per_minute: 10000, tokens_per_minute: 600000}
+  local_embeddings:                     # candidate C and offline I (runs in our process, not Token Factory)
+    model: sentence-transformers MiniLM-class model   # exact checkpoint chosen in Phase 1

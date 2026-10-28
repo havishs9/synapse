@@ -1,0 +1,34 @@
+# Vetted dataset registry. License text read 2026-10-27; see docs/VERIFICATION.md.
+# license_ok is a machine pre-check; a human must still approve each dataset (TEAM_INPUTS.md "Data").
+datasets:
+  usaspending_contracts:
+    task: procurement_categorization
+    source: https://api.usaspending.gov/api/v2/search/spending_by_award/
+    license: "USAspending.gov data: free to copy, adapt, redistribute, commercial or non-commercial, subject to the Limitation on Permissible Use of Dun & Bradstreet data"
+    license_source: https://github.com/fedspendingtransparency/usaspending-website/blob/master/src/js/components/about/Licensing.jsx
+    citation: "USAspending.gov, U.S. Department of Treasury, Bureau of the Fiscal Service, https://www.usaspending.gov. Accessed 27 October 2026."
+    license_ok: true
+    notes: "Avoid D&B-derived recipient identifiers (DUNS). Recipient name use is pending human review."
+  psc_manual:
+    task: procurement_categorization
+    source: https://www.acquisition.gov/sites/default/files/manual/PSC%20April%202025.xlsx
+    license: "U.S. federal government work (acquisition.gov)"
+    license_ok: true
+  loghub_hdfs_v1:
+    task: log_anomaly_detection
+    source: https://zenodo.org/records/8196385/files/HDFS_v1.zip
+    homepage: https://github.com/logpai/loghub
+    license: "Loghub license: freely available for research or academic work; must reference the loghub repo URL and cite the Loghub paper; license notice must be included in all copies"
+    license_source: https://github.com/logpai/loghub/blob/master/LICENSE
+    citation:
+      - "Jieming Zhu, Shilin He, Pinjia He, Jinyang Liu, Michael R. Lyu. Loghub: A Large Collection of System Log Datasets for AI-driven Log Analytics. ISSRE 2023."
+      - "Wei Xu, Ling Huang, Armando Fox, David Patterson, Michael Jordan. Detecting Large-Scale System Problems by Mining Console Logs. SOSP 2009."
+    license_ok: needs_human_review   # is a hackathon demo "research or academic work"?
+    notes: "Do not redistribute the raw logs in the repo; download via make demo-data."
+  banking77:
+    task: support_ticket_routing
+    source: https://raw.githubusercontent.com/PolyAI-LDN/task-specific-datasets/master/banking_data/
+    homepage: https://huggingface.co/datasets/PolyAI/banking77
+    license: CC-BY-4.0
+    citation: "Casanueva et al. Efficient Intent Detection with Dual Sentence Encoders. 2020. https://arxiv.org/abs/2003.04807"
+    license_ok: true

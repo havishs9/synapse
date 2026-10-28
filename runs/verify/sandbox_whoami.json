@@ -1,0 +1,22 @@
+{
+  "token_expiration": 1793146435,
+  "permissions": {
+    "import": false,
+    "spawn": false,
+    "spawn_disposable": false,
+    "list": false,
+    "cancel": false,
+    "set_image_tag": false
+  },
+  "limits": {
+    "instance_max_timeout": 3600,
+    "instance_max_concurrency": 50,
+    "instance_max_layer_bytes": 12884901888,
+    "images_import_max_concurrency": 8,
+    "images_import_max_timeout": 3600
+  },
+  "operations_stat": {
+    "running_instances": 0,
+    "running_imports": 0
+  }
+}

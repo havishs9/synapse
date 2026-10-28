@@ -1,0 +1,167 @@
+[
+  {
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "test": "plain",
+    "latency_ms": 1008,
+    "finish_reason": "stop",
+    "prompt_tokens": 21,
+    "completion_tokens": 31,
+    "cost_usd": 0.00011399999999999999,
+    "content": "ok",
+    "ok": true
+  },
+  {
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "test": "tools",
+    "latency_ms": 518,
+    "finish_reason": "tool_calls",
+    "prompt_tokens": 351,
+    "completion_tokens": 111,
+    "cost_usd": 0.0006839999999999999,
+    "content": "",
+    "tool_calls": [
+      {
+        "name": "set_category",
+        "arguments": "{\"category\": \"IT equipment\"}"
+      }
+    ],
+    "ok": true
+  },
+  {
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "test": "json_schema",
+    "latency_ms": 866,
+    "finish_reason": "stop",
+    "prompt_tokens": 62,
+    "completion_tokens": 253,
+    "cost_usd": 0.000821,
+    "content": "{\n  \"category\": \"IT equipment\",\n  \"confidence\": 0.99\n}",
+    "ok": true
+  },
+  {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "test": "plain",
+    "latency_ms": 795,
+    "finish_reason": "stop",
+    "prompt_tokens": 21,
+    "completion_tokens": 44,
+    "cost_usd": 4.59e-05,
+    "content": "\n\nok",
+    "ok": true
+  },
+  {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "test": "tools",
+    "latency_ms": 1557,
+    "finish_reason": "tool_calls",
+    "prompt_tokens": 399,
+    "completion_tokens": 40,
+    "cost_usd": 0.0001557,
+    "content": "",
+    "tool_calls": [
+      {
+        "name": "set_category",
+        "arguments": "{\"category\": \"IT equipment\"}"
+      }
+    ],
+    "ok": true
+  },
+  {
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "test": "json_schema",
+    "latency_ms": 1981,
+    "finish_reason": "stop",
+    "prompt_tokens": 62,
+    "completion_tokens": 86,
+    "cost_usd": 9.6e-05,
+    "content": "{\"category\": \"IT equipment\", \"confidence\": 0.97}",
+    "ok": true
+  },
+  {
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "test": "plain",
+    "latency_ms": 566,
+    "finish_reason": "stop",
+    "prompt_tokens": 21,
+    "completion_tokens": 81,
+    "cost_usd": 2.0699999999999995e-05,
+    "content": "\nok",
+    "ok": true
+  },
+  {
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "test": "tools",
+    "latency_ms": 1444,
+    "finish_reason": "tool_calls",
+    "prompt_tokens": 316,
+    "completion_tokens": 243,
+    "cost_usd": 7.727999999999999e-05,
+    "content": "",
+    "tool_calls": [
+      {
+        "name": "set_category",
+        "arguments": "{\"category\": \"IT equipment\"}"
+      }
+    ],
+    "ok": true
+  },
+  {
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "test": "json_schema",
+    "latency_ms": 889,
+    "finish_reason": "stop",
+    "prompt_tokens": 62,
+    "completion_tokens": 126,
+    "cost_usd": 3.396e-05,
+    "content": "{\n  \"category\": \"IT equipment\",\n  \"confidence\": 0.97\n}",
+    "ok": true
+  },
+  {
+    "model": "nvidia/Nemotron-3_5-Lightning",
+    "test": "plain",
+    "latency_ms": 998,
+    "finish_reason": "stop",
+    "prompt_tokens": 21,
+    "completion_tokens": 196,
+    "cost_usd": 4.8299999999999995e-05,
+    "content": "ok",
+    "ok": true
+  },
+  {
+    "model": "nvidia/Nemotron-3_5-Lightning",
+    "test": "tools",
+    "latency_ms": 350,
+    "finish_reason": "tool_calls",
+    "prompt_tokens": 445,
+    "completion_tokens": 26,
+    "cost_usd": 3.294e-05,
+    "content": "",
+    "tool_calls": [
+      {
+        "name": "set_category",
+        "arguments": "{\"category\":\"IT equipment\"}"
+      }
+    ],
+    "ok": true
+  },
+  {
+    "model": "nvidia/Nemotron-3_5-Lightning",
+    "test": "json_schema",
+    "latency_ms": 1991,
+    "finish_reason": "stop",
+    "prompt_tokens": 62,
+    "completion_tokens": 471,
+    "cost_usd": 0.00011675999999999999,
+    "content": "{\"category\": \"IT equipment\", \"confidence\": 1.0}",
+    "ok": true
+  },
+  {
+    "model": "Qwen/Qwen3-Embedding-8B",
+    "test": "embeddings",
+    "ok": true,
+    "dim": 4096,
+    "latency_ms": 1917,
+    "prompt_tokens": 20,
+    "cost_usd": 2e-07
+  }
+]

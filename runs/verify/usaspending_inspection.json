@@ -1,0 +1,91 @@
+{
+  "rows": 42000,
+  "unique_awards": 42000,
+  "missing_psc": 0,
+  "unmapped_psc": 0,
+  "unmapped_examples": [],
+  "empty_description": 0,
+  "duplicate_descriptions": 4815,
+  "median_description_chars": 43,
+  "boilerplate_tokens": {
+    "<digits>!": 4245
+  },
+  "category_counts": [
+    [
+      "Facilities & Construction",
+      14342
+    ],
+    [
+      "Industrial Products & Services",
+      5930
+    ],
+    [
+      "IT",
+      3755
+    ],
+    [
+      "Transportation and Logistics Services",
+      2494
+    ],
+    [
+      "Sustainment S&E",
+      2478
+    ],
+    [
+      "Professional Services",
+      2457
+    ],
+    [
+      "Office Management",
+      1458
+    ],
+    [
+      "Electronic & Communication Equipment",
+      1290
+    ],
+    [
+      "Equipment Related Services",
+      1198
+    ],
+    [
+      "Clothing, Textiles & Subsistence S&E",
+      1148
+    ],
+    [
+      "Travel & Lodging",
+      973
+    ],
+    [
+      "Research and Development",
+      888
+    ],
+    [
+      "Medical",
+      879
+    ],
+    [
+      "Miscellaneous S&E",
+      760
+    ],
+    [
+      "Human Capital",
+      666
+    ],
+    [
+      "Security and Protection",
+      619
+    ],
+    [
+      "Weapons & Ammunition",
+      464
+    ],
+    [
+      "Electronic & Communication Services",
+      121
+    ],
+    [
+      "Aircraft, Ships/Submarines & Land Vehicles",
+      80
+    ]
+  ]
+}

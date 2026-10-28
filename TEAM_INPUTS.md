@@ -1,6 +1,6 @@
 # Team Inputs
 
-Claude Code: read this file together with SPEC.md. Values here override defaults in SPEC.md. Anything marked UNKNOWN must be checked during Phase 0 and recorded in docs/VERIFICATION.md.
+Claude Code: read this file together with the spec files in `spec/` (start with `spec/00_START_HERE.md`). The team decisions D1 to D7 in `spec/00_START_HERE.md` are final. This file adds facts only the team can provide. Anything marked UNKNOWN must be checked during Phase 0 and recorded in `docs/VERIFICATION.md`. Never put API keys in this file; keys live only in `.env`.
 
 ## Project
 - Project name: Synapse
@@ -8,42 +8,46 @@ Claude Code: read this file together with SPEC.md. Values here override defaults
 - License: MIT
 
 ## Team and ownership
-- Person A (backend, agents, pipeline):
-- Person B (frontend, deployment, demo video):
+- Person A (pipeline, Sandboxes, agents):
+- Person B (UI, compare mode, deployment, demo video):
 - Other members and roles:
 
 ## Credits and budget
 - Token Factory credits claimed (promo form + Builders Program): yes / no
 - Current Token Factory credit balance: $
 - CREDIT_BUDGET_USD per run during development: 5
-- CREDIT_BUDGET_USD per run for the final demo run:
+- CREDIT_BUDGET_USD per run for the final demo recordings:
 - Tavily credits available:
 
 ## Platform facts (fill in what you know, write UNKNOWN otherwise)
-- Nemotron model IDs visible in the Token Factory console:
-  - Largest (Ultra):
-  - Mid (Super):
-  - Small (Nano):
-- Embedding model available on Token Factory (ID): UNKNOWN
-- Token Factory Sandboxes available on our account: UNKNOWN
-- Sandbox limits (CPU, memory, max parallel): UNKNOWN
-- Rate limits on our account:
-- Answers received from Nebius Discord (paste them here with the date):
+- NEBIUS_PROJECT_ID set in .env: yes / no
+- API model IDs from the console or GET /v1/models:
+  - Nemotron-3-Ultra-550b-a55b: UNKNOWN
+  - Nemotron-3-Super-120b-a12b: UNKNOWN
+  - Nemotron-3-Nano-30B-A3B: UNKNOWN
+  - Nemotron-3.5-Lightning: UNKNOWN
+  - Qwen3-Embedding-8B: UNKNOWN
+- Sandboxes enabled on our account: UNKNOWN
+- Sandbox limits from whoami (timeout, CPU, memory): UNKNOWN
+- Serverless CPU endpoint created successfully: UNKNOWN
+- Object Storage bucket created: UNKNOWN
+- Rate limits on our account: UNKNOWN
+- Answers received from Nebius Discord (paste with date):
 
-## Decisions
-- Log dataset: HDFS (system log anomaly detection) / LANL (login and security story)
-- Second demo task: Banking77 support ticket routing
-- Third demo task (stretch): yes / no
-- Specialist hosting: Nebius Serverless Endpoints / Nebius AI Cloud CPU instance / served from main backend (fallback)
+## Decisions (defaults from spec/00_START_HERE.md; change only if the team agrees)
+- Main demo task: procurement categorization (USAspending)
+- Second showcase task: system log anomaly detection (LogHub HDFS)
+- Optional third task: Banking77 (yes / no)
+- Prompt-injection task (STRETCH): no
+- Specialist hosting: one shared specialist server on one Nebius Serverless CPU endpoint (fallback: main backend)
 - Public demo app hosting:
-- Demo story for compare mode (the exact example input we will show):
+- Exact example record for compare mode in the video:
 
 ## Data
-- Custom sample data provided: yes / no (if yes, file path: )
-- Dataset licenses approved by a human:
-  - HDFS: yes / no
-  - Banking77: yes / no
-  - Other:
+- Dataset licenses read and approved by a human:
+  - USAspending (data-use terms): yes / no
+  - LogHub HDFS: yes / no
+  - Banking77 (CC-BY-4.0): yes / no
 
 ## Notes for Claude Code
 - Anything else it should know:

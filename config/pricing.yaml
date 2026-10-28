@@ -1,0 +1,39 @@
+# Prices in USD. Every value lists its source and the date it was read.
+currency: USD
+
+token_factory:
+  # Source: GET /v1/models?verbose=true "pricing" field (USD per token), read 2026-10-27.
+  # Raw response: runs/verify/models_list_verbose.json. Converted here to USD per 1M tokens.
+  # The public prices page (tokenfactory.nebius.com/pricing) is JS-rendered and could not be read.
+  source: "GET https://api.tokenfactory.nebius.com/v1/models?verbose=true, 2026-10-27"
+  per_1m_tokens:
+    nvidia/Nemotron-3-Ultra-550b-a55b:     {input: 1.00, cached_input: 0.12, output: 3.00}
+    nvidia/nemotron-3-super-120b-a12b:     {input: 0.30, cached_input: 0.06, output: 0.90}
+    nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B: {input: 0.06, cached_input: 0.012, output: 0.24}
+    nvidia/Nemotron-3_5-Lightning:         {input: 0.06, cached_input: 0.03, output: 0.24}
+    Qwen/Qwen3-Embedding-8B:               {input: 0.01, output: 0.0}
+
+serverless_cpu:
+  # Serverless AI has no separate pricing; it bills Compute VM + disk rates
+  # (https://docs.nebius.com/serverless/pricing-quotas, read 2026-10-27).
+  # cpu-d3 = AMD EPYC 9654 Genoa (https://docs.nebius.com/compute/virtual-machines/types, read 2026-10-27).
+  # Rates: https://docs.nebius.com/compute/resources/pricing, "from Oct 1, 2026" column, read 2026-10-27.
+  # Stopped endpoints are not billed for compute or storage.
+  platform: cpu-d3
+  vcpu_hour: 0.015
+  ram_gib_hour: 0.0045
+  network_ssd_gib_month: 0.071        # per GiB per 730 hours
+  hours_per_month: 730
+  min_disk_gib: 20                    # Serverless CPU endpoints need >= 20 GiB disk (spec 04, CONFIRMED)
+  presets:                            # hourly compute = vcpus * vcpu_hour + ram_gib * ram_gib_hour (derived, not a listed price)
+    2vcpu-8gb:  {vcpus: 2, ram_gib: 8}
+    4vcpu-16gb: {vcpus: 4, ram_gib: 16}
+  chosen_preset: 2vcpu-8gb            # provisional; confirm when the endpoint is created
+
+object_storage:
+  # https://nebius.com/prices, read 2026-10-27
+  standard_gib_month: 0.0147
+  standard_egress_gib: 0.015
+
+fine_tuning: null                     # G (LoRA) is STRETCH and off; not priced
+dedicated_endpoints: null             # not used
