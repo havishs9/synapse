@@ -42,7 +42,7 @@ each run and never adjusted after seeing results.
 - [x] Rerun procurement and logs with the 3-step cascade (same targets as before); record splits and spend.
   - `p2b-procurement-d`: the Nemotron planner chose J, A, I, C, K this time (local embeddings only, no B); no embedding candidate reached the final round, so only TF-IDF → LLM chains were possible. Winner A-07 (validation 0.617), shipped H(A-07→K-11): TF-IDF answers 64.1%, Nano 35.9% on the sealed test; sealed macro-F1 0.647 on 3,368 records; deployed as v2 (beats v1's 0.635); Ultra 0.456 vs specialist 0.627 on the same 298 sealed rows; $25.88 per 1M predictions; spend $0.15.
   - `p2b-logs-d`: winner A-12 again (sealed recall@1%FPR 1.000 on 2,850 records, PR-AUC 0.9997); H(A-12→K-01) gains nothing at 1.000, so no cascade; v2 not deployed (doesn't beat the live v1's 1.000); v1 stays live; spend $0.07.
-- [~] Snapshot all three specialists, push, restart the endpoint so it serves three; update VERIFICATION.md and the "different winner" item with the measured winners.
+- [x] Snapshot all three specialists, push, restart the endpoint so it serves three; update VERIFICATION.md and the "different winner" item with the measured winners. — commit 11c70ba pushed; endpoint restarted 2026-10-28 (healthy with 3 specialists after ~10 min); live checks in VERIFICATION.md Phase 2b.
 
 ## Phase 3: product and demo
 
