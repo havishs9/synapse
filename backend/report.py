@@ -21,7 +21,10 @@ def build_report_card(run_dir: Path) -> dict:
     chosen = rep.get("chosen") or winner
     pts = {p["cand"]: p for p in rep["pareto_points"]}
     wp = pts.get(chosen) or {}
-    metrics_file = json.loads(Path(wp["metrics_path"]).read_text()) if wp.get("metrics_path") and Path(wp["metrics_path"]).exists() else {}
+    mp = Path(wp["metrics_path"]) if wp.get("metrics_path") else None
+    if mp is not None and not mp.is_absolute():
+        mp = rd / mp                                   # snapshots store paths relative to the run folder
+    metrics_file = json.loads(mp.read_text()) if mp is not None and mp.exists() else {}
     final = rep.get("final") or {}
     base = rep.get("baseline") or {}
     volume = card.get("monthly_volume") or config.demo_monthly_volume()

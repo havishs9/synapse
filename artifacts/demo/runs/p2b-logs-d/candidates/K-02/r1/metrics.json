@@ -1,0 +1,47 @@
+{
+  "primary_metric": "recall_at_fpr",
+  "primary": 0.0,
+  "macro_precision": 0.5606060606060606,
+  "macro_recall": 0.9006849315068493,
+  "macro_f1": 0.5529750282601993,
+  "accuracy": 0.8066666666666666,
+  "per_class": {
+    "anomaly": {
+      "precision": 0.12121212121212122,
+      "recall": 1.0,
+      "f1": 0.21621621621621623,
+      "support": 4
+    },
+    "normal": {
+      "precision": 1.0,
+      "recall": 0.8013698630136986,
+      "f1": 0.8897338403041825,
+      "support": 146
+    }
+  },
+  "calibration_error": 0.1382000000000001,
+  "n": 150,
+  "pr_auc": 0.6666666666666666,
+  "recall_at_fpr": 0.0,
+  "fpr_target": 0.01,
+  "p50_ms": 785.8423749858048,
+  "p99_ms": 2011.3427511416373,
+  "throughput_per_s": 1.272519823098193,
+  "model_size_mb": 0.379281,
+  "cost_per_1m_usd": 396.13239999999996,
+  "cost_formula": {
+    "kind": "tokens",
+    "model": "nvidia/Nemotron-3_5-Lightning",
+    "mean_prompt_tokens": 6532.1,
+    "mean_completion_tokens": 17.526666666666667,
+    "price_per_1m_tokens": {
+      "input": 0.06,
+      "cached_input": 0.03,
+      "output": 0.24
+    },
+    "cpu_part_per_1m_usd": 0.0,
+    "formula": "1e6 \u00d7 (prompt_tokens \u00d7 input_price + completion_tokens \u00d7 output_price) / 1e6 + cpu_part"
+  },
+  "split": "val",
+  "secondary": 0.6666666666666666
+}

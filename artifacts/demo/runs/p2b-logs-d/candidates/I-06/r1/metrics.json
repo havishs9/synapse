@@ -1,0 +1,48 @@
+{
+  "primary_metric": "recall_at_fpr",
+  "primary": 0.9523809523809523,
+  "macro_precision": 0.9907735982966643,
+  "macro_recall": 0.6904761904761905,
+  "macro_f1": 0.7712059085070645,
+  "accuracy": 0.9817543859649123,
+  "per_class": {
+    "anomaly": {
+      "precision": 1.0,
+      "recall": 0.38095238095238093,
+      "f1": 0.5517241379310345,
+      "support": 84
+    },
+    "normal": {
+      "precision": 0.9815471965933286,
+      "recall": 1.0,
+      "f1": 0.9906876790830945,
+      "support": 2766
+    }
+  },
+  "calibration_error": 0.016599781196783403,
+  "n": 2850,
+  "pr_auc": 0.9339545952594307,
+  "recall_at_fpr": 0.9523809523809523,
+  "fpr_target": 0.01,
+  "p50_ms": 2928.6112710251473,
+  "p99_ms": 11922.464189194143,
+  "throughput_per_s": 24.28366542803575,
+  "model_size_mb": 7.792732,
+  "cost_per_1m_usd": 7.016075939368468,
+  "cost_formula": {
+    "kind": "tokens",
+    "model": "Qwen/Qwen3-Embedding-8B",
+    "mean_prompt_tokens": 621.6608367157299,
+    "mean_completion_tokens": 0.0,
+    "price_per_1m_tokens": {
+      "input": 0.01,
+      "output": 0.0
+    },
+    "cpu_part_per_1m_usd": 0.7994675722111687,
+    "formula": "1e6 \u00d7 (prompt_tokens \u00d7 input_price + completion_tokens \u00d7 output_price) / 1e6 + cpu_part",
+    "latency_measured": "single-item predict_proba on 30 items, caches bypassed, on this machine's CPU including the embedding API call",
+    "throughput_measured": "batch predict_proba on 300 items, caches bypassed"
+  },
+  "split": "val",
+  "secondary": 0.9339545952594307
+}

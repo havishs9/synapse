@@ -1,0 +1,152 @@
+{
+  "primary_metric": "macro_f1",
+  "primary": 0.6773479082693152,
+  "macro_precision": 0.7393721544691075,
+  "macro_recall": 0.6669392011497276,
+  "macro_f1": 0.6773479082693152,
+  "accuracy": 0.7,
+  "per_class": {
+    "Aircraft, Ships/Submarines & Land Vehicles": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666,
+      "support": 2
+    },
+    "Clothing, Textiles & Subsistence S&E": {
+      "precision": 0.8888888888888888,
+      "recall": 1.0,
+      "f1": 0.9411764705882353,
+      "support": 8
+    },
+    "Electronic & Communication Equipment": {
+      "precision": 0.4,
+      "recall": 0.75,
+      "f1": 0.5217391304347826,
+      "support": 8
+    },
+    "Electronic & Communication Services": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 2
+    },
+    "Equipment Related Services": {
+      "precision": 0.45454545454545453,
+      "recall": 0.7142857142857143,
+      "f1": 0.5555555555555556,
+      "support": 7
+    },
+    "Facilities & Construction": {
+      "precision": 1.0,
+      "recall": 0.8181818181818182,
+      "f1": 0.9,
+      "support": 11
+    },
+    "Human Capital": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666,
+      "support": 4
+    },
+    "IT": {
+      "precision": 1.0,
+      "recall": 0.5833333333333334,
+      "f1": 0.7368421052631579,
+      "support": 12
+    },
+    "Industrial Products & Services": {
+      "precision": 0.47368421052631576,
+      "recall": 0.6923076923076923,
+      "f1": 0.5625,
+      "support": 13
+    },
+    "Medical": {
+      "precision": 0.8333333333333334,
+      "recall": 0.7142857142857143,
+      "f1": 0.7692307692307693,
+      "support": 7
+    },
+    "Miscellaneous S&E": {
+      "precision": 1.0,
+      "recall": 0.6,
+      "f1": 0.75,
+      "support": 5
+    },
+    "Office Management": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 11
+    },
+    "Professional Services": {
+      "precision": 0.5333333333333333,
+      "recall": 0.6153846153846154,
+      "f1": 0.5714285714285714,
+      "support": 13
+    },
+    "Research and Development": {
+      "precision": 0.8571428571428571,
+      "recall": 1.0,
+      "f1": 0.9230769230769231,
+      "support": 6
+    },
+    "Security and Protection": {
+      "precision": 0.25,
+      "recall": 0.25,
+      "f1": 0.25,
+      "support": 4
+    },
+    "Sustainment S&E": {
+      "precision": 1.0,
+      "recall": 0.5384615384615384,
+      "f1": 0.7,
+      "support": 13
+    },
+    "Transportation and Logistics Services": {
+      "precision": 0.7,
+      "recall": 0.5384615384615384,
+      "f1": 0.6086956521739131,
+      "support": 13
+    },
+    "Travel & Lodging": {
+      "precision": 0.8571428571428571,
+      "recall": 0.8571428571428571,
+      "f1": 0.8571428571428571,
+      "support": 7
+    },
+    "Weapons & Ammunition": {
+      "precision": 0.8,
+      "recall": 1.0,
+      "f1": 0.8888888888888888,
+      "support": 4
+    }
+  },
+  "calibration_error": 0.2609999999999999,
+  "n": 150,
+  "pr_auc": null,
+  "recall_at_fpr": null,
+  "fpr_target": null,
+  "p50_ms": 666.3957499549724,
+  "p99_ms": 673.4387637954205,
+  "throughput_per_s": 1.8194304701836024,
+  "model_size_mb": 2.409722,
+  "cost_per_1m_usd": 74.24799999999999,
+  "cost_formula": {
+    "kind": "tokens",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "mean_prompt_tokens": 1140.2933333333333,
+    "mean_completion_tokens": 24.293333333333333,
+    "price_per_1m_tokens": {
+      "input": 0.06,
+      "cached_input": 0.012,
+      "output": 0.24
+    },
+    "cpu_part_per_1m_usd": 0.0,
+    "formula": "1e6 \u00d7 (prompt_tokens \u00d7 input_price + completion_tokens \u00d7 output_price) / 1e6 + cpu_part"
+  },
+  "split": "val",
+  "secondary": 0.6773479082693152,
+  "p50_ms_during_search": 549.6225419919938,
+  "p99_ms_during_search": 2501.3989871460913,
+  "latency_note": "re-measured after the search: 10 single-item calls one at a time, caches bypassed, from this machine"
+}

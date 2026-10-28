@@ -5,6 +5,7 @@ Hackathon project for the Nebius x NVIDIA Global AI Hackathon (Coding and Agenti
 The full build spec is in `spec/`. Before any work, read `spec/00_START_HERE.md`, then files 01 to 05 in order, then `TEAM_INPUTS.md`.
 
 Standing rules for every session:
+- Phase 3 is split between two people; read `docs/TEAM_PLAN.md` and work only on the track of the person you're working with.
 - Work only on the phase you are asked to do (build order in `spec/05_DEMO_BUILD_ORDER_AND_ACCEPTANCE.md`). Stop when its exit criterion is met, run the tests, and commit.
 - Read API keys only from `.env`. Never print, log, or commit them, and never add `.env` to git.
 - Never hardcode model IDs, prices or endpoint URLs; use `config/models.yaml` and `config/pricing.yaml`.

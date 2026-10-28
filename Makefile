@@ -32,7 +32,7 @@ build-support:
 	$(PY) -m backend.cli build support_tickets
 
 replay: build-frontend   ## make replay RUN=<run_id>: serve the recorded runs; builds replay instead of training
-	APP_MODE=replay ARTIFACTS_DIR=./artifacts/demo $(PY) -m uvicorn backend.main:app --port 8000
+	APP_MODE=replay ARTIFACTS_DIR=./artifacts/demo RUNS_DIR=./artifacts/demo/runs $(PY) -m uvicorn backend.main:app --port 8000
 
 snapshot-demo:    ## copy the demo specialists and recorded runs into the committed demo folders
 	$(PY) scripts/snapshot_demo.py $(RUN)

@@ -1,0 +1,913 @@
+{
+  "task_id": "hdfs_logs",
+  "primary_metric": "recall_at_fpr",
+  "validation_rounds": [
+    {
+      "round": 1,
+      "data_frac": 0.1,
+      "scores": {
+        "J-01": 0.4523809523809524,
+        "J-02": 0.38095238095238093,
+        "J-03": 0.38095238095238093,
+        "J-04": 0.4523809523809524,
+        "J-05": 0.38095238095238093,
+        "J-06": 0.38095238095238093,
+        "A-01": 1.0,
+        "A-02": 1.0,
+        "A-03": 1.0,
+        "A-04": 1.0,
+        "A-05": 1.0,
+        "A-06": 1.0,
+        "A-07": 1.0,
+        "A-08": 1.0,
+        "A-09": 1.0,
+        "A-10": 1.0,
+        "A-11": 1.0,
+        "A-12": 1.0,
+        "E-01": 1.0,
+        "E-02": 1.0,
+        "E-03": 1.0,
+        "E-04": 1.0,
+        "E-05": 1.0,
+        "E-06": 1.0,
+        "I-01": 0.38095238095238093,
+        "I-02": 0.39285714285714285,
+        "I-03": 0.38095238095238093,
+        "I-04": 0.9404761904761905,
+        "I-05": 0.39285714285714285,
+        "I-06": 0.9523809523809523,
+        "K-01": 0.0,
+        "K-02": 0.0
+      }
+    },
+    {
+      "round": 2,
+      "data_frac": 0.4,
+      "scores": {
+        "A-04": 1.0,
+        "A-06": 1.0,
+        "A-10": 1.0,
+        "A-12": 1.0,
+        "E-01": 0.9880952380952381,
+        "E-02": 0.9880952380952381,
+        "E-04": 1.0,
+        "E-05": 0.9880952380952381,
+        "E-06": 0.9880952380952381
+      }
+    },
+    {
+      "round": 3,
+      "data_frac": 1.0,
+      "scores": {
+        "A-04": 1.0,
+        "A-06": 1.0,
+        "A-10": 1.0,
+        "A-12": 1.0
+      }
+    }
+  ],
+  "frontier": [
+    {
+      "cand": "A-12",
+      "family": "A",
+      "role": "recommended",
+      "val_primary": 1.0,
+      "cost_per_1m_usd": 0.00357501585159842,
+      "p50_ms": 0.4126870189793408
+    }
+  ],
+  "pareto_points": [
+    {
+      "cand": "J-01",
+      "family": "J",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.4523809523809524,
+      "val_secondary": 0.46852130325814534,
+      "cost_per_1m_usd": 0.22194279183826232,
+      "p50_ms": 10.647187533322722,
+      "p99_ms": 31.003812111448585,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/J-01/r1/metrics.json"
+    },
+    {
+      "cand": "J-02",
+      "family": "J",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.38095238095238093,
+      "val_secondary": 0.39919799498746866,
+      "cost_per_1m_usd": 0.2191695122534386,
+      "p50_ms": 10.61616645893082,
+      "p99_ms": 22.59845598018746,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/J-02/r1/metrics.json"
+    },
+    {
+      "cand": "J-03",
+      "family": "J",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.38095238095238093,
+      "val_secondary": 0.39919799498746866,
+      "cost_per_1m_usd": 0.2176036650901079,
+      "p50_ms": 10.406896006315947,
+      "p99_ms": 25.632709414931146,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/J-03/r1/metrics.json"
+    },
+    {
+      "cand": "J-04",
+      "family": "J",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.4523809523809524,
+      "val_secondary": 0.46852130325814534,
+      "cost_per_1m_usd": 0.22004375451255992,
+      "p50_ms": 10.34143753349781,
+      "p99_ms": 26.120704535860717,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/J-04/r1/metrics.json"
+    },
+    {
+      "cand": "J-05",
+      "family": "J",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.38095238095238093,
+      "val_secondary": 0.39919799498746866,
+      "cost_per_1m_usd": 0.22096026805292096,
+      "p50_ms": 10.668437520507723,
+      "p99_ms": 20.225620953133596,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/J-05/r1/metrics.json"
+    },
+    {
+      "cand": "J-06",
+      "family": "J",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.38095238095238093,
+      "val_secondary": 0.39919799498746866,
+      "cost_per_1m_usd": 0.22201413565599346,
+      "p50_ms": 9.988000034354627,
+      "p99_ms": 18.979056613752903,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/J-06/r1/metrics.json"
+    },
+    {
+      "cand": "A-01",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 1.0,
+      "val_secondary": 0.8902495070068562,
+      "cost_per_1m_usd": 0.03513268275369932,
+      "p50_ms": 1.8669795244932175,
+      "p99_ms": 6.26992005272769,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-01/r1/metrics.json"
+    },
+    {
+      "cand": "A-02",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 1.0,
+      "val_secondary": 0.8931217506507038,
+      "cost_per_1m_usd": 0.032870142483565304,
+      "p50_ms": 1.9617289653979242,
+      "p99_ms": 4.569639621768151,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-02/r1/metrics.json"
+    },
+    {
+      "cand": "A-03",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 1.0,
+      "val_secondary": 0.8928797035311673,
+      "cost_per_1m_usd": 0.00449020005374526,
+      "p50_ms": 0.42075052624568343,
+      "p99_ms": 1.1739408248104162,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-03/r1/metrics.json"
+    },
+    {
+      "cand": "A-04",
+      "family": "A",
+      "rung": 1,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 1.0,
+      "val_secondary": 0.9836134813499386,
+      "cost_per_1m_usd": 0.004216500334123898,
+      "p50_ms": 0.4191870102658868,
+      "p99_ms": 0.9101118892431271,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-04/r3/metrics.json"
+    },
+    {
+      "cand": "A-05",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 1.0,
+      "val_secondary": 0.8938520880216777,
+      "cost_per_1m_usd": 0.03397416823671423,
+      "p50_ms": 1.8524164916016161,
+      "p99_ms": 4.200701679801569,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-05/r1/metrics.json"
+    },
+    {
+      "cand": "A-06",
+      "family": "A",
+      "rung": 1,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 1.0,
+      "val_secondary": 0.9994347739095638,
+      "cost_per_1m_usd": 0.024013301708987377,
+      "p50_ms": 1.6970419674180448,
+      "p99_ms": 3.299178431043403,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-06/r3/metrics.json"
+    },
+    {
+      "cand": "A-07",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 1.0,
+      "val_secondary": 0.8936849240661203,
+      "cost_per_1m_usd": 0.004830174320502626,
+      "p50_ms": 0.4386664950288832,
+      "p99_ms": 1.3224740885198123,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-07/r1/metrics.json"
+    },
+    {
+      "cand": "A-08",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 1.0,
+      "val_secondary": 0.9244759843737371,
+      "cost_per_1m_usd": 0.005005987017527212,
+      "p50_ms": 0.4578125081025064,
+      "p99_ms": 1.3921268284320965,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-08/r1/metrics.json"
+    },
+    {
+      "cand": "A-09",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 1.0,
+      "val_secondary": 0.9137877507527851,
+      "cost_per_1m_usd": 0.051742144287659546,
+      "p50_ms": 1.9852915429510176,
+      "p99_ms": 5.522509630536665,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-09/r1/metrics.json"
+    },
+    {
+      "cand": "A-10",
+      "family": "A",
+      "rung": 1,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 1.0,
+      "val_secondary": 0.9992878015403692,
+      "cost_per_1m_usd": 0.024532728724353886,
+      "p50_ms": 1.5481250011362135,
+      "p99_ms": 2.373894194606692,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-10/r3/metrics.json"
+    },
+    {
+      "cand": "A-11",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 1.0,
+      "val_secondary": 0.9199233762491262,
+      "cost_per_1m_usd": 0.004305467725873659,
+      "p50_ms": 0.5265630315989256,
+      "p99_ms": 1.4315868774428993,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-11/r1/metrics.json"
+    },
+    {
+      "cand": "A-12",
+      "family": "A",
+      "rung": 1,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 1.0,
+      "val_secondary": 0.999859943977591,
+      "cost_per_1m_usd": 0.00357501585159842,
+      "p50_ms": 0.4126870189793408,
+      "p99_ms": 0.8564978698268548,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/A-12/r3/metrics.json"
+    },
+    {
+      "cand": "E-01",
+      "family": "E",
+      "rung": 1,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.9880952380952381,
+      "val_secondary": 0.9920218813434358,
+      "cost_per_1m_usd": 0.19634157566832453,
+      "p50_ms": 11.609458539169282,
+      "p99_ms": 16.269057750469074,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/E-01/r2/metrics.json"
+    },
+    {
+      "cand": "E-02",
+      "family": "E",
+      "rung": 1,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.9880952380952381,
+      "val_secondary": 0.9935889625283512,
+      "cost_per_1m_usd": 0.1659791481140643,
+      "p50_ms": 9.138249501120299,
+      "p99_ms": 10.430941797094421,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/E-02/r2/metrics.json"
+    },
+    {
+      "cand": "E-03",
+      "family": "E",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 1.0,
+      "val_secondary": 0.9661570046870547,
+      "cost_per_1m_usd": 0.2502541515916093,
+      "p50_ms": 12.900562433060259,
+      "p99_ms": 19.55393383279444,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/E-03/r1/metrics.json"
+    },
+    {
+      "cand": "E-04",
+      "family": "E",
+      "rung": 1,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 1.0,
+      "val_secondary": 0.9947433636827525,
+      "cost_per_1m_usd": 0.22713160214055933,
+      "p50_ms": 12.222937017213553,
+      "p99_ms": 23.460379033349476,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/E-04/r2/metrics.json"
+    },
+    {
+      "cand": "E-05",
+      "family": "E",
+      "rung": 1,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.9880952380952381,
+      "val_secondary": 0.9944932419803358,
+      "cost_per_1m_usd": 0.2251977678611649,
+      "p50_ms": 12.53679150249809,
+      "p99_ms": 20.38204607204535,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/E-05/r2/metrics.json"
+    },
+    {
+      "cand": "E-06",
+      "family": "E",
+      "rung": 1,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.9880952380952381,
+      "val_secondary": 0.9944932419803361,
+      "cost_per_1m_usd": 0.22585821606667464,
+      "p50_ms": 12.265458004549146,
+      "p99_ms": 25.367835096549243,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/E-06/r2/metrics.json"
+    },
+    {
+      "cand": "I-01",
+      "family": "I",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.38095238095238093,
+      "val_secondary": 0.4385715831283077,
+      "cost_per_1m_usd": 0.5323149519521402,
+      "p50_ms": 56.06402095872909,
+      "p99_ms": 1557.676269081428,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/I-01/r1/metrics.json"
+    },
+    {
+      "cand": "I-02",
+      "family": "I",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.39285714285714285,
+      "val_secondary": 0.4295407396914871,
+      "cost_per_1m_usd": 0.3870129089059625,
+      "p50_ms": 56.634208536706865,
+      "p99_ms": 823.188797063212,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/I-02/r1/metrics.json"
+    },
+    {
+      "cand": "I-03",
+      "family": "I",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.38095238095238093,
+      "val_secondary": 0.4312680898757246,
+      "cost_per_1m_usd": 0.47108977901799687,
+      "p50_ms": 57.64116649515927,
+      "p99_ms": 1611.4016792096704,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 2850,
+      "metrics_path": "candidates/I-03/r1/metrics.json"
+    },
+    {
+      "cand": "I-04",
+      "family": "I",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.9404761904761905,
+      "val_secondary": 0.9291534846625453,
+      "cost_per_1m_usd": 6.774409963025853,
+      "p50_ms": 4006.8285005982034,
+      "p99_ms": 13806.78407066851,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 2850,
+      "metrics_path": "candidates/I-04/r1/metrics.json"
+    },
+    {
+      "cand": "I-05",
+      "family": "I",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.39285714285714285,
+      "val_secondary": 0.45149277903409685,
+      "cost_per_1m_usd": 6.976194036041342,
+      "p50_ms": 4751.31591653917,
+      "p99_ms": 52339.07889501545,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 2850,
+      "metrics_path": "candidates/I-05/r1/metrics.json"
+    },
+    {
+      "cand": "I-06",
+      "family": "I",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.9523809523809523,
+      "val_secondary": 0.9339545952594307,
+      "cost_per_1m_usd": 7.016075939368468,
+      "p50_ms": 2928.6112710251473,
+      "p99_ms": 11922.464189194143,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 2850,
+      "metrics_path": "candidates/I-06/r1/metrics.json"
+    },
+    {
+      "cand": "K-01",
+      "family": "K",
+      "rung": 3,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.0,
+      "val_secondary": 0.03616138763197587,
+      "cost_per_1m_usd": 108.0464,
+      "p50_ms": 364.9463960027788,
+      "p99_ms": 885.5991297331639,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "candidates/K-01/r1/metrics.json"
+    },
+    {
+      "cand": "K-02",
+      "family": "K",
+      "rung": 3,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.0,
+      "val_secondary": 0.6666666666666666,
+      "cost_per_1m_usd": 396.13239999999996,
+      "p50_ms": 785.8423749858048,
+      "p99_ms": 2011.3427511416373,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "candidates/K-02/r1/metrics.json"
+    },
+    {
+      "cand": "H(A-12→K-01)",
+      "family": "H",
+      "rung": 0,
+      "round": 0,
+      "data_frac": 1.0,
+      "val_primary": 1.0,
+      "cost_per_1m_usd": 0.00357501585159842,
+      "p50_ms": 0.4126870189793408,
+      "p99_ms": 0.8564978698268548,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": true,
+      "n_val": 543
+    }
+  ],
+  "calibration": {
+    "method": "none (temperature scaling skipped: cross-fit ECE did not improve)",
+    "temperature": 1.0,
+    "ece_before": 0.0004950265060352126,
+    "ece_after_crossfit": 0.0007416024163367418,
+    "skipped": true,
+    "candidate": "A-12",
+    "threshold_at_fpr": 0.0015604431964265377
+  },
+  "cascade": {
+    "taus": [
+      0.3
+    ],
+    "primary": 1.0,
+    "shares": [
+      1.0,
+      0.0
+    ],
+    "cost_per_1m_usd": 0.00357501585159842,
+    "escalation_rate": 0.0,
+    "tau": 0.3,
+    "n": 543,
+    "alone_same_sample": [
+      1.0,
+      0.0
+    ],
+    "base_primary_same_sample": 1.0,
+    "llm_primary_same_sample": 0.0,
+    "best_primary_any_tau": 1.0,
+    "tau_rule": "lowest expected cost within 0.005 of the best threshold combination",
+    "sample": "the LLM rung's capped validation sample",
+    "winner_alone_same_sample": 1.0,
+    "base": "A-12",
+    "fallback": "K-01",
+    "stages": [
+      {
+        "cand": "A-12",
+        "family": "A",
+        "share": 1.0,
+        "tau": 0.3,
+        "reach": 1.0
+      },
+      {
+        "cand": "K-01",
+        "family": "K",
+        "share": 0.0,
+        "tau": null,
+        "reach": 0.0
+      }
+    ],
+    "cost_formula": "sum over stages of (share of items reaching the stage × its cost)",
+    "p50_ms": 0.4126870189793408,
+    "p99_ms": 0.8564978698268548,
+    "cascades_tried": [
+      {
+        "cascade": "H(A-12→K-01)",
+        "primary": 1.0,
+        "gain": 0.0,
+        "cost_per_1m_usd": 0.00357501585159842,
+        "stages": [
+          {
+            "cand": "A-12",
+            "family": "A",
+            "share": 1.0,
+            "tau": 0.3,
+            "reach": 1.0
+          },
+          {
+            "cand": "K-01",
+            "family": "K",
+            "share": 0.0,
+            "tau": null,
+            "reach": 0.0
+          }
+        ],
+        "allowed": true,
+        "why_not_allowed": null
+      }
+    ],
+    "pick_rule": "gain over A-12 alone > 0.01, then the cheapest within 0.005 of the best cascade",
+    "used": false,
+    "why_not": "no cascade gained over 0.01 on the shared validation sample"
+  },
+  "final": {
+    "accuracy": 0.9936842105263158,
+    "macro_precision": 0.9108910891089108,
+    "macro_recall": 0.9967473798337549,
+    "macro_f1": 0.9494553394078885,
+    "per_class": {
+      "anomaly": {
+        "precision": 0.8217821782178217,
+        "recall": 1.0,
+        "f1": 0.9021739130434783,
+        "support": 83
+      },
+      "normal": {
+        "precision": 1.0,
+        "recall": 0.9934947596675099,
+        "f1": 0.9967367657722987,
+        "support": 2767
+      }
+    },
+    "n": 2850,
+    "calibration_error": 0.0012769809852222055,
+    "pr_auc": 0.9997165131112686,
+    "recall_at_fpr": 1.0,
+    "fpr_target": 0.01,
+    "threshold_at_fpr": 0.0015604431964265377,
+    "primary_metric": "recall_at_fpr",
+    "primary": 1.0,
+    "at_val_threshold": {
+      "threshold": 0.0015604431964265377,
+      "recall": 1.0,
+      "fpr": 0.006505240332490061
+    }
+  },
+  "final_sample": {
+    "metrics": {
+      "accuracy": 0.9966666666666667,
+      "macro_precision": 0.9977064220183487,
+      "macro_recall": 0.9939759036144578,
+      "macro_f1": 0.9958202716823406,
+      "per_class": {
+        "anomaly": {
+          "precision": 1.0,
+          "recall": 0.9879518072289156,
+          "f1": 0.9939393939393939,
+          "support": 83
+        },
+        "normal": {
+          "precision": 0.9954128440366973,
+          "recall": 1.0,
+          "f1": 0.9977011494252873,
+          "support": 217
+        }
+      },
+      "n": 300,
+      "calibration_error": 0.004589654521658704,
+      "pr_auc": 1.0,
+      "recall_at_fpr": 1.0,
+      "fpr_target": 0.01,
+      "threshold_at_fpr": 0.0015604431964265377,
+      "primary_metric": "recall_at_fpr",
+      "primary": 1.0
+    },
+    "n": 300,
+    "note": "the specialist on the same sealed rows the baseline was scored on"
+  },
+  "seeds": {
+    "A-12": {
+      "mean": 1.0,
+      "std": 0.0,
+      "n_seeds": 3,
+      "scores": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "method": "bootstrap resample of the training set per seed"
+    }
+  },
+  "val_vs_sealed": {
+    "validation": 1.0,
+    "sealed": 1.0
+  },
+  "teacher_agreement": {
+    "agreement_rate": 0.7366666666666667,
+    "n": 300,
+    "note": "agreement with Nemotron Ultra's labels, not accuracy"
+  },
+  "baseline": {
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "display_name": "Nemotron-3-Ultra-550b-a55b",
+    "metrics": {
+      "accuracy": 0.74,
+      "macro_precision": 0.6855118347655662,
+      "macro_recall": 0.7049580811726168,
+      "macro_f1": 0.6924128503075871,
+      "per_class": {
+        "anomaly": {
+          "precision": 0.5252525252525253,
+          "recall": 0.6265060240963856,
+          "f1": 0.5714285714285714,
+          "support": 83
+        },
+        "normal": {
+          "precision": 0.845771144278607,
+          "recall": 0.783410138248848,
+          "f1": 0.8133971291866029,
+          "support": 217
+        }
+      },
+      "n": 300,
+      "calibration_error": 0.20133333333333323,
+      "pr_auc": 0.5011957229578728,
+      "recall_at_fpr": 0.0,
+      "fpr_target": 0.01,
+      "threshold_at_fpr": 0.95,
+      "primary_metric": "recall_at_fpr",
+      "primary": 0.0
+    },
+    "p50_ms": 1494.8252085014246,
+    "p99_ms": 3767.3012412514067,
+    "cost_per_1m_usd": 1746.3333333333335,
+    "cost_formula": {
+      "kind": "tokens",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "mean_prompt_tokens": 1681.6533333333334,
+      "mean_completion_tokens": 21.56,
+      "price_per_1m_tokens": {
+        "input": 1.0,
+        "cached_input": 0.12,
+        "output": 3.0
+      },
+      "cpu_part_per_1m_usd": 0.0,
+      "formula": "1e6 × (prompt_tokens × input_price + completion_tokens × output_price) / 1e6 + cpu_part"
+    },
+    "n": 300,
+    "usage": {
+      "role": "main_chat_planner_teacher_baseline",
+      "mean_prompt_tokens": 1681.6533333333334,
+      "mean_completion_tokens": 21.56,
+      "p50_ms": 1494.8252085014246,
+      "p99_ms": 3767.3012412514067,
+      "n_calls": 300,
+      "failed": 0
+    },
+    "prompt": "zero-shot: task card description + category definitions, JSON schema output, reasoning off"
+  },
+  "real_vs_synthetic": null,
+  "more_data_curve": [
+    {
+      "data_frac": 0.1,
+      "val_primary": 1.0
+    },
+    {
+      "data_frac": 0.4,
+      "val_primary": 1.0
+    },
+    {
+      "data_frac": 1.0,
+      "val_primary": 1.0
+    }
+  ],
+  "decision": {
+    "passes_thresholds": true,
+    "reason": "first version; meets the target with recall_at_fpr 1.000",
+    "target": {
+      "primary_min": 0.9,
+      "per_class_floor": null
+    }
+  },
+  "repair_rounds": [],
+  "weaknesses": [
+    "normal confused with anomaly (1 validation errors): The classifier misinterprets routine block allocation and DataNode receipt logs containing temporary task paths and block IDs as anomalous due to insufficient normal examples of this common NameNode-DataNode coordination pattern."
+  ],
+  "data_sources": [
+    {
+      "name": "loghub_hdfs_v1",
+      "url": "https://zenodo.org/records/8196385/files/HDFS_v1.zip",
+      "license": "Loghub license: freely available for research or academic work; must reference the loghub repo URL and cite the Loghub paper; license notice must be included in all copies",
+      "license_ok": true,
+      "rows_used": 15000,
+      "is_synthetic": false,
+      "citation": [
+        "Jieming Zhu, Shilin He, Pinjia He, Jinyang Liu, Michael R. Lyu. Loghub: A Large Collection of System Log Datasets for AI-driven Log Analytics. ISSRE 2023.",
+        "Wei Xu, Ling Huang, Armando Fox, David Patterson, Michael Jordan. Detecting Large-Scale System Problems by Mining Console Logs. SOSP 2009."
+      ]
+    }
+  ],
+  "winner": "A-12",
+  "chosen": "A-12",
+  "winner_reason": "misses cost more than false alarms (task card), so among candidates meeting the recall_at_fpr target of 0.90 this is the best detector: 1.000, PR-AUC 0.9999 on validation"
+}

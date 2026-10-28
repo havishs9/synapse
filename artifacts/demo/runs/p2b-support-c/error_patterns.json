@@ -1,0 +1,61 @@
+{
+  "patterns": [
+    {
+      "pattern": "Customers describe unrecognized payments without specifying payment method (debit vs card), using generic terms like 'payment', 'charge', 'money taken out', causing the classifier to default to the more common card payment class.",
+      "count": 6,
+      "example_ids": [
+        "train-4731",
+        "train-4812",
+        "train-4686",
+        "train-4772",
+        "train-4693",
+        "train-4792"
+      ],
+      "suggested_data_fix": "Add training examples with ambiguous payment method language (e.g., 'unrecognized transaction', 'unknown charge on my account') labeled as direct_debit_payment_not_recognised to teach the model that method-agnostic complaints can be direct debit.",
+      "true_label": "direct_debit_payment_not_recognised",
+      "predicted_label": "card_payment_not_recognised"
+    },
+    {
+      "pattern": "Customers mention fees in the context of card purchases or transactions, but the classifier over-associates 'fee' with 'transfer' due to stronger lexical overlap in training data.",
+      "count": 5,
+      "example_ids": [
+        "train-2630",
+        "train-2536",
+        "test-824",
+        "train-2573",
+        "train-2512"
+      ],
+      "suggested_data_fix": "Augment card_payment_fee_charged with more examples explicitly linking fees to card purchases (e.g., 'fee on my card purchase', 'extra charge for card transaction', 'card payment fee').",
+      "true_label": "card_payment_fee_charged",
+      "predicted_label": "transfer_fee_charged"
+    },
+    {
+      "pattern": "Customers ask procedural 'what/how' questions about verification requirements and methods, but the classifier misroutes them to the 'why' (reason/purpose) class due to shared verification vocabulary.",
+      "count": 5,
+      "example_ids": [
+        "train-9861",
+        "test-3020",
+        "test-3000",
+        "train-9812",
+        "train-9836"
+      ],
+      "suggested_data_fix": "Add more 'how-to' process questions (e.g., 'steps to verify identity', 'what documents needed for verification') to verify_my_identity, and ensure why_verify_identity contains explicit purpose language like 'why is verification required'.",
+      "true_label": "verify_my_identity",
+      "predicted_label": "why_verify_identity"
+    },
+    {
+      "pattern": "Customers express inability, failure, or confusion completing verification ('can't verify', 'not working', 'stuck'), but the classifier maps them to the general verification process class instead of the failure-specific class.",
+      "count": 4,
+      "example_ids": [
+        "train-3898",
+        "test-1227",
+        "train-3965",
+        "train-3993"
+      ],
+      "suggested_data_fix": "Enrich unable_to_verify_identity with explicit failure/problem phrasing (e.g., 'verification failed', 'unable to complete identity check', 'verification not working', 'error verifying identity').",
+      "true_label": "unable_to_verify_identity",
+      "predicted_label": "verify_my_identity"
+    }
+  ],
+  "source": "llm"
+}

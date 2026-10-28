@@ -1,0 +1,146 @@
+{
+  "primary_metric": "macro_f1",
+  "primary": 0.44243077770194306,
+  "macro_precision": 0.4463334293292615,
+  "macro_recall": 0.4463868363896994,
+  "macro_f1": 0.44243077770194306,
+  "accuracy": 0.4832393948383269,
+  "per_class": {
+    "Aircraft, Ships/Submarines & Land Vehicles": {
+      "precision": 0.07894736842105263,
+      "recall": 0.21428571428571427,
+      "f1": 0.11538461538461539,
+      "support": 14
+    },
+    "Clothing, Textiles & Subsistence S&E": {
+      "precision": 0.547486033519553,
+      "recall": 0.5240641711229946,
+      "f1": 0.5355191256830601,
+      "support": 187
+    },
+    "Electronic & Communication Equipment": {
+      "precision": 0.39325842696629215,
+      "recall": 0.38461538461538464,
+      "f1": 0.3888888888888889,
+      "support": 182
+    },
+    "Electronic & Communication Services": {
+      "precision": 0.05,
+      "recall": 0.09523809523809523,
+      "f1": 0.06557377049180328,
+      "support": 21
+    },
+    "Equipment Related Services": {
+      "precision": 0.35135135135135137,
+      "recall": 0.3151515151515151,
+      "f1": 0.33226837060702874,
+      "support": 165
+    },
+    "Facilities & Construction": {
+      "precision": 0.42066420664206644,
+      "recall": 0.4,
+      "f1": 0.41007194244604317,
+      "support": 285
+    },
+    "Human Capital": {
+      "precision": 0.4411764705882353,
+      "recall": 0.3448275862068966,
+      "f1": 0.3870967741935484,
+      "support": 87
+    },
+    "IT": {
+      "precision": 0.6048951048951049,
+      "recall": 0.6070175438596491,
+      "f1": 0.6059544658493871,
+      "support": 285
+    },
+    "Industrial Products & Services": {
+      "precision": 0.3582089552238806,
+      "recall": 0.3368421052631579,
+      "f1": 0.3471971066907776,
+      "support": 285
+    },
+    "Medical": {
+      "precision": 0.5454545454545454,
+      "recall": 0.5283018867924528,
+      "f1": 0.536741214057508,
+      "support": 159
+    },
+    "Miscellaneous S&E": {
+      "precision": 0.45794392523364486,
+      "recall": 0.44545454545454544,
+      "f1": 0.45161290322580644,
+      "support": 110
+    },
+    "Office Management": {
+      "precision": 0.5540540540540541,
+      "recall": 0.6533864541832669,
+      "f1": 0.5996343692870201,
+      "support": 251
+    },
+    "Professional Services": {
+      "precision": 0.40784313725490196,
+      "recall": 0.3649122807017544,
+      "f1": 0.3851851851851852,
+      "support": 285
+    },
+    "Research and Development": {
+      "precision": 0.6186440677966102,
+      "recall": 0.503448275862069,
+      "f1": 0.5551330798479087,
+      "support": 145
+    },
+    "Security and Protection": {
+      "precision": 0.375,
+      "recall": 0.3564356435643564,
+      "f1": 0.36548223350253806,
+      "support": 101
+    },
+    "Sustainment S&E": {
+      "precision": 0.5164473684210527,
+      "recall": 0.5508771929824562,
+      "f1": 0.533106960950764,
+      "support": 285
+    },
+    "Transportation and Logistics Services": {
+      "precision": 0.4918032786885246,
+      "recall": 0.5263157894736842,
+      "f1": 0.5084745762711864,
+      "support": 285
+    },
+    "Travel & Lodging": {
+      "precision": 0.7083333333333334,
+      "recall": 0.8831168831168831,
+      "f1": 0.7861271676300579,
+      "support": 154
+    },
+    "Weapons & Ammunition": {
+      "precision": 0.5588235294117647,
+      "recall": 0.4470588235294118,
+      "f1": 0.49673202614379086,
+      "support": 85
+    }
+  },
+  "calibration_error": 0.1408978773309539,
+  "n": 3371,
+  "pr_auc": null,
+  "recall_at_fpr": null,
+  "fpr_target": null,
+  "p50_ms": 19.98933352297172,
+  "p99_ms": 170.70012703777175,
+  "throughput_per_s": 103.17631877418009,
+  "model_size_mb": 1.513963,
+  "cost_per_1m_usd": 0.18816336224042907,
+  "cost_formula": {
+    "kind": "cpu",
+    "endpoint_hourly_usd": 0.06989041095890411,
+    "preset": "2vcpu-8gb",
+    "platform": "cpu-d3",
+    "throughput_per_s": 103.17631877418009,
+    "formula": "endpoint_hourly_usd \u00d7 (1e6 / throughput_per_s) / 3600",
+    "latency_measured": "single-item predict_proba on 100 items, caches bypassed, on this machine's CPU",
+    "throughput_measured": "batch predict_proba on 300 items, caches bypassed"
+  },
+  "split": "val",
+  "secondary": 0.44243077770194306
+}

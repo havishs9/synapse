@@ -1,0 +1,1169 @@
+{
+  "run_id": "p2b-procurement-d",
+  "task": "Procurement Categorizer",
+  "task_id": "procurement",
+  "winner": {
+    "candidate": "H(A-07\u2192K-11)",
+    "family": "H",
+    "why": "cheapest candidate that meets the macro_f1 target of 0.60 on validation (0.617); wrapped in a cascade that answers 65% A-07, 35% K-11 (+0.045 on the shared sample)",
+    "planner_summary": "Trying rules (J), TF\u2011IDF (A), local embeddings with linear heads (C), and embedding kNN/centroids (I) because short keyword\u2011heavy descriptions favor lexical and semantic matching with low latency.; prompted Nemotron (K) added so the cascade can be evaluated",
+    "planner_source": "llm"
+  },
+  "frontier": [
+    {
+      "cand": "A-07",
+      "family": "A",
+      "role": "recommended",
+      "val_primary": 0.6174033476633546,
+      "cost_per_1m_usd": 0.00023120459932434635,
+      "p50_ms": 0.2324995002709329
+    },
+    {
+      "cand": "A-05",
+      "family": "A",
+      "role": "most_accurate",
+      "val_primary": 0.6309477906660107,
+      "cost_per_1m_usd": 0.0015426205011373616,
+      "p50_ms": 0.4502294468693435
+    },
+    {
+      "cand": "J-01",
+      "family": "J",
+      "role": "cheapest",
+      "val_primary": 0.40266980904430827,
+      "cost_per_1m_usd": 0.0001390744111152675,
+      "p50_ms": 0.006229500286281109
+    }
+  ],
+  "excluded_families": {
+    "F": "Not implemented.",
+    "D": "Not implemented.",
+    "G": "Not implemented (STRETCH off).",
+    "B": "Qwen3\u2011Embedding\u20118B is large, targets paraphrase\u2011heavy text, and risks exceeding 50\u202fms latency.",
+    "E": "LightGBM engineered features are designed for log windows, not short purchase descriptions.",
+    "L": "Nemotron Super is even slower and unsuited for high\u2011volume low\u2011latency classification."
+  },
+  "primary_metric": "macro_f1",
+  "sealed": {
+    "accuracy": 0.6873515439429929,
+    "macro_precision": 0.652124411931471,
+    "macro_recall": 0.6489590373475532,
+    "macro_f1": 0.6467919291205547,
+    "per_class": {
+      "Aircraft, Ships/Submarines & Land Vehicles": {
+        "precision": 0.36363636363636365,
+        "recall": 0.26666666666666666,
+        "f1": 0.3076923076923077,
+        "support": 15
+      },
+      "Clothing, Textiles & Subsistence S&E": {
+        "precision": 0.7887323943661971,
+        "recall": 0.9032258064516129,
+        "f1": 0.8421052631578947,
+        "support": 186
+      },
+      "Electronic & Communication Equipment": {
+        "precision": 0.5294117647058824,
+        "recall": 0.6961325966850829,
+        "f1": 0.6014319809069213,
+        "support": 181
+      },
+      "Electronic & Communication Services": {
+        "precision": 0.11764705882352941,
+        "recall": 0.09523809523809523,
+        "f1": 0.10526315789473684,
+        "support": 21
+      },
+      "Equipment Related Services": {
+        "precision": 0.4204081632653061,
+        "recall": 0.6280487804878049,
+        "f1": 0.5036674816625917,
+        "support": 164
+      },
+      "Facilities & Construction": {
+        "precision": 0.6707818930041153,
+        "recall": 0.5719298245614035,
+        "f1": 0.6174242424242424,
+        "support": 285
+      },
+      "Human Capital": {
+        "precision": 0.6625,
+        "recall": 0.6162790697674418,
+        "f1": 0.6385542168674698,
+        "support": 86
+      },
+      "IT": {
+        "precision": 0.8145454545454546,
+        "recall": 0.7859649122807018,
+        "f1": 0.8,
+        "support": 285
+      },
+      "Industrial Products & Services": {
+        "precision": 0.49834983498349833,
+        "recall": 0.5298245614035088,
+        "f1": 0.5136054421768708,
+        "support": 285
+      },
+      "Medical": {
+        "precision": 0.7965116279069767,
+        "recall": 0.8616352201257862,
+        "f1": 0.8277945619335347,
+        "support": 159
+      },
+      "Miscellaneous S&E": {
+        "precision": 0.7211538461538461,
+        "recall": 0.6818181818181818,
+        "f1": 0.7009345794392523,
+        "support": 110
+      },
+      "Office Management": {
+        "precision": 0.8059071729957806,
+        "recall": 0.764,
+        "f1": 0.784394250513347,
+        "support": 250
+      },
+      "Professional Services": {
+        "precision": 0.6344086021505376,
+        "recall": 0.6210526315789474,
+        "f1": 0.6276595744680851,
+        "support": 285
+      },
+      "Research and Development": {
+        "precision": 0.8133333333333334,
+        "recall": 0.8356164383561644,
+        "f1": 0.8243243243243243,
+        "support": 146
+      },
+      "Security and Protection": {
+        "precision": 0.6568627450980392,
+        "recall": 0.6568627450980392,
+        "f1": 0.6568627450980392,
+        "support": 102
+      },
+      "Sustainment S&E": {
+        "precision": 0.7617021276595745,
+        "recall": 0.6280701754385964,
+        "f1": 0.6884615384615385,
+        "support": 285
+      },
+      "Transportation and Logistics Services": {
+        "precision": 0.8181818181818182,
+        "recall": 0.631578947368421,
+        "f1": 0.7128712871287128,
+        "support": 285
+      },
+      "Travel & Lodging": {
+        "precision": 0.8726114649681529,
+        "recall": 0.8896103896103896,
+        "f1": 0.8810289389067524,
+        "support": 154
+      },
+      "Weapons & Ammunition": {
+        "precision": 0.6436781609195402,
+        "recall": 0.6666666666666666,
+        "f1": 0.6549707602339181,
+        "support": 84
+      }
+    },
+    "n": 3368,
+    "calibration_error": 0.19707391600881172,
+    "primary_metric": "macro_f1",
+    "primary": 0.6467919291205547,
+    "escalation_rate": 0.35926365795724463,
+    "stage_shares": {
+      "A-07": 0.6407363420427553,
+      "K-11": 0.35926365795724463
+    }
+  },
+  "validation_vs_sealed": {
+    "validation": 0.6706012473034463,
+    "sealed": 0.6467919291205547
+  },
+  "seeds": {
+    "A-07": {
+      "mean": 0.5872958336563016,
+      "std": 0.005869366381231937,
+      "n_seeds": 3,
+      "scores": [
+        0.5953832317373761,
+        0.5816335899656611,
+        0.5848706792658676
+      ],
+      "method": "bootstrap resample of the training set per seed"
+    },
+    "A-05": {
+      "mean": 0.6032686372504735,
+      "std": 0.0033327685758130477,
+      "n_seeds": 3,
+      "scores": [
+        0.607916768095852,
+        0.6002684214724114,
+        0.601620722183157
+      ],
+      "method": "bootstrap resample of the training set per seed"
+    }
+  },
+  "teacher_agreement": {
+    "agreement_rate": 0.5134228187919463,
+    "n": 298,
+    "note": "agreement with Nemotron Ultra's labels, not accuracy"
+  },
+  "baseline": {
+    "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+    "display_name": "Nemotron-3-Ultra-550b-a55b",
+    "metrics": {
+      "accuracy": 0.48322147651006714,
+      "macro_precision": 0.4728954753745733,
+      "macro_recall": 0.5101548408591752,
+      "macro_f1": 0.4556671746937219,
+      "per_class": {
+        "Aircraft, Ships/Submarines & Land Vehicles": {
+          "precision": 0.1,
+          "recall": 1.0,
+          "f1": 0.18181818181818182,
+          "support": 1
+        },
+        "Clothing, Textiles & Subsistence S&E": {
+          "precision": 0.7142857142857143,
+          "recall": 0.5882352941176471,
+          "f1": 0.6451612903225806,
+          "support": 17
+        },
+        "Electronic & Communication Equipment": {
+          "precision": 0.47368421052631576,
+          "recall": 0.5625,
+          "f1": 0.5142857142857142,
+          "support": 16
+        },
+        "Electronic & Communication Services": {
+          "precision": 0.25,
+          "recall": 0.5,
+          "f1": 0.3333333333333333,
+          "support": 2
+        },
+        "Equipment Related Services": {
+          "precision": 0.3125,
+          "recall": 0.3333333333333333,
+          "f1": 0.3225806451612903,
+          "support": 15
+        },
+        "Facilities & Construction": {
+          "precision": 0.4827586206896552,
+          "recall": 0.56,
+          "f1": 0.5185185185185185,
+          "support": 25
+        },
+        "Human Capital": {
+          "precision": 0.6666666666666666,
+          "recall": 0.5,
+          "f1": 0.5714285714285714,
+          "support": 8
+        },
+        "IT": {
+          "precision": 0.6428571428571429,
+          "recall": 0.72,
+          "f1": 0.6792452830188679,
+          "support": 25
+        },
+        "Industrial Products & Services": {
+          "precision": 0.28888888888888886,
+          "recall": 0.52,
+          "f1": 0.37142857142857144,
+          "support": 25
+        },
+        "Medical": {
+          "precision": 0.75,
+          "recall": 0.8571428571428571,
+          "f1": 0.8,
+          "support": 14
+        },
+        "Miscellaneous S&E": {
+          "precision": 0.15789473684210525,
+          "recall": 0.3,
+          "f1": 0.20689655172413793,
+          "support": 10
+        },
+        "Office Management": {
+          "precision": 0.8,
+          "recall": 0.5454545454545454,
+          "f1": 0.6486486486486487,
+          "support": 22
+        },
+        "Professional Services": {
+          "precision": 0.55,
+          "recall": 0.44,
+          "f1": 0.4888888888888889,
+          "support": 25
+        },
+        "Research and Development": {
+          "precision": 0.6923076923076923,
+          "recall": 0.6923076923076923,
+          "f1": 0.6923076923076923,
+          "support": 13
+        },
+        "Security and Protection": {
+          "precision": 0.25,
+          "recall": 0.1111111111111111,
+          "f1": 0.15384615384615385,
+          "support": 9
+        },
+        "Sustainment S&E": {
+          "precision": 0.2,
+          "recall": 0.04,
+          "f1": 0.06666666666666667,
+          "support": 25
+        },
+        "Transportation and Logistics Services": {
+          "precision": 0.6363636363636364,
+          "recall": 0.28,
+          "f1": 0.3888888888888889,
+          "support": 25
+        },
+        "Travel & Lodging": {
+          "precision": 0.5882352941176471,
+          "recall": 0.7142857142857143,
+          "f1": 0.6451612903225806,
+          "support": 14
+        },
+        "Weapons & Ammunition": {
+          "precision": 0.42857142857142855,
+          "recall": 0.42857142857142855,
+          "f1": 0.42857142857142855,
+          "support": 7
+        }
+      },
+      "n": 298,
+      "calibration_error": 0.3963087248322146,
+      "primary_metric": "macro_f1",
+      "primary": 0.4556671746937219
+    },
+    "p50_ms": 1237.7713335154112,
+    "p99_ms": 2512.632560518681,
+    "cost_per_1m_usd": 806.7818791946308,
+    "cost_formula": {
+      "kind": "tokens",
+      "model": "nvidia/Nemotron-3-Ultra-550b-a55b",
+      "mean_prompt_tokens": 734.751677852349,
+      "mean_completion_tokens": 24.01006711409396,
+      "price_per_1m_tokens": {
+        "input": 1.0,
+        "cached_input": 0.12,
+        "output": 3.0
+      },
+      "cpu_part_per_1m_usd": 0.0,
+      "formula": "1e6 \u00d7 (prompt_tokens \u00d7 input_price + completion_tokens \u00d7 output_price) / 1e6 + cpu_part"
+    },
+    "n": 298,
+    "usage": {
+      "role": "main_chat_planner_teacher_baseline",
+      "mean_prompt_tokens": 734.751677852349,
+      "mean_completion_tokens": 24.01006711409396,
+      "p50_ms": 1237.7713335154112,
+      "p99_ms": 2512.632560518681,
+      "n_calls": 298,
+      "failed": 0
+    },
+    "prompt": "zero-shot: task card description + category definitions, JSON schema output, reasoning off"
+  },
+  "specialist_on_baseline_sample": {
+    "metrics": {
+      "accuracy": 0.6677852348993288,
+      "macro_precision": 0.6428151600022576,
+      "macro_recall": 0.6341696607486081,
+      "macro_f1": 0.6269835829053962,
+      "per_class": {
+        "Aircraft, Ships/Submarines & Land Vehicles": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 1
+        },
+        "Clothing, Textiles & Subsistence S&E": {
+          "precision": 0.8947368421052632,
+          "recall": 1.0,
+          "f1": 0.9444444444444444,
+          "support": 17
+        },
+        "Electronic & Communication Equipment": {
+          "precision": 0.6,
+          "recall": 0.75,
+          "f1": 0.6666666666666666,
+          "support": 16
+        },
+        "Electronic & Communication Services": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 2
+        },
+        "Equipment Related Services": {
+          "precision": 0.34375,
+          "recall": 0.7333333333333333,
+          "f1": 0.46808510638297873,
+          "support": 15
+        },
+        "Facilities & Construction": {
+          "precision": 0.6190476190476191,
+          "recall": 0.52,
+          "f1": 0.5652173913043478,
+          "support": 25
+        },
+        "Human Capital": {
+          "precision": 0.7142857142857143,
+          "recall": 0.625,
+          "f1": 0.6666666666666666,
+          "support": 8
+        },
+        "IT": {
+          "precision": 0.7619047619047619,
+          "recall": 0.64,
+          "f1": 0.6956521739130435,
+          "support": 25
+        },
+        "Industrial Products & Services": {
+          "precision": 0.4166666666666667,
+          "recall": 0.4,
+          "f1": 0.40816326530612246,
+          "support": 25
+        },
+        "Medical": {
+          "precision": 0.7777777777777778,
+          "recall": 1.0,
+          "f1": 0.875,
+          "support": 14
+        },
+        "Miscellaneous S&E": {
+          "precision": 0.9,
+          "recall": 0.9,
+          "f1": 0.9,
+          "support": 10
+        },
+        "Office Management": {
+          "precision": 0.9375,
+          "recall": 0.6818181818181818,
+          "f1": 0.7894736842105263,
+          "support": 22
+        },
+        "Professional Services": {
+          "precision": 0.45161290322580644,
+          "recall": 0.56,
+          "f1": 0.5,
+          "support": 25
+        },
+        "Research and Development": {
+          "precision": 0.9090909090909091,
+          "recall": 0.7692307692307693,
+          "f1": 0.8333333333333334,
+          "support": 13
+        },
+        "Security and Protection": {
+          "precision": 0.7142857142857143,
+          "recall": 0.5555555555555556,
+          "f1": 0.625,
+          "support": 9
+        },
+        "Sustainment S&E": {
+          "precision": 0.8823529411764706,
+          "recall": 0.6,
+          "f1": 0.7142857142857143,
+          "support": 25
+        },
+        "Transportation and Logistics Services": {
+          "precision": 0.8333333333333334,
+          "recall": 0.6,
+          "f1": 0.6976744186046512,
+          "support": 25
+        },
+        "Travel & Lodging": {
+          "precision": 0.8571428571428571,
+          "recall": 0.8571428571428571,
+          "f1": 0.8571428571428571,
+          "support": 14
+        },
+        "Weapons & Ammunition": {
+          "precision": 0.6,
+          "recall": 0.8571428571428571,
+          "f1": 0.7058823529411765,
+          "support": 7
+        }
+      },
+      "n": 298,
+      "calibration_error": 0.20071857517407368,
+      "primary_metric": "macro_f1",
+      "primary": 0.6269835829053962
+    },
+    "n": 298,
+    "note": "the specialist on the same sealed rows the baseline was scored on"
+  },
+  "real_vs_synthetic": null,
+  "latency": {
+    "p50_ms": 0.2324995002709329,
+    "p99_ms": 673.797248119954
+  },
+  "cost_per_1m_usd": 25.874534234902352,
+  "cost_formula": "sum over stages of (share of items reaching the stage \u00d7 its cost)",
+  "throughput_per_s": null,
+  "model_size_mb": null,
+  "cascade": {
+    "taus": [
+      0.5
+    ],
+    "primary": 0.6706012473034463,
+    "shares": [
+      0.6515151515151515,
+      0.3484848484848485
+    ],
+    "cost_per_1m_usd": 25.874534234902352,
+    "escalation_rate": 0.3484848484848485,
+    "tau": 0.5,
+    "n": 528,
+    "alone_same_sample": [
+      0.6256701343291244,
+      0.6568054000622388
+    ],
+    "base_primary_same_sample": 0.6256701343291244,
+    "llm_primary_same_sample": 0.6568054000622388,
+    "best_primary_any_tau": 0.675217681249038,
+    "tau_rule": "lowest expected cost within 0.005 of the best threshold combination",
+    "sample": "the LLM rung's capped validation sample",
+    "winner_alone_same_sample": 0.6256701343291244,
+    "base": "A-07",
+    "fallback": "K-11",
+    "stages": [
+      {
+        "cand": "A-07",
+        "family": "A",
+        "share": 0.6515151515151515,
+        "tau": 0.5,
+        "reach": 1.0
+      },
+      {
+        "cand": "K-11",
+        "family": "K",
+        "share": 0.3484848484848485,
+        "tau": null,
+        "reach": 0.3484848484848485
+      }
+    ],
+    "cost_formula": "sum over stages of (share of items reaching the stage \u00d7 its cost)",
+    "p50_ms": 0.2324995002709329,
+    "p99_ms": 673.797248119954,
+    "cascades_tried": [
+      {
+        "cascade": "H(A-07\u2192K-11)",
+        "primary": 0.6706012473034463,
+        "gain": 0.04493111297432184,
+        "cost_per_1m_usd": 25.874534234902352,
+        "stages": [
+          {
+            "cand": "A-07",
+            "family": "A",
+            "share": 0.6515151515151515,
+            "tau": 0.5,
+            "reach": 1.0
+          },
+          {
+            "cand": "K-11",
+            "family": "K",
+            "share": 0.3484848484848485,
+            "tau": null,
+            "reach": 0.3484848484848485
+          }
+        ],
+        "allowed": true,
+        "why_not_allowed": null
+      }
+    ],
+    "pick_rule": "gain over A-07 alone > 0.01, then the cheapest within 0.005 of the best cascade"
+  },
+  "more_data_curve": [
+    {
+      "data_frac": 0.1,
+      "val_primary": 0.4234044193957401
+    },
+    {
+      "data_frac": 0.4,
+      "val_primary": 0.552434653906597
+    },
+    {
+      "data_frac": 1.0,
+      "val_primary": 0.6174033476633546
+    }
+  ],
+  "weaknesses": [
+    "Professional Services confused with Facilities & Construction (32 validation errors): Service contracts with site-specific work keywords (exploration, survey, installation, field testing, bridge, dam, park) are misclassified as construction due to overlapping location and activity terminology.",
+    "Facilities & Construction confused with Professional Services (27 validation errors): Facilities records using service-oriented language (management support, planning, technical data, restoration services, environmental support) are misclassified as professional services due to the prevalence of 'services' and 'support' terms.",
+    "Sustainment S&E confused with Industrial Products & Services (26 validation errors): Sustainment spare parts and components (pumps, bearings, wheels, clamps) with NSNs, part numbers, and hardware-specific nomenclature resemble industrial product purchases.",
+    "Industrial Products & Services confused with Sustainment S&E (21 validation errors): Industrial product procurements (gear assemblies, fuel systems, filters, manifolds, coolant drums) with assembly/part descriptors, NSNs, and quantities mimic sustainment spare-part orders."
+  ],
+  "repair_rounds": [],
+  "calibration": {
+    "method": "temperature scaling (fit on validation)",
+    "temperature": 0.7198740136832902,
+    "ece_before": 0.13644280700412717,
+    "ece_after_crossfit": 0.04349897600669139,
+    "candidate": "A-07"
+  },
+  "decision": {
+    "passes_thresholds": true,
+    "reason": "first version; meets the target with macro_f1 0.647",
+    "target": {
+      "primary_min": 0.6,
+      "per_class_floor": null
+    }
+  },
+  "data_sources": [
+    {
+      "name": "usaspending_contracts",
+      "url": "https://api.usaspending.gov/api/v2/search/spending_by_award/",
+      "license": "USAspending.gov data: free to copy, adapt, redistribute, commercial or non-commercial, subject to the Limitation on Permissible Use of Dun & Bradstreet data",
+      "license_ok": true,
+      "rows_used": 17732,
+      "is_synthetic": false,
+      "citation": [
+        "USAspending.gov, U.S. Department of Treasury, Bureau of the Fiscal Service, https://www.usaspending.gov. Accessed 27 October 2026."
+      ]
+    }
+  ],
+  "splits": {
+    "train": 10298,
+    "train_before_rebalance": 10106,
+    "val": 3371,
+    "test": 3368,
+    "holdback": 887
+  },
+  "pareto_points": [
+    {
+      "cand": "J-01",
+      "family": "J",
+      "rung": 1,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 0.40266980904430827,
+      "val_secondary": 0.40266980904430827,
+      "cost_per_1m_usd": 0.0001390744111152675,
+      "p50_ms": 0.006229500286281109,
+      "p99_ms": 0.17729054205119668,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/J-01/r3/metrics.json"
+    },
+    {
+      "cand": "J-02",
+      "family": "J",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.07696886895416717,
+      "val_secondary": 0.07696886895416717,
+      "cost_per_1m_usd": 0.00014538926861869318,
+      "p50_ms": 0.005291018169373274,
+      "p99_ms": 0.04755442263558508,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/J-02/r1/metrics.json"
+    },
+    {
+      "cand": "J-03",
+      "family": "J",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.1441838157715055,
+      "val_secondary": 0.1441838157715055,
+      "cost_per_1m_usd": 0.00013384875000484252,
+      "p50_ms": 0.005250039976090193,
+      "p99_ms": 0.049906127387657886,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/J-03/r1/metrics.json"
+    },
+    {
+      "cand": "J-04",
+      "family": "J",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.07696886895416717,
+      "val_secondary": 0.07696886895416717,
+      "cost_per_1m_usd": 0.00010196661598128015,
+      "p50_ms": 0.005395966582000256,
+      "p99_ms": 0.03274504444561905,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/J-04/r1/metrics.json"
+    },
+    {
+      "cand": "A-01",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.4401139389612011,
+      "val_secondary": 0.4401139389612011,
+      "cost_per_1m_usd": 0.002166538024833875,
+      "p50_ms": 0.5853540496900678,
+      "p99_ms": 1.6491658880841,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/A-01/r1/metrics.json"
+    },
+    {
+      "cand": "A-02",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.44427816954741656,
+      "val_secondary": 0.44427816954741656,
+      "cost_per_1m_usd": 0.0019062232284281944,
+      "p50_ms": 0.537729007191956,
+      "p99_ms": 1.5635839104652418,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/A-02/r1/metrics.json"
+    },
+    {
+      "cand": "A-03",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.40834086355955784,
+      "val_secondary": 0.40834086355955784,
+      "cost_per_1m_usd": 0.0003634652085054169,
+      "p50_ms": 0.299145991448313,
+      "p99_ms": 1.494612469105054,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/A-03/r1/metrics.json"
+    },
+    {
+      "cand": "A-04",
+      "family": "A",
+      "rung": 1,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.5394561045016968,
+      "val_secondary": 0.5394561045016968,
+      "cost_per_1m_usd": 0.0002221528136327093,
+      "p50_ms": 0.26541651459410787,
+      "p99_ms": 2.4826657841913695,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/A-04/r2/metrics.json"
+    },
+    {
+      "cand": "A-05",
+      "family": "A",
+      "rung": 1,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 0.6309477906660107,
+      "val_secondary": 0.6309477906660107,
+      "cost_per_1m_usd": 0.0015426205011373616,
+      "p50_ms": 0.4502294468693435,
+      "p99_ms": 0.9133478067815312,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/A-05/r3/metrics.json"
+    },
+    {
+      "cand": "A-06",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.4322806612155492,
+      "val_secondary": 0.4322806612155492,
+      "cost_per_1m_usd": 0.0019412438931058899,
+      "p50_ms": 0.5355835310183465,
+      "p99_ms": 1.653936831280589,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/A-06/r1/metrics.json"
+    },
+    {
+      "cand": "A-07",
+      "family": "A",
+      "rung": 1,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 0.6174033476633546,
+      "val_secondary": 0.6174033476633546,
+      "cost_per_1m_usd": 0.00023120459932434635,
+      "p50_ms": 0.2324995002709329,
+      "p99_ms": 0.358484324533493,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/A-07/r3/metrics.json"
+    },
+    {
+      "cand": "A-08",
+      "family": "A",
+      "rung": 1,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.39296879770169946,
+      "val_secondary": 0.39296879770169946,
+      "cost_per_1m_usd": 0.0002790601120760616,
+      "p50_ms": 0.227937416639179,
+      "p99_ms": 0.7817490550223741,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/A-08/r1/metrics.json"
+    },
+    {
+      "cand": "C-01",
+      "family": "C",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.4464127982627606,
+      "val_secondary": 0.4464127982627606,
+      "cost_per_1m_usd": 0.18673571573088646,
+      "p50_ms": 19.718167022801936,
+      "p99_ms": 181.1642836651942,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/C-01/r1/metrics.json"
+    },
+    {
+      "cand": "C-02",
+      "family": "C",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.4122293104897505,
+      "val_secondary": 0.4122293104897505,
+      "cost_per_1m_usd": 0.20143201624608884,
+      "p50_ms": 19.83227051096037,
+      "p99_ms": 172.1765725862412,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/C-02/r1/metrics.json"
+    },
+    {
+      "cand": "C-03",
+      "family": "C",
+      "rung": 2,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.5049388864176053,
+      "val_secondary": 0.5049388864176053,
+      "cost_per_1m_usd": 0.09345158214820774,
+      "p50_ms": 9.670854546129704,
+      "p99_ms": 75.98676615979622,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/C-03/r2/metrics.json"
+    },
+    {
+      "cand": "I-01",
+      "family": "I",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.44243077770194306,
+      "val_secondary": 0.44243077770194306,
+      "cost_per_1m_usd": 0.18816336224042907,
+      "p50_ms": 19.98933352297172,
+      "p99_ms": 170.70012703777175,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/I-01/r1/metrics.json"
+    },
+    {
+      "cand": "I-02",
+      "family": "I",
+      "rung": 2,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.4220623346807468,
+      "val_secondary": 0.4220623346807468,
+      "cost_per_1m_usd": 0.19435996139323247,
+      "p50_ms": 20.152562472503632,
+      "p99_ms": 170.89034468873285,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/I-02/r1/metrics.json"
+    },
+    {
+      "cand": "I-03",
+      "family": "I",
+      "rung": 2,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.5439802658688149,
+      "val_secondary": 0.5439802658688149,
+      "cost_per_1m_usd": 0.07965335444967654,
+      "p50_ms": 9.813542012125254,
+      "p99_ms": 74.48796477404463,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": false,
+      "n_val": 3371,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/I-03/r2/metrics.json"
+    },
+    {
+      "cand": "K-01",
+      "family": "K",
+      "rung": 3,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.34250159146281034,
+      "val_secondary": 0.34250159146281034,
+      "cost_per_1m_usd": 49.833600000000004,
+      "p50_ms": 471.5616245230194,
+      "p99_ms": 3449.720957331009,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-01/r1/metrics.json"
+    },
+    {
+      "cand": "K-02",
+      "family": "K",
+      "rung": 3,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.38888456562064355,
+      "val_secondary": 0.38888456562064355,
+      "cost_per_1m_usd": 48.864000000000004,
+      "p50_ms": 1159.1393954877276,
+      "p99_ms": 6103.661298377556,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-02/r1/metrics.json"
+    },
+    {
+      "cand": "K-03",
+      "family": "K",
+      "rung": 3,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 0.627050332213817,
+      "val_secondary": 0.627050332213817,
+      "cost_per_1m_usd": 60.889599999999994,
+      "p50_ms": 667.6580830826424,
+      "p99_ms": 882.9048931947909,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-03/r3/metrics.json"
+    },
+    {
+      "cand": "K-04",
+      "family": "K",
+      "rung": 3,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.569335469573725,
+      "val_secondary": 0.569335469573725,
+      "cost_per_1m_usd": 60.414,
+      "p50_ms": 1002.3396874894388,
+      "p99_ms": 3718.3039759035455,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-04/r2/metrics.json"
+    },
+    {
+      "cand": "K-05",
+      "family": "K",
+      "rung": 3,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.5725171819450996,
+      "val_secondary": 0.5725171819450996,
+      "cost_per_1m_usd": 74.67439999999999,
+      "p50_ms": 544.604791502934,
+      "p99_ms": 31313.97456732462,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-05/r2/metrics.json"
+    },
+    {
+      "cand": "K-06",
+      "family": "K",
+      "rung": 3,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.5783411706523834,
+      "val_secondary": 0.5783411706523834,
+      "cost_per_1m_usd": 73.6216,
+      "p50_ms": 992.7426454960369,
+      "p99_ms": 4040.0114257307723,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-06/r2/metrics.json"
+    },
+    {
+      "cand": "K-07",
+      "family": "K",
+      "rung": 3,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.3524325837361333,
+      "val_secondary": 0.3524325837361333,
+      "cost_per_1m_usd": 51.5456,
+      "p50_ms": 554.7618335112929,
+      "p99_ms": 6334.7810054029105,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-07/r1/metrics.json"
+    },
+    {
+      "cand": "K-08",
+      "family": "K",
+      "rung": 3,
+      "round": 1,
+      "data_frac": 0.1,
+      "val_primary": 0.3856620444428708,
+      "val_secondary": 0.3856620444428708,
+      "cost_per_1m_usd": 50.5504,
+      "p50_ms": 1227.9901249858085,
+      "p99_ms": 6331.339784671434,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-08/r1/metrics.json"
+    },
+    {
+      "cand": "K-09",
+      "family": "K",
+      "rung": 3,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 0.5943936303957207,
+      "val_secondary": 0.5943936303957207,
+      "cost_per_1m_usd": 62.55199999999999,
+      "p50_ms": 670.7632290199399,
+      "p99_ms": 896.4631859818473,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-09/r3/metrics.json"
+    },
+    {
+      "cand": "K-10",
+      "family": "K",
+      "rung": 3,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.5763726629731475,
+      "val_secondary": 0.5763726629731475,
+      "cost_per_1m_usd": 62.1036,
+      "p50_ms": 991.7312704783399,
+      "p99_ms": 3958.629662321763,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-10/r2/metrics.json"
+    },
+    {
+      "cand": "K-11",
+      "family": "K",
+      "rung": 3,
+      "round": 3,
+      "data_frac": 1.0,
+      "val_primary": 0.6773479082693152,
+      "val_secondary": 0.6773479082693152,
+      "cost_per_1m_usd": 74.24799999999999,
+      "p50_ms": 666.3957499549724,
+      "p99_ms": 673.4387637954205,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-11/r3/metrics.json"
+    },
+    {
+      "cand": "K-12",
+      "family": "K",
+      "rung": 3,
+      "round": 2,
+      "data_frac": 0.4,
+      "val_primary": 0.5695767242334749,
+      "val_secondary": 0.5695767242334749,
+      "cost_per_1m_usd": 75.31439999999999,
+      "p50_ms": 1003.76629200764,
+      "p99_ms": 4002.665593430865,
+      "eliminated": true,
+      "final_round": false,
+      "uses_cloud": true,
+      "n_val": 150,
+      "metrics_path": "/Users/rajaselvamjayakumar/Documents/programing/synapse/runs/p2b-procurement-d/candidates/K-12/r2/metrics.json"
+    },
+    {
+      "cand": "H(A-07\u2192K-11)",
+      "family": "H",
+      "rung": 0,
+      "round": 0,
+      "data_frac": 1.0,
+      "val_primary": 0.6706012473034463,
+      "cost_per_1m_usd": 25.874534234902352,
+      "p50_ms": 0.2324995002709329,
+      "p99_ms": 673.797248119954,
+      "eliminated": false,
+      "final_round": true,
+      "uses_cloud": true,
+      "n_val": 528
+    }
+  ],
+  "monthly_volume": 2000000,
+  "monthly_volume_source": "task card",
+  "projection": {
+    "baseline_yearly_usd": 19362.76510067114,
+    "specialist_yearly_usd": 620.9888216376564,
+    "method": "cost per 1M predictions \u00d7 monthly_volume \u00d7 12 / 1e6 (marginal cost; the Serverless endpoint is shared by all specialists)"
+  }
+}

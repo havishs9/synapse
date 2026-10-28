@@ -1,0 +1,14 @@
+{
+  "run_id": "p2b-logs-d",
+  "task_id": "hdfs_logs",
+  "stage": "end",
+  "repair_round": 0,
+  "spend_usd": 0.070156,
+  "budget_usd": 5.0,
+  "started": 1793207747.47487,
+  "updated": 1793208589.308623,
+  "finished": 1793208589.305356,
+  "status": "done",
+  "message": "Run complete",
+  "kind": "build"
+}

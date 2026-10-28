@@ -1,0 +1,15 @@
+{
+  "patterns": [
+    {
+      "pattern": "The classifier misinterprets routine block allocation and DataNode receipt logs containing temporary task paths and block IDs as anomalous due to insufficient normal examples of this common NameNode-DataNode coordination pattern.",
+      "count": 1,
+      "example_ids": [
+        "blk_8201636386843043721"
+      ],
+      "suggested_data_fix": "Augment the normal training set with additional labeled examples of BLOCK* allocateBlock and DataXceiver Receiving block sequences from temporary MapReduce task directories.",
+      "true_label": "normal",
+      "predicted_label": "anomaly"
+    }
+  ],
+  "source": "llm"
+}

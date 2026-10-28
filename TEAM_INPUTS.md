@@ -8,9 +8,9 @@ Claude Code: read this file together with the spec files in `spec/` (start with 
 - License: MIT
 
 ## Team and ownership
-- Person A (pipeline, Sandboxes, agents):
-- Person B (UI, compare mode, deployment, demo video):
-- Other members and roles:
+- Person A (pipeline, Sandboxes, agents): Raj (Phase 3: storage, auth backend, build queue and workers, API endpoint deploys)
+- Person B (UI, compare mode, deployment, demo video): Havish (Phase 3: all frontend, product routes, Vercel hosting, docs, video)
+- Other members and roles: plan and contracts in `docs/TEAM_PLAN.md`
 
 ## Credits and budget
 - Token Factory credits claimed (promo form + Builders Program): yes / no
@@ -37,10 +37,10 @@ Claude Code: read this file together with the spec files in `spec/` (start with 
 ## Decisions (defaults from spec/00_START_HERE.md; change only if the team agrees)
 - Main demo task: procurement categorization (USAspending)
 - Second showcase task: system log anomaly detection (LogHub HDFS)
-- Optional third task: Banking77 (yes / no)
+- Optional third task: Banking77: yes (built 2026-10-28, `p2b-support-c`)
 - Prompt-injection task (STRETCH): no
 - Specialist hosting: one shared specialist server on one Nebius Serverless CPU endpoint (fallback: main backend)
-- Public demo app hosting:
+- Public demo app hosting: frontend on Vercel, API and specialists on the Nebius Serverless endpoint (2026-10-28)
 - Exact example record for compare mode in the video:
 
 ## Data

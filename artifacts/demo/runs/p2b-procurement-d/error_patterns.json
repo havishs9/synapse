@@ -1,0 +1,73 @@
+{
+  "patterns": [
+    {
+      "pattern": "Service contracts with site-specific work keywords (exploration, survey, installation, field testing, bridge, dam, park) are misclassified as construction due to overlapping location and activity terminology.",
+      "count": 32,
+      "example_ids": [
+        "CONT_AWD_W9136425FA025_9700_W9136421A0006_9700",
+        "CONT_AWD_W912P925F0015_9700_W912P922D0007_9700",
+        "CONT_AWD_W9124P25P0004_9700_-NONE-_-NONE-",
+        "CONT_AWD_W9124J25C0003_9700_-NONE-_-NONE-",
+        "CONT_AWD_W50S8W25PA005_9700_-NONE-_-NONE-",
+        "CONT_AWD_W9127N25P0026_9700_-NONE-_-NONE-",
+        "CONT_AWD_W9124D25PA200_9700_-NONE-_-NONE-",
+        "CONT_AWD_W912HY25F0034_9700_W912HY21D0001_9700"
+      ],
+      "suggested_data_fix": "Add training examples of professional services containing construction-adjacent keywords (survey, exploration, installation, geotechnical, field testing) explicitly labeled as Professional Services.",
+      "true_label": "Professional Services",
+      "predicted_label": "Facilities & Construction"
+    },
+    {
+      "pattern": "Facilities records using service-oriented language (management support, planning, technical data, restoration services, environmental support) are misclassified as professional services due to the prevalence of 'services' and 'support' terms.",
+      "count": 27,
+      "example_ids": [
+        "CONT_AWD_W9124825F2002_9700_W5168W23D0011_9700",
+        "CONT_AWD_W9124P25F0386_9700_W9124P22D0101_9700",
+        "CONT_AWD_W912DS25FA042_9700_W912DS24D0001_9700",
+        "CONT_AWD_W912L725PA036_9700_-NONE-_-NONE-",
+        "CONT_AWD_W912PP25F0020_9700_W912PP20D0003_9700",
+        "CONT_AWD_W56ZTN25FA010_9700_W56ZTN21D0001_9700",
+        "CONT_AWD_W912DY25FA028_9700_W912DY22D0084_9700",
+        "CONT_AWD_W912P925FA099_9700_W912P920D0026_9700"
+      ],
+      "suggested_data_fix": "Augment training data with facilities/construction records containing service-framework phrasing (construction management support, planning updates, forestry restoration, imagery analysis) labeled as Facilities & Construction.",
+      "true_label": "Facilities & Construction",
+      "predicted_label": "Professional Services"
+    },
+    {
+      "pattern": "Sustainment spare parts and components (pumps, bearings, wheels, clamps) with NSNs, part numbers, and hardware-specific nomenclature resemble industrial product purchases.",
+      "count": 26,
+      "example_ids": [
+        "CONT_AWD_SPRRA125P0001_9700_-NONE-_-NONE-",
+        "CONT_AWD_SPEHA625F0176_9700_SPE4AX19D9411_9700",
+        "CONT_AWD_W91ZLK25PA017_9700_-NONE-_-NONE-",
+        "CONT_AWD_SPRHA125F0021_9700_SPE4AX18D9416_9700",
+        "CONT_AWD_SPETA625P0021_9700_-NONE-_-NONE-",
+        "CONT_AWD_SPMYM225P0133_9700_-NONE-_-NONE-",
+        "CONT_AWD_W9127S25P0005_9700_-NONE-_-NONE-",
+        "CONT_AWD_SPMYM225F0216_9700_SPMYM221D0002_9700"
+      ],
+      "suggested_data_fix": "Inject more sustainment examples featuring NSN/part-number patterns and component-level terminology (assembly, repair, spare, replacement, metering) labeled as Sustainment S&E.",
+      "true_label": "Sustainment S&E",
+      "predicted_label": "Industrial Products & Services"
+    },
+    {
+      "pattern": "Industrial product procurements (gear assemblies, fuel systems, filters, manifolds, coolant drums) with assembly/part descriptors, NSNs, and quantities mimic sustainment spare-part orders.",
+      "count": 21,
+      "example_ids": [
+        "CONT_AWD_SPRPA125V0046_9700_-NONE-_-NONE-",
+        "CONT_AWD_W911S225P0022_9700_-NONE-_-NONE-",
+        "CONT_AWD_W912CH25F0190_9700_W912CH25D0033_9700",
+        "CONT_AWD_W519TC25P2345_9700_-NONE-_-NONE-",
+        "CONT_AWD_SPRMM125PHA33_9700_-NONE-_-NONE-",
+        "CONT_AWD_W912CH25P0029_9700_-NONE-_-NONE-",
+        "CONT_AWD_SPRPA125P0085_9700_-NONE-_-NONE-",
+        "CONT_AWD_W911PT25FA072_9700_W911PT21A0003_9700"
+      ],
+      "suggested_data_fix": "Add industrial product examples with part-like specifications (assembly, system, distribution, drum, filter) and NSNs labeled as Industrial Products & Services to differentiate procurement from sustainment.",
+      "true_label": "Industrial Products & Services",
+      "predicted_label": "Sustainment S&E"
+    }
+  ],
+  "source": "llm"
+}

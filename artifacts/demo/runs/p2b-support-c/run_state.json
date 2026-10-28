@@ -1,0 +1,14 @@
+{
+  "run_id": "p2b-support-c",
+  "task_id": "support_tickets",
+  "stage": "end",
+  "repair_round": 0,
+  "spend_usd": 0.309663,
+  "budget_usd": 5.0,
+  "started": 1793205797.9464488,
+  "updated": 1793206344.8833249,
+  "finished": 1793206344.875484,
+  "status": "done",
+  "message": "Run complete",
+  "kind": "build"
+}

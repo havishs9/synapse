@@ -1,0 +1,149 @@
+{
+  "primary_metric": "macro_f1",
+  "primary": 0.5763726629731475,
+  "macro_precision": 0.592603303129619,
+  "macro_recall": 0.5782585835217414,
+  "macro_f1": 0.5763726629731475,
+  "accuracy": 0.64,
+  "per_class": {
+    "Aircraft, Ships/Submarines & Land Vehicles": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 2
+    },
+    "Clothing, Textiles & Subsistence S&E": {
+      "precision": 1.0,
+      "recall": 0.875,
+      "f1": 0.9333333333333333,
+      "support": 8
+    },
+    "Electronic & Communication Equipment": {
+      "precision": 0.3333333333333333,
+      "recall": 0.375,
+      "f1": 0.35294117647058826,
+      "support": 8
+    },
+    "Electronic & Communication Services": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 2
+    },
+    "Equipment Related Services": {
+      "precision": 0.4,
+      "recall": 0.5714285714285714,
+      "f1": 0.47058823529411764,
+      "support": 7
+    },
+    "Facilities & Construction": {
+      "precision": 0.6153846153846154,
+      "recall": 0.7272727272727273,
+      "f1": 0.6666666666666666,
+      "support": 11
+    },
+    "Human Capital": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666,
+      "support": 4
+    },
+    "IT": {
+      "precision": 0.6923076923076923,
+      "recall": 0.75,
+      "f1": 0.72,
+      "support": 12
+    },
+    "Industrial Products & Services": {
+      "precision": 0.6,
+      "recall": 0.46153846153846156,
+      "f1": 0.5217391304347826,
+      "support": 13
+    },
+    "Medical": {
+      "precision": 0.8,
+      "recall": 0.5714285714285714,
+      "f1": 0.6666666666666666,
+      "support": 7
+    },
+    "Miscellaneous S&E": {
+      "precision": 0.4,
+      "recall": 0.4,
+      "f1": 0.4,
+      "support": 5
+    },
+    "Office Management": {
+      "precision": 0.7692307692307693,
+      "recall": 0.9090909090909091,
+      "f1": 0.8333333333333334,
+      "support": 11
+    },
+    "Professional Services": {
+      "precision": 0.6,
+      "recall": 0.6923076923076923,
+      "f1": 0.6428571428571429,
+      "support": 13
+    },
+    "Research and Development": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 6
+    },
+    "Security and Protection": {
+      "precision": 0.25,
+      "recall": 0.25,
+      "f1": 0.25,
+      "support": 4
+    },
+    "Sustainment S&E": {
+      "precision": 0.5714285714285714,
+      "recall": 0.6153846153846154,
+      "f1": 0.5925925925925926,
+      "support": 13
+    },
+    "Transportation and Logistics Services": {
+      "precision": 0.7,
+      "recall": 0.5384615384615384,
+      "f1": 0.6086956521739131,
+      "support": 13
+    },
+    "Travel & Lodging": {
+      "precision": 0.7777777777777778,
+      "recall": 1.0,
+      "f1": 0.875,
+      "support": 7
+    },
+    "Weapons & Ammunition": {
+      "precision": 0.75,
+      "recall": 0.75,
+      "f1": 0.75,
+      "support": 4
+    }
+  },
+  "calibration_error": 0.30733333333333346,
+  "n": 150,
+  "pr_auc": null,
+  "recall_at_fpr": null,
+  "fpr_target": null,
+  "p50_ms": 991.7312704783399,
+  "p99_ms": 3958.629662321763,
+  "throughput_per_s": 1.0083376714719017,
+  "model_size_mb": 1.134471,
+  "cost_per_1m_usd": 62.1036,
+  "cost_formula": {
+    "kind": "tokens",
+    "model": "nvidia/Nemotron-3_5-Lightning",
+    "mean_prompt_tokens": 955.38,
+    "mean_completion_tokens": 19.92,
+    "price_per_1m_tokens": {
+      "input": 0.06,
+      "cached_input": 0.03,
+      "output": 0.24
+    },
+    "cpu_part_per_1m_usd": 0.0,
+    "formula": "1e6 \u00d7 (prompt_tokens \u00d7 input_price + completion_tokens \u00d7 output_price) / 1e6 + cpu_part"
+  },
+  "split": "val",
+  "secondary": 0.5763726629731475
+}

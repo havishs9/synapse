@@ -1,0 +1,893 @@
+{
+  "runs": [
+    {
+      "cand": "J-01",
+      "family": "J",
+      "config": {
+        "min_precision": 0.8,
+        "min_support": 5
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-01/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.452 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.4523809523809524,
+      "val_secondary": 0.46852130325814534,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.4523809523809524
+        }
+      ]
+    },
+    {
+      "cand": "J-02",
+      "family": "J",
+      "config": {
+        "min_precision": 0.8,
+        "min_support": 10
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-02/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.381 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.38095238095238093,
+      "val_secondary": 0.39919799498746866,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.38095238095238093
+        }
+      ]
+    },
+    {
+      "cand": "J-03",
+      "family": "J",
+      "config": {
+        "min_precision": 0.8,
+        "min_support": 20
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-03/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.381 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.38095238095238093,
+      "val_secondary": 0.39919799498746866,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.38095238095238093
+        }
+      ]
+    },
+    {
+      "cand": "J-04",
+      "family": "J",
+      "config": {
+        "min_precision": 0.9,
+        "min_support": 5
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-04/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.452 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.4523809523809524,
+      "val_secondary": 0.46852130325814534,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.4523809523809524
+        }
+      ]
+    },
+    {
+      "cand": "J-05",
+      "family": "J",
+      "config": {
+        "min_precision": 0.9,
+        "min_support": 10
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-05/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.381 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.38095238095238093,
+      "val_secondary": 0.39919799498746866,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.38095238095238093
+        }
+      ]
+    },
+    {
+      "cand": "J-06",
+      "family": "J",
+      "config": {
+        "min_precision": 0.9,
+        "min_support": 20
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-06/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.381 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.38095238095238093,
+      "val_secondary": 0.39919799498746866,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.38095238095238093
+        }
+      ]
+    },
+    {
+      "cand": "A-01",
+      "family": "A",
+      "config": {
+        "C": 1.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-01/r1/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.890 < 0.966 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.8902495070068562,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-02",
+      "family": "A",
+      "config": {
+        "C": 1.0,
+        "char": true,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-02/r1/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.893 < 0.966 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.8931217506507038,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-03",
+      "family": "A",
+      "config": {
+        "C": 1.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-03/r1/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.893 < 0.966 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.8928797035311673,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-04",
+      "family": "A",
+      "config": {
+        "C": 1.0,
+        "char": false,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-04/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 1.0,
+      "val_secondary": 0.9836134813499386,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 1.0
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-05",
+      "family": "A",
+      "config": {
+        "C": 4.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-05/r1/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.894 < 0.966 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.8938520880216777,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-06",
+      "family": "A",
+      "config": {
+        "C": 4.0,
+        "char": true,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-06/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 1.0,
+      "val_secondary": 0.9994347739095638,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 1.0
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-07",
+      "family": "A",
+      "config": {
+        "C": 4.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-07/r1/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.894 < 0.966 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.8936849240661203,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-08",
+      "family": "A",
+      "config": {
+        "C": 4.0,
+        "char": false,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-08/r1/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.924 < 0.966 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.9244759843737371,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-09",
+      "family": "A",
+      "config": {
+        "C": 16.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-09/r1/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.914 < 0.966 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.9137877507527851,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-10",
+      "family": "A",
+      "config": {
+        "C": 16.0,
+        "char": true,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-10/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 1.0,
+      "val_secondary": 0.9992878015403692,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 1.0
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-11",
+      "family": "A",
+      "config": {
+        "C": 16.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-11/r1/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.920 < 0.966 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.9199233762491262,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "A-12",
+      "family": "A",
+      "config": {
+        "C": 16.0,
+        "char": false,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-12/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 1.0,
+      "val_secondary": 0.999859943977591,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 1.0
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "E-01",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.05,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-01/r2/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.988 < 1.000 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.9880952380952381,
+      "val_secondary": 0.9920218813434358,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.9880952380952381
+        }
+      ]
+    },
+    {
+      "cand": "E-02",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.05,
+        "n_estimators": 300,
+        "num_leaves": 31
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-02/r2/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.988 < 1.000 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.9880952380952381,
+      "val_secondary": 0.9935889625283512,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.9880952380952381
+        }
+      ]
+    },
+    {
+      "cand": "E-03",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.05,
+        "n_estimators": 300,
+        "num_leaves": 63
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-03/r1/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.966 < 0.966 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.9661570046870547,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "E-04",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-04/r2/metrics.json",
+      "elimination_reason": "tied on recall_at_fpr (1.000); lost the tie-break 0.995 < 0.997 (PR-AUC)",
+      "val_score": 1.0,
+      "val_secondary": 0.9947433636827525,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 1.0
+        }
+      ]
+    },
+    {
+      "cand": "E-05",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "num_leaves": 31
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-05/r2/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.988 < 1.000 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.9880952380952381,
+      "val_secondary": 0.9944932419803358,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.9880952380952381
+        }
+      ]
+    },
+    {
+      "cand": "E-06",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "num_leaves": 63
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-06/r2/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.988 < 1.000 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.9880952380952381,
+      "val_secondary": 0.9944932419803361,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 1.0
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.9880952380952381
+        }
+      ]
+    },
+    {
+      "cand": "I-01",
+      "family": "I",
+      "config": {
+        "backend": "local",
+        "k": 10,
+        "method": "knn"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-01/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.381 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.38095238095238093,
+      "val_secondary": 0.4385715831283077,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.38095238095238093
+        }
+      ]
+    },
+    {
+      "cand": "I-02",
+      "family": "I",
+      "config": {
+        "backend": "local",
+        "method": "centroid"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-02/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.393 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.39285714285714285,
+      "val_secondary": 0.4295407396914871,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.39285714285714285
+        }
+      ]
+    },
+    {
+      "cand": "I-03",
+      "family": "I",
+      "config": {
+        "backend": "local",
+        "k": 25,
+        "method": "knn"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-03/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.381 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.38095238095238093,
+      "val_secondary": 0.4312680898757246,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.38095238095238093
+        }
+      ]
+    },
+    {
+      "cand": "I-04",
+      "family": "I",
+      "config": {
+        "backend": "cloud",
+        "k": 10,
+        "method": "knn"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-04/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.940 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.9404761904761905,
+      "val_secondary": 0.9291534846625453,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.9404761904761905
+        }
+      ]
+    },
+    {
+      "cand": "I-05",
+      "family": "I",
+      "config": {
+        "backend": "cloud",
+        "method": "centroid"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-05/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.393 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.39285714285714285,
+      "val_secondary": 0.45149277903409685,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.39285714285714285
+        }
+      ]
+    },
+    {
+      "cand": "I-06",
+      "family": "I",
+      "config": {
+        "backend": "cloud",
+        "k": 25,
+        "method": "knn"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-06/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.952 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.9523809523809523,
+      "val_secondary": 0.9339545952594307,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.9523809523809523
+        }
+      ]
+    },
+    {
+      "cand": "K-01",
+      "family": "K",
+      "config": {
+        "instruction": 1,
+        "n_examples": 0,
+        "role": "ladder_K_alternative"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-01/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.000 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.0,
+      "val_secondary": 0.03616138763197587,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.0
+        }
+      ]
+    },
+    {
+      "cand": "K-02",
+      "family": "K",
+      "config": {
+        "instruction": 1,
+        "n_examples": 3,
+        "role": "ladder_K_alternative"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-02/r1/metrics.json",
+      "elimination_reason": "recall_at_fpr 0.000 < 1.000 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.0,
+      "val_secondary": 0.6666666666666666,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.0
+        }
+      ]
+    }
+  ]
+}

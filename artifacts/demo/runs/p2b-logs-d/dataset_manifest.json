@@ -1,0 +1,97 @@
+{
+  "sources": [
+    {
+      "name": "loghub_hdfs_v1",
+      "url": "https://zenodo.org/records/8196385/files/HDFS_v1.zip",
+      "license": "Loghub license: freely available for research or academic work; must reference the loghub repo URL and cite the Loghub paper; license notice must be included in all copies",
+      "license_ok": true,
+      "rows_used": 15000,
+      "is_synthetic": false,
+      "citation": [
+        "Jieming Zhu, Shilin He, Pinjia He, Jinyang Liu, Michael R. Lyu. Loghub: A Large Collection of System Log Datasets for AI-driven Log Analytics. ISSRE 2023.",
+        "Wei Xu, Ling Huang, Armando Fox, David Patterson, Michael Jordan. Detecting Large-Scale System Problems by Mining Console Logs. SOSP 2009."
+      ]
+    }
+  ],
+  "label_mapping": {
+    "type": "native_labels"
+  },
+  "format_match": {
+    "score": null,
+    "explanation": "No sample inputs were provided."
+  },
+  "splits": {
+    "train": {
+      "rows": 8550,
+      "class_counts": {
+        "anomaly": 250,
+        "normal": 8300
+      }
+    },
+    "train_before_rebalance": {
+      "rows": 8550,
+      "class_counts": {
+        "anomaly": 250,
+        "normal": 8300
+      }
+    },
+    "val": {
+      "rows": 2850,
+      "class_counts": {
+        "anomaly": 84,
+        "normal": 2766
+      }
+    },
+    "test": {
+      "rows": 2850,
+      "class_counts": {
+        "anomaly": 83,
+        "normal": 2767
+      }
+    },
+    "holdback": {
+      "rows": 750,
+      "class_counts": {
+        "anomaly": 22,
+        "normal": 728
+      }
+    }
+  },
+  "processing": [
+    "loaded prepared windows",
+    "grouped log lines by block ID",
+    "deduplicated on normalized text before splitting"
+  ],
+  "sampling": {
+    "note": "windows sampled at the natural anomaly ratio",
+    "blocks_total": 575061,
+    "blocks_sampled": 15000,
+    "label_counts": {
+      "normal": 14561,
+      "anomaly": 439
+    },
+    "anomaly_rate_source": 0.029280371995318757,
+    "seed": 13,
+    "max_lines": 300,
+    "dedupe": {
+      "before": 15000,
+      "after": 15000,
+      "duplicate_texts_with_conflicting_labels": 0
+    },
+    "load": {
+      "blocks_total": 575061,
+      "blocks_sampled": 15000,
+      "label_counts": {
+        "normal": 14561,
+        "anomaly": 439
+      },
+      "anomaly_rate_source": 0.029280371995318757,
+      "seed": 7,
+      "max_lines": 300
+    },
+    "rebalance": {
+      "note": "not rebalanced; class weights used instead"
+    },
+    "split": "holdback 5%, then train/val/test 60/20/20 stratified"
+  }
+}

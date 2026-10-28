@@ -1,0 +1,1322 @@
+{
+  "runs": [
+    {
+      "cand": "J-01",
+      "family": "J",
+      "config": {
+        "min_precision": 0.8,
+        "min_support": 5
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-01/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.5738264148991685,
+      "val_secondary": 0.5738264148991685,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.21761702636936447
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.43614761159609644
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.5738264148991685
+        }
+      ]
+    },
+    {
+      "cand": "J-02",
+      "family": "J",
+      "config": {
+        "min_precision": 0.8,
+        "min_support": 10
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-02/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.4470434295181943,
+      "val_secondary": 0.4470434295181943,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.07020161974237434
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.27586114380532445
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.4470434295181943
+        }
+      ]
+    },
+    {
+      "cand": "J-03",
+      "family": "J",
+      "config": {
+        "min_precision": 0.8,
+        "min_support": 20
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-03/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.000 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.00040293835043238383,
+      "val_secondary": 0.00040293835043238383,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.00040293835043238383
+        }
+      ]
+    },
+    {
+      "cand": "J-04",
+      "family": "J",
+      "config": {
+        "min_precision": 0.9,
+        "min_support": 5
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-04/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.163 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.16273426533230542,
+      "val_secondary": 0.16273426533230542,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.16273426533230542
+        }
+      ]
+    },
+    {
+      "cand": "J-05",
+      "family": "J",
+      "config": {
+        "min_precision": 0.9,
+        "min_support": 10
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-05/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.057 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.056941114395594565,
+      "val_secondary": 0.056941114395594565,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.056941114395594565
+        }
+      ]
+    },
+    {
+      "cand": "J-06",
+      "family": "J",
+      "config": {
+        "min_precision": 0.9,
+        "min_support": 20
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/J-06/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.26860407981307566,
+      "val_secondary": 0.26860407981307566,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.00040293835043238383
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.1429742469369343
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.26860407981307566
+        }
+      ]
+    },
+    {
+      "cand": "A-01",
+      "family": "A",
+      "config": {
+        "C": 1.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-01/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.749 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.7488592324963831,
+      "val_secondary": 0.7488592324963831,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.7488592324963831
+        }
+      ]
+    },
+    {
+      "cand": "A-02",
+      "family": "A",
+      "config": {
+        "C": 1.0,
+        "char": true,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-02/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.762 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.762318740938414,
+      "val_secondary": 0.762318740938414,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.762318740938414
+        }
+      ]
+    },
+    {
+      "cand": "A-03",
+      "family": "A",
+      "config": {
+        "C": 1.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-03/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.664 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.6635243604985928,
+      "val_secondary": 0.6635243604985928,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.6635243604985928
+        }
+      ]
+    },
+    {
+      "cand": "A-04",
+      "family": "A",
+      "config": {
+        "C": 1.0,
+        "char": false,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-04/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.697 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.6973227199207291,
+      "val_secondary": 0.6973227199207291,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.6973227199207291
+        }
+      ]
+    },
+    {
+      "cand": "A-05",
+      "family": "A",
+      "config": {
+        "C": 4.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-05/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.765 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.7645792803019734,
+      "val_secondary": 0.7645792803019734,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.7645792803019734
+        }
+      ]
+    },
+    {
+      "cand": "A-06",
+      "family": "A",
+      "config": {
+        "C": 4.0,
+        "char": true,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-06/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.762 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.7617381871704696,
+      "val_secondary": 0.7617381871704696,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.7617381871704696
+        }
+      ]
+    },
+    {
+      "cand": "A-07",
+      "family": "A",
+      "config": {
+        "C": 4.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-07/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.703 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.7025753951808799,
+      "val_secondary": 0.7025753951808799,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.7025753951808799
+        }
+      ]
+    },
+    {
+      "cand": "A-08",
+      "family": "A",
+      "config": {
+        "C": 4.0,
+        "char": false,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-08/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.696 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.6960348292583851,
+      "val_secondary": 0.6960348292583851,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.6960348292583851
+        }
+      ]
+    },
+    {
+      "cand": "A-09",
+      "family": "A",
+      "config": {
+        "C": 16.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-09/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.8956868398835508,
+      "val_secondary": 0.8956868398835508,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.7718542544980067
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.8726529586830386
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.8956868398835508
+        }
+      ]
+    },
+    {
+      "cand": "A-10",
+      "family": "A",
+      "config": {
+        "C": 16.0,
+        "char": true,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-10/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.758 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.7584535615113792,
+      "val_secondary": 0.7584535615113792,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.7584535615113792
+        }
+      ]
+    },
+    {
+      "cand": "A-11",
+      "family": "A",
+      "config": {
+        "C": 16.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-11/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.8768322265337545,
+      "val_secondary": 0.8768322265337545,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.7143277794608219
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.8410018283454141
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.8768322265337545
+        }
+      ]
+    },
+    {
+      "cand": "A-12",
+      "family": "A",
+      "config": {
+        "C": 16.0,
+        "char": false,
+        "model": "svm"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/A-12/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.691 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.6912191527047885,
+      "val_secondary": 0.6912191527047885,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.6912191527047885
+        }
+      ]
+    },
+    {
+      "cand": "E-01",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.05,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-01/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.525 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.5248536437537556,
+      "val_secondary": 0.5248536437537556,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.5248536437537556
+        }
+      ]
+    },
+    {
+      "cand": "E-02",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.05,
+        "n_estimators": 300,
+        "num_leaves": 31
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-02/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.524 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.5235360659219906,
+      "val_secondary": 0.5235360659219906,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.5235360659219906
+        }
+      ]
+    },
+    {
+      "cand": "E-03",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.05,
+        "n_estimators": 300,
+        "num_leaves": 63
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-03/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.522 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.5219739763786984,
+      "val_secondary": 0.5219739763786984,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.5219739763786984
+        }
+      ]
+    },
+    {
+      "cand": "E-04",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-04/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.495 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.4953034367681616,
+      "val_secondary": 0.4953034367681616,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.4953034367681616
+        }
+      ]
+    },
+    {
+      "cand": "E-05",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "num_leaves": 31
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-05/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.491 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.49089099009696496,
+      "val_secondary": 0.49089099009696496,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.49089099009696496
+        }
+      ]
+    },
+    {
+      "cand": "E-06",
+      "family": "E",
+      "config": {
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "num_leaves": 63
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/E-06/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.491 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.49137951527755136,
+      "val_secondary": 0.49137951527755136,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.49137951527755136
+        }
+      ]
+    },
+    {
+      "cand": "I-01",
+      "family": "I",
+      "config": {
+        "backend": "local",
+        "k": 10,
+        "method": "knn"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-01/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.9069733247015311,
+      "val_secondary": 0.9069733247015311,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8501394567686668
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.8957025748122099
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.9069733247015311
+        }
+      ]
+    },
+    {
+      "cand": "I-02",
+      "family": "I",
+      "config": {
+        "backend": "local",
+        "method": "centroid"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-02/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.814 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.8144877997982617,
+      "val_secondary": 0.8144877997982617,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8144877997982617
+        }
+      ]
+    },
+    {
+      "cand": "I-03",
+      "family": "I",
+      "config": {
+        "backend": "local",
+        "k": 25,
+        "method": "knn"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-03/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.9087103530131467,
+      "val_secondary": 0.9087103530131467,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8496965265032403
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.8970667505910481
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.9087103530131467
+        }
+      ]
+    },
+    {
+      "cand": "I-04",
+      "family": "I",
+      "config": {
+        "backend": "cloud",
+        "k": 10,
+        "method": "knn"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-04/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.9315920500743325,
+      "val_secondary": 0.9315920500743325,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8988846144369191
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.9271866599693889
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.9315920500743325
+        }
+      ]
+    },
+    {
+      "cand": "I-05",
+      "family": "I",
+      "config": {
+        "backend": "cloud",
+        "method": "centroid"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-05/r2/metrics.json",
+      "elimination_reason": "macro_f1 0.886 < 0.925 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.8860440957499461,
+      "val_secondary": 0.8860440957499461,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8762801783187897
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.8860440957499461
+        }
+      ]
+    },
+    {
+      "cand": "I-06",
+      "family": "I",
+      "config": {
+        "backend": "cloud",
+        "k": 25,
+        "method": "knn"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/I-06/r2/metrics.json",
+      "elimination_reason": "macro_f1 0.921 < 0.925 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.9211944655581822,
+      "val_secondary": 0.9211944655581822,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8956040322472607
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.9211944655581822
+        }
+      ]
+    },
+    {
+      "cand": "B-01",
+      "family": "B",
+      "config": {
+        "C": 1.0,
+        "head": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/B-01/r2/metrics.json",
+      "elimination_reason": "macro_f1 0.906 < 0.925 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.9059247589948318,
+      "val_secondary": 0.9059247589948318,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.873297877147267
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.9059247589948318
+        }
+      ]
+    },
+    {
+      "cand": "B-02",
+      "family": "B",
+      "config": {
+        "head": "mlp"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/B-02/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.9356084281909717,
+      "val_secondary": 0.9356084281909717,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8735061043789466
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.9247904656917318
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.9356084281909717
+        }
+      ]
+    },
+    {
+      "cand": "B-03",
+      "family": "B",
+      "config": {
+        "C": 4.0,
+        "head": "logreg"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/B-03/r2/metrics.json",
+      "elimination_reason": "macro_f1 0.920 < 0.925 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.920007361048083,
+      "val_secondary": 0.920007361048083,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.892165007324973
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.920007361048083
+        }
+      ]
+    },
+    {
+      "cand": "B-04",
+      "family": "B",
+      "config": {
+        "C": 16.0,
+        "head": "logreg"
+      },
+      "seed": 0,
+      "status": "done",
+      "round_reached": 3,
+      "data_frac": 1.0,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/B-04/r3/metrics.json",
+      "elimination_reason": null,
+      "val_score": 0.9331287909270998,
+      "val_secondary": 0.9331287909270998,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8969167770780508
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.9264168663826203
+        },
+        {
+          "round": 3,
+          "data_frac": 1.0,
+          "val": 0.9331287909270998
+        }
+      ]
+    },
+    {
+      "cand": "K-01",
+      "family": "K",
+      "config": {
+        "instruction": 0,
+        "n_examples": 0,
+        "role": "ladder_K_primary"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-01/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.633 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.6329004329004329,
+      "val_secondary": 0.6329004329004329,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.6329004329004329
+        }
+      ]
+    },
+    {
+      "cand": "K-02",
+      "family": "K",
+      "config": {
+        "instruction": 0,
+        "n_examples": 0,
+        "role": "ladder_K_alternative"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-02/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.705 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.7054730983302412,
+      "val_secondary": 0.7054730983302412,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.7054730983302412
+        }
+      ]
+    },
+    {
+      "cand": "K-03",
+      "family": "K",
+      "config": {
+        "instruction": 0,
+        "n_examples": 5,
+        "role": "ladder_K_primary"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-03/r2/metrics.json",
+      "elimination_reason": "macro_f1 0.829 < 0.925 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.8288806431663573,
+      "val_secondary": 0.8288806431663573,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8333333333333334
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.8288806431663573
+        }
+      ]
+    },
+    {
+      "cand": "K-04",
+      "family": "K",
+      "config": {
+        "instruction": 0,
+        "n_examples": 5,
+        "role": "ladder_K_alternative"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-04/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.829 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.8285714285714285,
+      "val_secondary": 0.8285714285714285,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8285714285714285
+        }
+      ]
+    },
+    {
+      "cand": "K-05",
+      "family": "K",
+      "config": {
+        "instruction": 0,
+        "n_examples": 10,
+        "role": "ladder_K_primary"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-05/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.807 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.8072356215213358,
+      "val_secondary": 0.8072356215213358,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8072356215213358
+        }
+      ]
+    },
+    {
+      "cand": "K-06",
+      "family": "K",
+      "config": {
+        "instruction": 0,
+        "n_examples": 10,
+        "role": "ladder_K_alternative"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-06/r2/metrics.json",
+      "elimination_reason": "macro_f1 0.876 < 0.925 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.8755411255411256,
+      "val_secondary": 0.8755411255411256,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8432900432900432
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.8755411255411256
+        }
+      ]
+    },
+    {
+      "cand": "K-07",
+      "family": "K",
+      "config": {
+        "instruction": 1,
+        "n_examples": 0,
+        "role": "ladder_K_primary"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-07/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.650 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.6504638218923933,
+      "val_secondary": 0.6504638218923933,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.6504638218923933
+        }
+      ]
+    },
+    {
+      "cand": "K-08",
+      "family": "K",
+      "config": {
+        "instruction": 1,
+        "n_examples": 0,
+        "role": "ladder_K_alternative"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-08/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.720 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.7197278911564625,
+      "val_secondary": 0.7197278911564625,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.7197278911564625
+        }
+      ]
+    },
+    {
+      "cand": "K-09",
+      "family": "K",
+      "config": {
+        "instruction": 1,
+        "n_examples": 5,
+        "role": "ladder_K_primary"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-09/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.822 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.82152133580705,
+      "val_secondary": 0.82152133580705,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.82152133580705
+        }
+      ]
+    },
+    {
+      "cand": "K-10",
+      "family": "K",
+      "config": {
+        "instruction": 1,
+        "n_examples": 5,
+        "role": "ladder_K_alternative"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-10/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.832 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.832034632034632,
+      "val_secondary": 0.832034632034632,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.832034632034632
+        }
+      ]
+    },
+    {
+      "cand": "K-11",
+      "family": "K",
+      "config": {
+        "instruction": 1,
+        "n_examples": 10,
+        "role": "ladder_K_primary"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 1,
+      "data_frac": 0.1,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-11/r1/metrics.json",
+      "elimination_reason": "macro_f1 0.812 < 0.833 (round 1 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.8115646258503401,
+      "val_secondary": 0.8115646258503401,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8115646258503401
+        }
+      ]
+    },
+    {
+      "cand": "K-12",
+      "family": "K",
+      "config": {
+        "instruction": 1,
+        "n_examples": 10,
+        "role": "ladder_K_alternative"
+      },
+      "seed": 0,
+      "status": "eliminated",
+      "round_reached": 2,
+      "data_frac": 0.4,
+      "error_log": null,
+      "fix_attempts": 0,
+      "metrics_path": "candidates/K-12/r2/metrics.json",
+      "elimination_reason": "macro_f1 0.877 < 0.925 (round 2 cutoff), and a cheaper candidate scores at least as well",
+      "val_score": 0.8772727272727272,
+      "val_secondary": 0.8772727272727272,
+      "history": [
+        {
+          "round": 1,
+          "data_frac": 0.1,
+          "val": 0.8718614718614718
+        },
+        {
+          "round": 2,
+          "data_frac": 0.4,
+          "val": 0.8772727272727272
+        }
+      ]
+    }
+  ]
+}

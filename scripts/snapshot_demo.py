@@ -2,7 +2,8 @@
 
   python scripts/snapshot_demo.py <run_id> [<run_id> ...]
 
-For each run: keeps every JSON handoff file, events.jsonl and the report card, and marks it replayable.
+For each run: keeps every JSON handoff file, events.jsonl and the report card in artifacts/demo/runs/ (committed),
+makes saved paths relative to the run folder, and marks it replayable.
 Procurement (USAspending) runs also keep train/val/holdback/sealed so v1 -> v2 improvement works on the
 deployed app. HDFS runs drop every file containing raw log lines (team rule: don't redistribute raw logs).
 The specialist's versions.json and bundles go to artifacts/demo/specialists/ with API keys stripped.
@@ -22,10 +23,17 @@ KEEP_ALWAYS = {"task_card.json", "dataset_manifest.json", "dataset_stats.json", 
                "eval_report.json", "error_patterns.json", "report_card.json", "report_card.md", "events.jsonl",
                "run_state.json", "llm_calls.jsonl", "labels.json", "corrections.json", "versions_gate.json"}
 DATA_FILES = {"train.jsonl", "val.jsonl", "holdback.jsonl", "synthetic_eval.jsonl"}
-DEST_RUNS = ROOT / "runs"
+DEST_RUNS = ROOT / "artifacts" / "demo" / "runs"      # committed; replay mode uses RUNS_DIR=./artifacts/demo/runs
 DEST_ART = ROOT / "artifacts" / "demo" / "specialists"
 # Families whose model file keeps raw training texts (kNN pool, retrieval pool, or a cascade wrapping one).
 STORES_TEXTS = {"I", "K", "L", "H"}
+
+
+def relative_paths(text: str, run_dir: Path) -> str:
+    """Saved runs hold absolute paths from the machine that ran them; make them relative to the run folder."""
+    for prefix in {str(run_dir) + "/", str(run_dir.resolve()) + "/"}:
+        text = text.replace(prefix, "")
+    return text
 
 
 def copy_bundle(src: Path, dest: Path) -> None:
@@ -58,6 +66,9 @@ def snapshot(run_id: str) -> None:
             out = dest / m.relative_to(src)
             out.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(m, out)
+    for name in ("runs.json", "eval_report.json"):
+        if (dest / name).exists():
+            (dest / name).write_text(relative_paths((dest / name).read_text(), src))
     (dest / "replay.ok").write_text("recorded demo run\n")
 
     for vfile in (config.artifacts_dir() / "specialists").glob("*/versions.json"):

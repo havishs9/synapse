@@ -1,0 +1,14 @@
+{
+  "rows": 11400,
+  "label_counts": {
+    "anomaly": 334,
+    "normal": 11066
+  },
+  "n_classes": 2,
+  "imbalance_ratio": 33.131736526946106,
+  "smallest_class": 334,
+  "avg_input_chars": 2725.44350877193,
+  "keyword_density": 0.03161706056814973,
+  "structured": true,
+  "input_type": "log_window"
+}

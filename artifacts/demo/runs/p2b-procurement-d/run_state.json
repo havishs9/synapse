@@ -1,0 +1,14 @@
+{
+  "run_id": "p2b-procurement-d",
+  "task_id": "procurement",
+  "stage": "end",
+  "repair_round": 0,
+  "spend_usd": 0.14605,
+  "budget_usd": 5.0,
+  "started": 1793206368.610637,
+  "updated": 1793207684.057817,
+  "finished": 1793207684.045658,
+  "status": "done",
+  "message": "Run complete",
+  "kind": "build"
+}

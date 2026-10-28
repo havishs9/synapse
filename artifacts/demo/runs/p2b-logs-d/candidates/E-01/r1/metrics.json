@@ -1,0 +1,44 @@
+{
+  "primary_metric": "recall_at_fpr",
+  "primary": 1.0,
+  "macro_precision": 0.9586949293043776,
+  "macro_recall": 0.9215344489205661,
+  "macro_f1": 0.9392786777890038,
+  "accuracy": 0.9933333333333333,
+  "per_class": {
+    "anomaly": {
+      "precision": 0.922077922077922,
+      "recall": 0.8452380952380952,
+      "f1": 0.8819875776397516,
+      "support": 84
+    },
+    "normal": {
+      "precision": 0.995311936530833,
+      "recall": 0.9978308026030369,
+      "f1": 0.996569777938256,
+      "support": 2766
+    }
+  },
+  "calibration_error": 0.006715384639165623,
+  "n": 2850,
+  "pr_auc": 0.9690637243483189,
+  "recall_at_fpr": 1.0,
+  "fpr_target": 0.01,
+  "p50_ms": 12.694832985289395,
+  "p99_ms": 21.723079858347777,
+  "throughput_per_s": 78.24570861481877,
+  "model_size_mb": 0.157474,
+  "cost_per_1m_usd": 0.24811588249151928,
+  "cost_formula": {
+    "kind": "cpu",
+    "endpoint_hourly_usd": 0.06989041095890411,
+    "preset": "2vcpu-8gb",
+    "platform": "cpu-d3",
+    "throughput_per_s": 78.24570861481877,
+    "formula": "endpoint_hourly_usd \u00d7 (1e6 / throughput_per_s) / 3600",
+    "latency_measured": "single-item predict_proba on 100 items, caches bypassed, on this machine's CPU",
+    "throughput_measured": "batch predict_proba on 300 items, caches bypassed"
+  },
+  "split": "val",
+  "secondary": 0.9690637243483189
+}

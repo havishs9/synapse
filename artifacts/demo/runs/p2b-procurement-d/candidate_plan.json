@@ -1,0 +1,766 @@
+{
+  "candidates": [
+    {
+      "id": "J-01",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.8,
+        "min_support": 5
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Keyword rules give microsecond latency and high precision for obvious category keywords (e.g., Aircraft, Weapons)."
+    },
+    {
+      "id": "J-02",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.8,
+        "min_support": 10
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Keyword rules give microsecond latency and high precision for obvious category keywords (e.g., Aircraft, Weapons)."
+    },
+    {
+      "id": "J-03",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.9,
+        "min_support": 5
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Keyword rules give microsecond latency and high precision for obvious category keywords (e.g., Aircraft, Weapons)."
+    },
+    {
+      "id": "J-04",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.9,
+        "min_support": 10
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Keyword rules give microsecond latency and high precision for obvious category keywords (e.g., Aircraft, Weapons)."
+    },
+    {
+      "id": "A-01",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 1.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "TF‑IDF + linear models are the classic fit for short, keyword‑heavy text with many classes."
+    },
+    {
+      "id": "A-02",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 1.0,
+        "char": true,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "TF‑IDF + linear models are the classic fit for short, keyword‑heavy text with many classes."
+    },
+    {
+      "id": "A-03",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 1.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "TF‑IDF + linear models are the classic fit for short, keyword‑heavy text with many classes."
+    },
+    {
+      "id": "A-04",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 1.0,
+        "char": false,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "TF‑IDF + linear models are the classic fit for short, keyword‑heavy text with many classes."
+    },
+    {
+      "id": "A-05",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 4.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "TF‑IDF + linear models are the classic fit for short, keyword‑heavy text with many classes."
+    },
+    {
+      "id": "A-06",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 4.0,
+        "char": true,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "TF‑IDF + linear models are the classic fit for short, keyword‑heavy text with many classes."
+    },
+    {
+      "id": "A-07",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 4.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "TF‑IDF + linear models are the classic fit for short, keyword‑heavy text with many classes."
+    },
+    {
+      "id": "A-08",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 4.0,
+        "char": false,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "TF‑IDF + linear models are the classic fit for short, keyword‑heavy text with many classes."
+    },
+    {
+      "id": "C-01",
+      "family": "C",
+      "rung": 2,
+      "params": {
+        "C": 1.0,
+        "head": "logreg"
+      },
+      "search_space": {
+        "head": [
+          "logreg",
+          "mlp"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Local MiniLM embeddings + a small head capture semantic similarity without cloud latency."
+    },
+    {
+      "id": "C-02",
+      "family": "C",
+      "rung": 2,
+      "params": {
+        "head": "mlp"
+      },
+      "search_space": {
+        "head": [
+          "logreg",
+          "mlp"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Local MiniLM embeddings + a small head capture semantic similarity without cloud latency."
+    },
+    {
+      "id": "C-03",
+      "family": "C",
+      "rung": 2,
+      "params": {
+        "C": 4.0,
+        "head": "logreg"
+      },
+      "search_space": {
+        "head": [
+          "logreg",
+          "mlp"
+        ],
+        "C": [
+          1.0,
+          4.0
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Local MiniLM embeddings + a small head capture semantic similarity without cloud latency."
+    },
+    {
+      "id": "I-01",
+      "family": "I",
+      "rung": 2,
+      "params": {
+        "backend": "local",
+        "k": 10,
+        "method": "knn"
+      },
+      "search_space": {
+        "method": [
+          "knn",
+          "centroid"
+        ],
+        "k": [
+          10,
+          25
+        ],
+        "backend": [
+          "local"
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Embedding kNN/centroids provide a non‑parametric semantic baseline that runs fast locally."
+    },
+    {
+      "id": "I-02",
+      "family": "I",
+      "rung": 2,
+      "params": {
+        "backend": "local",
+        "method": "centroid"
+      },
+      "search_space": {
+        "method": [
+          "knn",
+          "centroid"
+        ],
+        "k": [
+          10,
+          25
+        ],
+        "backend": [
+          "local"
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Embedding kNN/centroids provide a non‑parametric semantic baseline that runs fast locally."
+    },
+    {
+      "id": "I-03",
+      "family": "I",
+      "rung": 2,
+      "params": {
+        "backend": "local",
+        "k": 25,
+        "method": "knn"
+      },
+      "search_space": {
+        "method": [
+          "knn",
+          "centroid"
+        ],
+        "k": [
+          10,
+          25
+        ],
+        "backend": [
+          "local"
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Embedding kNN/centroids provide a non‑parametric semantic baseline that runs fast locally."
+    },
+    {
+      "id": "K-01",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 0,
+        "n_examples": 0,
+        "role": "ladder_K_primary"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-02",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 0,
+        "n_examples": 0,
+        "role": "ladder_K_alternative"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-03",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 0,
+        "n_examples": 5,
+        "role": "ladder_K_primary"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-04",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 0,
+        "n_examples": 5,
+        "role": "ladder_K_alternative"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-05",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 0,
+        "n_examples": 10,
+        "role": "ladder_K_primary"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-06",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 0,
+        "n_examples": 10,
+        "role": "ladder_K_alternative"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-07",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 1,
+        "n_examples": 0,
+        "role": "ladder_K_primary"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-08",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 1,
+        "n_examples": 0,
+        "role": "ladder_K_alternative"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-09",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 1,
+        "n_examples": 5,
+        "role": "ladder_K_primary"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-10",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 1,
+        "n_examples": 5,
+        "role": "ladder_K_alternative"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-11",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 1,
+        "n_examples": 10,
+        "role": "ladder_K_primary"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-12",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 1,
+        "n_examples": 10,
+        "role": "ladder_K_alternative"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_primary",
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          5,
+          10
+        ],
+        "instruction": [
+          0,
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    }
+  ],
+  "excluded": {
+    "F": "Not implemented.",
+    "D": "Not implemented.",
+    "G": "Not implemented (STRETCH off).",
+    "B": "Qwen3‑Embedding‑8B is large, targets paraphrase‑heavy text, and risks exceeding 50 ms latency.",
+    "E": "LightGBM engineered features are designed for log windows, not short purchase descriptions.",
+    "L": "Nemotron Super is even slower and unsuited for high‑volume low‑latency classification."
+  },
+  "summary": "Trying rules (J), TF‑IDF (A), local embeddings with linear heads (C), and embedding kNN/centroids (I) because short keyword‑heavy descriptions favor lexical and semantic matching with low latency.; prompted Nemotron (K) added so the cascade can be evaluated",
+  "planner_source": "llm"
+}

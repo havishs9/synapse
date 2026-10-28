@@ -19,7 +19,7 @@ print(s['platform'], s['chosen_preset'], s['disk_gib'])")
 
 # One --env flag per variable: the CLI takes KEY=VALUE pairs as a repeatable flag, not a comma list.
 ENVS=(
-  "APP_MODE=${DEPLOY_APP_MODE:-replay}" "TRAINING_BACKEND=local" "ARTIFACTS_DIR=./artifacts/demo" "RUNS_DIR=./runs"
+  "APP_MODE=${DEPLOY_APP_MODE:-replay}" "TRAINING_BACKEND=local" "ARTIFACTS_DIR=./artifacts/demo" "RUNS_DIR=./artifacts/demo/runs"
   "NEBIUS_BASE_URL=${NEBIUS_BASE_URL}" "CREDIT_BUDGET_USD=${CREDIT_BUDGET_USD:-5}"
   "DEMO_DAILY_BUDGET_USD=${DEMO_DAILY_BUDGET_USD:-3}"
   "NEBIUS_API_KEY=${NEBIUS_API_KEY}" "SPECIALIST_ADMIN_TOKEN=${SPECIALIST_ADMIN_TOKEN}" "API_KEY_PEPPER=${API_KEY_PEPPER}"

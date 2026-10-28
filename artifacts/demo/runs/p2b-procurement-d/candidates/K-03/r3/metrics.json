@@ -1,0 +1,152 @@
+{
+  "primary_metric": "macro_f1",
+  "primary": 0.627050332213817,
+  "macro_precision": 0.667562047063432,
+  "macro_recall": 0.6155392852761274,
+  "macro_f1": 0.627050332213817,
+  "accuracy": 0.6466666666666666,
+  "per_class": {
+    "Aircraft, Ships/Submarines & Land Vehicles": {
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1": 0.5,
+      "support": 2
+    },
+    "Clothing, Textiles & Subsistence S&E": {
+      "precision": 1.0,
+      "recall": 0.875,
+      "f1": 0.9333333333333333,
+      "support": 8
+    },
+    "Electronic & Communication Equipment": {
+      "precision": 0.4,
+      "recall": 0.5,
+      "f1": 0.4444444444444444,
+      "support": 8
+    },
+    "Electronic & Communication Services": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 2
+    },
+    "Equipment Related Services": {
+      "precision": 0.2857142857142857,
+      "recall": 0.5714285714285714,
+      "f1": 0.38095238095238093,
+      "support": 7
+    },
+    "Facilities & Construction": {
+      "precision": 0.8181818181818182,
+      "recall": 0.8181818181818182,
+      "f1": 0.8181818181818182,
+      "support": 11
+    },
+    "Human Capital": {
+      "precision": 1.0,
+      "recall": 0.5,
+      "f1": 0.6666666666666666,
+      "support": 4
+    },
+    "IT": {
+      "precision": 1.0,
+      "recall": 0.5833333333333334,
+      "f1": 0.7368421052631579,
+      "support": 12
+    },
+    "Industrial Products & Services": {
+      "precision": 0.42105263157894735,
+      "recall": 0.6153846153846154,
+      "f1": 0.5,
+      "support": 13
+    },
+    "Medical": {
+      "precision": 0.8333333333333334,
+      "recall": 0.7142857142857143,
+      "f1": 0.7692307692307693,
+      "support": 7
+    },
+    "Miscellaneous S&E": {
+      "precision": 0.5,
+      "recall": 0.4,
+      "f1": 0.4444444444444444,
+      "support": 5
+    },
+    "Office Management": {
+      "precision": 0.9,
+      "recall": 0.8181818181818182,
+      "f1": 0.8571428571428571,
+      "support": 11
+    },
+    "Professional Services": {
+      "precision": 0.5,
+      "recall": 0.6153846153846154,
+      "f1": 0.5517241379310345,
+      "support": 13
+    },
+    "Research and Development": {
+      "precision": 0.8571428571428571,
+      "recall": 1.0,
+      "f1": 0.9230769230769231,
+      "support": 6
+    },
+    "Security and Protection": {
+      "precision": 0.3333333333333333,
+      "recall": 0.25,
+      "f1": 0.2857142857142857,
+      "support": 4
+    },
+    "Sustainment S&E": {
+      "precision": 0.7777777777777778,
+      "recall": 0.5384615384615384,
+      "f1": 0.6363636363636364,
+      "support": 13
+    },
+    "Transportation and Logistics Services": {
+      "precision": 0.7,
+      "recall": 0.5384615384615384,
+      "f1": 0.6086956521739131,
+      "support": 13
+    },
+    "Travel & Lodging": {
+      "precision": 0.8571428571428571,
+      "recall": 0.8571428571428571,
+      "f1": 0.8571428571428571,
+      "support": 7
+    },
+    "Weapons & Ammunition": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 4
+    }
+  },
+  "calibration_error": 0.31426666666666647,
+  "n": 150,
+  "pr_auc": null,
+  "recall_at_fpr": null,
+  "fpr_target": null,
+  "p50_ms": 667.6580830826424,
+  "p99_ms": 882.9048931947909,
+  "throughput_per_s": 2.7610702695105735,
+  "model_size_mb": 2.409648,
+  "cost_per_1m_usd": 60.889599999999994,
+  "cost_formula": {
+    "kind": "tokens",
+    "model": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+    "mean_prompt_tokens": 917.8666666666667,
+    "mean_completion_tokens": 24.24,
+    "price_per_1m_tokens": {
+      "input": 0.06,
+      "cached_input": 0.012,
+      "output": 0.24
+    },
+    "cpu_part_per_1m_usd": 0.0,
+    "formula": "1e6 \u00d7 (prompt_tokens \u00d7 input_price + completion_tokens \u00d7 output_price) / 1e6 + cpu_part"
+  },
+  "split": "val",
+  "secondary": 0.627050332213817,
+  "p50_ms_during_search": 362.17839547316544,
+  "p99_ms_during_search": 76827.9931441712,
+  "latency_note": "re-measured after the search: 10 single-item calls one at a time, caches bypassed, from this machine"
+}

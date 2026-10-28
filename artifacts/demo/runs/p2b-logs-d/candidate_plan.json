@@ -1,0 +1,828 @@
+{
+  "candidates": [
+    {
+      "id": "J-01",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.8,
+        "min_support": 5
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10,
+          20
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Fast, interpretable rule-based baseline ideal for structured logs and microsecond latency."
+    },
+    {
+      "id": "J-02",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.8,
+        "min_support": 10
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10,
+          20
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Fast, interpretable rule-based baseline ideal for structured logs and microsecond latency."
+    },
+    {
+      "id": "J-03",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.8,
+        "min_support": 20
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10,
+          20
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Fast, interpretable rule-based baseline ideal for structured logs and microsecond latency."
+    },
+    {
+      "id": "J-04",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.9,
+        "min_support": 5
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10,
+          20
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Fast, interpretable rule-based baseline ideal for structured logs and microsecond latency."
+    },
+    {
+      "id": "J-05",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.9,
+        "min_support": 10
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10,
+          20
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Fast, interpretable rule-based baseline ideal for structured logs and microsecond latency."
+    },
+    {
+      "id": "J-06",
+      "family": "J",
+      "rung": 1,
+      "params": {
+        "min_precision": 0.9,
+        "min_support": 20
+      },
+      "search_space": {
+        "min_support": [
+          5,
+          10,
+          20
+        ],
+        "min_precision": [
+          0.8,
+          0.9
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Fast, interpretable rule-based baseline ideal for structured logs and microsecond latency."
+    },
+    {
+      "id": "A-01",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 1.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-02",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 1.0,
+        "char": true,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-03",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 1.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-04",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 1.0,
+        "char": false,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-05",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 4.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-06",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 4.0,
+        "char": true,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-07",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 4.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-08",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 4.0,
+        "char": false,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-09",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 16.0,
+        "char": true,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-10",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 16.0,
+        "char": true,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-11",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 16.0,
+        "char": false,
+        "model": "logreg"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "A-12",
+      "family": "A",
+      "rung": 1,
+      "params": {
+        "C": 16.0,
+        "char": false,
+        "model": "svm"
+      },
+      "search_space": {
+        "model": [
+          "logreg",
+          "svm"
+        ],
+        "C": [
+          1.0,
+          4.0,
+          16.0
+        ],
+        "char": [
+          true,
+          false
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Classic TF‑IDF + linear model; strong baseline for keyword‑heavy text and fits latency budget."
+    },
+    {
+      "id": "E-01",
+      "family": "E",
+      "rung": 1,
+      "params": {
+        "learning_rate": 0.05,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "search_space": {
+        "num_leaves": [
+          15,
+          31,
+          63
+        ],
+        "learning_rate": [
+          0.05,
+          0.1
+        ],
+        "n_estimators": [
+          300
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "LightGBM on engineered window features – explicitly recommended for long log windows and recall‑first optimization."
+    },
+    {
+      "id": "E-02",
+      "family": "E",
+      "rung": 1,
+      "params": {
+        "learning_rate": 0.05,
+        "n_estimators": 300,
+        "num_leaves": 31
+      },
+      "search_space": {
+        "num_leaves": [
+          15,
+          31,
+          63
+        ],
+        "learning_rate": [
+          0.05,
+          0.1
+        ],
+        "n_estimators": [
+          300
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "LightGBM on engineered window features – explicitly recommended for long log windows and recall‑first optimization."
+    },
+    {
+      "id": "E-03",
+      "family": "E",
+      "rung": 1,
+      "params": {
+        "learning_rate": 0.05,
+        "n_estimators": 300,
+        "num_leaves": 63
+      },
+      "search_space": {
+        "num_leaves": [
+          15,
+          31,
+          63
+        ],
+        "learning_rate": [
+          0.05,
+          0.1
+        ],
+        "n_estimators": [
+          300
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "LightGBM on engineered window features – explicitly recommended for long log windows and recall‑first optimization."
+    },
+    {
+      "id": "E-04",
+      "family": "E",
+      "rung": 1,
+      "params": {
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "num_leaves": 15
+      },
+      "search_space": {
+        "num_leaves": [
+          15,
+          31,
+          63
+        ],
+        "learning_rate": [
+          0.05,
+          0.1
+        ],
+        "n_estimators": [
+          300
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "LightGBM on engineered window features – explicitly recommended for long log windows and recall‑first optimization."
+    },
+    {
+      "id": "E-05",
+      "family": "E",
+      "rung": 1,
+      "params": {
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "num_leaves": 31
+      },
+      "search_space": {
+        "num_leaves": [
+          15,
+          31,
+          63
+        ],
+        "learning_rate": [
+          0.05,
+          0.1
+        ],
+        "n_estimators": [
+          300
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "LightGBM on engineered window features – explicitly recommended for long log windows and recall‑first optimization."
+    },
+    {
+      "id": "E-06",
+      "family": "E",
+      "rung": 1,
+      "params": {
+        "learning_rate": 0.1,
+        "n_estimators": 300,
+        "num_leaves": 63
+      },
+      "search_space": {
+        "num_leaves": [
+          15,
+          31,
+          63
+        ],
+        "learning_rate": [
+          0.05,
+          0.1
+        ],
+        "n_estimators": [
+          300
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "LightGBM on engineered window features – explicitly recommended for long log windows and recall‑first optimization."
+    },
+    {
+      "id": "I-01",
+      "family": "I",
+      "rung": 2,
+      "params": {
+        "backend": "local",
+        "k": 10,
+        "method": "knn"
+      },
+      "search_space": {
+        "method": [
+          "knn",
+          "centroid"
+        ],
+        "k": [
+          10,
+          25
+        ],
+        "backend": [
+          "local",
+          "cloud"
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Embedding‑based kNN/centroids for semantic similarity; cloud/local backends fit deployment and latency constraints."
+    },
+    {
+      "id": "I-02",
+      "family": "I",
+      "rung": 2,
+      "params": {
+        "backend": "local",
+        "method": "centroid"
+      },
+      "search_space": {
+        "method": [
+          "knn",
+          "centroid"
+        ],
+        "k": [
+          10,
+          25
+        ],
+        "backend": [
+          "local",
+          "cloud"
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Embedding‑based kNN/centroids for semantic similarity; cloud/local backends fit deployment and latency constraints."
+    },
+    {
+      "id": "I-03",
+      "family": "I",
+      "rung": 2,
+      "params": {
+        "backend": "local",
+        "k": 25,
+        "method": "knn"
+      },
+      "search_space": {
+        "method": [
+          "knn",
+          "centroid"
+        ],
+        "k": [
+          10,
+          25
+        ],
+        "backend": [
+          "local",
+          "cloud"
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Embedding‑based kNN/centroids for semantic similarity; cloud/local backends fit deployment and latency constraints."
+    },
+    {
+      "id": "I-04",
+      "family": "I",
+      "rung": 2,
+      "params": {
+        "backend": "cloud",
+        "k": 10,
+        "method": "knn"
+      },
+      "search_space": {
+        "method": [
+          "knn",
+          "centroid"
+        ],
+        "k": [
+          10,
+          25
+        ],
+        "backend": [
+          "local",
+          "cloud"
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Embedding‑based kNN/centroids for semantic similarity; cloud/local backends fit deployment and latency constraints."
+    },
+    {
+      "id": "I-05",
+      "family": "I",
+      "rung": 2,
+      "params": {
+        "backend": "cloud",
+        "method": "centroid"
+      },
+      "search_space": {
+        "method": [
+          "knn",
+          "centroid"
+        ],
+        "k": [
+          10,
+          25
+        ],
+        "backend": [
+          "local",
+          "cloud"
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Embedding‑based kNN/centroids for semantic similarity; cloud/local backends fit deployment and latency constraints."
+    },
+    {
+      "id": "I-06",
+      "family": "I",
+      "rung": 2,
+      "params": {
+        "backend": "cloud",
+        "k": 25,
+        "method": "knn"
+      },
+      "search_space": {
+        "method": [
+          "knn",
+          "centroid"
+        ],
+        "k": [
+          10,
+          25
+        ],
+        "backend": [
+          "local",
+          "cloud"
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "Embedding‑based kNN/centroids for semantic similarity; cloud/local backends fit deployment and latency constraints."
+    },
+    {
+      "id": "K-01",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 1,
+        "n_examples": 0,
+        "role": "ladder_K_alternative"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          3
+        ],
+        "instruction": [
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    },
+    {
+      "id": "K-02",
+      "family": "K",
+      "rung": 3,
+      "params": {
+        "instruction": 1,
+        "n_examples": 3,
+        "role": "ladder_K_alternative"
+      },
+      "search_space": {
+        "role": [
+          "ladder_K_alternative"
+        ],
+        "n_examples": [
+          0,
+          3
+        ],
+        "instruction": [
+          1
+        ]
+      },
+      "strategy": "real_only",
+      "reason": "added so the cascade (H) can escalate uncertain items to a prompted Nemotron model"
+    }
+  ],
+  "excluded": {
+    "F": "Not implemented.",
+    "D": "Not implemented.",
+    "G": "Not implemented (STRETCH off).",
+    "B": "Cloud‑based 8B embedding model overkill for structured binary log classification and risks exceeding 20 ms latency.",
+    "C": "Local MiniLM embeddings similarly heavy and not tailored for engineered log features.",
+    "L": "Even larger LLM, definitely exceeds latency."
+  },
+  "summary": "Trying rules (J), TF‑IDF linear models (A), LightGBM on engineered features (E), and embedding kNN/centroids (I) because they provide fast interpretable baselines, classic text classification, the recommended engineered‑feature approach for long log windows, and semantic similarity methods that fit the cloud deployment and latency budget.; prompted Nemotron (K) added so the cascade can be evaluated",
+  "planner_source": "llm"
+}

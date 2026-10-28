@@ -1,0 +1,39 @@
+{
+  "task_id": "hdfs_logs",
+  "task_name": "Log Anomaly Detector",
+  "description": "Flag anomalous sessions in Hadoop file-system (HDFS) logs. Each input is one block's log window.",
+  "input_type": "log_window",
+  "output_type": "binary",
+  "labels": [
+    {
+      "name": "anomaly",
+      "definition": "The block's session shows a failure or abnormal behavior"
+    },
+    {
+      "name": "normal",
+      "definition": "The block's session completed normally"
+    }
+  ],
+  "positive_definition": "anomaly",
+  "error_preference": "recall_first",
+  "per_class_error_costs": null,
+  "optimization_metric": "recall_at_fpr",
+  "fpr_target": 0.01,
+  "thresholds": {
+    "primary_min": 0.9,
+    "per_class_floor": null
+  },
+  "needs_reason": true,
+  "monthly_volume": 5000000,
+  "latency_budget_ms": 20.0,
+  "deployment": "cloud_ok",
+  "build_budget_usd": 5.0,
+  "build_budget_minutes": 30.0,
+  "sample_inputs": [],
+  "window_spec": {
+    "group_by": "block_id",
+    "window_minutes": null
+  },
+  "dataset_key": "loghub_hdfs_v1",
+  "plan_changes": []
+}
