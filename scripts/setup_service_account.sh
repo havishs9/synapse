@@ -24,7 +24,7 @@ EXPIRES=$(date -u -v+60d +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '+60 days
 jget() { python3 -c "import sys,json; d=json.load(sys.stdin); print(eval('d' + sys.argv[1]))" "$1"; }
 
 SA=$("$N" iam service-account get-by-name --parent-id "$PROJECT" --name synapse-backend --format json 2>/dev/null \
-     | jget "['metadata']['id']" || true)
+     | jget "['metadata']['id']" 2>/dev/null || true)
 if [ -z "$SA" ]; then
   SA=$("$N" iam service-account create --parent-id "$PROJECT" --name synapse-backend \
        --description "Synapse API endpoint and build workers: object storage, AI jobs, registry" --format json \

@@ -136,7 +136,7 @@ embedding responses) makes specialist predictions that hit embeddings or Nano fr
 | R-b | Login: **Google sign-in, open sign-up** | Decided. **To do (Raj)**: set up Google OAuth (steps below) |
 | R-c | Object Storage bucket | **Done**: `synapse-artifacts-e04crhvwbc` (eu-west2, 50 GiB cap, endpoint `https://storage.eu-west2.nebius.cloud`) |
 | R-d | Container Registry | **Done**: `registry-e04cjwm2bdv5k5b8hc` (`cr.eu-west2.nebius.cloud/e04cjwm2bdv5k5b8hc`; push/pull path VERIFY on first push) |
-| R-d2 | Service account `synapse-backend` (editors group), its S3 access key and authorized key | **To do (Raj)**: Claude's CLI call was blocked by the permission check (it grants tenant-wide edit rights). Review and run `bash scripts/setup_service_account.sh`: it writes the S3 keys into `.env` and the credentials file to `~/.config/synapse/` without printing them; keys expire after 60 days |
+| R-d2 | Service account `synapse-backend` (editors group), its S3 access key and authorized key | **Done 2026-10-28 (Raj ran the script)**: `serviceaccount-e04vfj54jr4tvp1qz0`; S3 key and `NEBIUS_SA_CREDENTIALS_FILE` are in Raj's `.env`; keys expire 2026-12-27. Bucket uploads verified (the bucket's default storage class is ENHANCED_THROUGHPUT; standard has no quota in eu-west2) |
 | R-e | Billed resources (AI Jobs, registry, bucket) | Approved |
 | R-f | Limits and budgets | Decided: §6 and `.env.example` |
 | R-g | `TAVILY_API_KEY` | In `.env` (Raj) |

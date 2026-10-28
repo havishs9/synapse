@@ -30,7 +30,7 @@ Claude Code: read this file together with the spec files in `spec/` (start with 
 - Sandboxes enabled on our account: UNKNOWN
 - Sandbox limits from whoami (timeout, CPU, memory): UNKNOWN
 - Serverless CPU endpoint created successfully: yes (2026-10-28, `aiendpoint-e04txwn4spe6v76nes`, https://port8000-b3arav7mmzek3n6.tunnel.applications.eu-west2.nebius.cloud)
-- Object Storage bucket created: yes (2026-10-28, `synapse-artifacts-e04crhvwbc`, eu-west2); Container Registry `registry-e04cjwm2bdv5k5b8hc`; service account pending (`scripts/setup_service_account.sh`, run by Raj)
+- Object Storage bucket created: yes (2026-10-28, `synapse-artifacts-e04crhvwbc`, eu-west2); Container Registry `registry-e04cjwm2bdv5k5b8hc`; service account `synapse-backend` created by Raj with `scripts/setup_service_account.sh` (2026-10-28; keys expire 2026-12-27); bucket default storage class set to ENHANCED_THROUGHPUT (eu-west2 has no standard-class quota)
 - Rate limits on our account: UNKNOWN
 - Answers received from Nebius Discord (paste with date):
 
