@@ -27,6 +27,19 @@ VERIFICATION.md); Serverless endpoint deployed in Phase 2 after the user logs in
 - [x] Shared specialist server on the Nebius Serverless endpoint: per-specialist routes and API keys, versioned routes — live at https://port8000-b3arav7mmzek3n6.tunnel.applications.eu-west2.nebius.cloud (endpoint `aiendpoint-e04txwn4spe6v76nes`, cpu-d3 2vcpu-8gb); live/pinned routes, cross-specialist 403, revocation and cascade escalation verified on the URL (VERIFICATION.md §4). Artifacts: documented fallback (downloaded from the public repo at startup), not Object Storage
 - [x] Unit test proving sealed-test isolation — backend/tests/test_sealed_isolation.py (written in Phase 1)
 
+## Phase 2b: model variety (added by the user 2026-10-28, before Phase 3)
+
+Goal: the three tasks end up on different parts of the ladder, measured, not forced. Targets are fixed before
+each run and never adjusted after seeing results.
+
+- [ ] 3-step cascade H: cheap stage (rung 1) → embedding stage (best B/C/I, if it reached the final round) → LLM stage (best K/L). Each stage answers when its calibrated confidence ≥ its threshold; the LLM answers the rest. 2-stage variants (cheap → embeddings, cheap → LLM) stay possible.
+  - Fit both thresholds on the LLM's validation sample (grid over tau1 × tau2). Among combinations within `CASCADE_TOLERANCE` of the best score, take the lowest expected cost per record (share per stage × that stage's measured `cost_per_1m_usd`), which replaces "least escalation".
+  - Report the split per stage on validation and on the sealed test ("TF-IDF 55% / embeddings 30% / Nano 15%"): eval_report, report card, narration, and which stage answered on each prediction.
+  - `CascadeH` generalised to N stages (bundle, shared server, snapshot rule: cascades with I/K/L stages store texts). Unit tests for the threshold fit and the N-stage predict.
+- [ ] Task 3 (spec file 05, optional task): support ticket routing on Banking77 (77 intents, CC-BY-4.0, already in `config/datasets.yaml` and `data/raw/banking77/`). Demo task card `support_tickets`, `cloud_ok: true` so the planner can try B (Qwen3-Embedding-8B + MLP), target macro-F1 0.85 fixed before the first run. `make build-support`.
+- [ ] Rerun procurement and logs with the 3-step cascade (same targets as before); record splits and spend.
+- [ ] Snapshot all three specialists, push, restart the endpoint so it serves three; update VERIFICATION.md and the "different winner" item with the measured winners.
+
 ## Phase 3: product and demo
 
 - [ ] Clarifying questions → editable task card, with plan-change lines
@@ -41,6 +54,17 @@ VERIFICATION.md); Serverless endpoint deployed in Phase 2 after the user logs in
 - [ ] `docs/DEVPOST.md` and `docs/VIDEO_SCRIPT.md`
 - [ ] Record the 3-minute video (human)
 - [ ] Acceptance criteria check (file 05 section 5)
+- [ ] Users with per-user separation on one shared endpoint (agreed with the team 2026-10-28; extends the spec, which has no accounts). Depends on the storage choice below.
+  - Login, and a `user_id` on every run, specialist, version and API key; every route checks ownership.
+  - Files under `users/<user_id>/...` in storage; specialist keys stay per specialist, scoped to their owner.
+  - One shared serving endpoint for everyone: load a specialist's bundle from storage on first call, keep recently used ones in memory (LRU). No endpoint per user (each is ~$0.07/h while running, minutes to start, no scale-to-zero seen). Later: more shared endpoints with routing by user, or a dedicated endpoint as a paid option.
+  - Serve only bundles our own pipeline wrote (joblib loading runs code); never accept uploaded model files.
+  - Per-user budgets for training spend and for cascade escalations on public predictions.
+- [ ] Durable storage instead of local disk and the repo download. Decided 2026-10-28: **Supabase** (Postgres for records: users, specialists, versions, hashed keys, runs; Supabase Auth for login) and **Nebius Object Storage** for files (bundles, run folders, uploaded datasets) under `users/<user_id>/...`. Nebius Managed PostgreSQL was considered (pgvector, but no auth, ~$0.14/h for 2 vCPU / 8 GB) and dropped for now. Fixes keys being lost on endpoint restart and the missing replay runs on the endpoint. Replaces the spec's SQLite: update file 02. Needs from a human: a Supabase project (URL, anon key, service key, JWT secret in `.env`) and a Nebius Object Storage bucket + access key.
+- [ ] Data sourcing beyond the pre-downloaded demo datasets (spec file 03 §1.1; today the Data agent only loads registry datasets by key):
+  - Upload in the chat (CSV, JSONL, plain-text logs) → saved as the user's own dataset → same dedupe / sealed split as the demo data. Unlabeled uploads: teacher labels from Nano (file 03 §1.2), reported as teacher-labeled.
+  - Not enough labeled data → vetted registry first, then live Tavily and Hugging Face Hub search: record the license, reject incompatible ones, format-match score against the user's samples, user approves in the chat. The demo never depends on live results.
+  - Synthetic data from Nemotron only to fill gaps (rare classes, format mismatch), in the user's format, always reported separately from real data. Today synthetic data is only added in repair rounds.
 
 ## Handoff notes (2026-10-28, end of session 1)
 
