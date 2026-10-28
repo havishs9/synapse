@@ -221,9 +221,10 @@ def run_data_agent(card: TaskCard, run_dir: Path, emit: Emit, *, seed: int = 13,
 
     rows, dd = dedupe(rows)
     emit("Data", "data", f"Removed {dd['before'] - dd['after']:,} duplicate texts before splitting")
-    processing = ["dropped empty descriptions and unmapped PSC codes" if card.dataset_key == "usaspending_contracts"
-                  else "loaded prepared windows", "stripped boilerplate tokens" if card.dataset_key ==
-                  "usaspending_contracts" else "grouped log lines by block ID",
+    processing = {"usaspending_contracts": ["dropped empty descriptions and unmapped PSC codes",
+                                            "stripped boilerplate tokens"],
+                  "loghub_hdfs_v1": ["loaded prepared windows", "grouped log lines by block ID"],
+                  }.get(card.dataset_key, ["merged the source's train and test files"]) + [
                   "deduplicated on normalized text before splitting"]
     if card.input_type == "log_window":
         sampling = {"note": "windows sampled at the natural anomaly ratio", **load_info}

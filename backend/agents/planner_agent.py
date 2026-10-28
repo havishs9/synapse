@@ -21,8 +21,8 @@ SPACES: dict[str, dict[str, list]] = {
     "A": {"model": ["logreg", "svm"], "C": [1.0, 4.0, 16.0], "char": [True, False]},
     "E": {"num_leaves": [15, 31, 63], "learning_rate": [0.05, 0.1], "n_estimators": [300]},
     "I": {"method": ["knn", "centroid"], "k": [10, 25], "backend": ["local", "cloud"]},
-    "B": {"C": [1.0, 4.0, 16.0]},
-    "C": {"C": [1.0, 4.0, 16.0]},
+    "B": {"head": ["logreg", "mlp"], "C": [1.0, 4.0, 16.0]},
+    "C": {"head": ["logreg", "mlp"], "C": [1.0, 4.0, 16.0]},
     "K": {"role": ["ladder_K_primary", "ladder_K_alternative"], "n_examples": [0, 5, 10], "instruction": [0, 1]},
     "L": {"n_examples": [5], "instruction": [1]},
 }
@@ -38,11 +38,13 @@ ALWAYS_EXCLUDED = {
 def expand(family: str, space: dict[str, list], limit: int | None = None) -> list[dict]:
     keys = sorted(space)
     combos = [dict(zip(keys, vals)) for vals in itertools.product(*(space[k] for k in keys))]
-    if family == "I":   # k only matters for knn
+    if family in ("I", "B", "C"):   # k only matters for knn; C (regularisation) only for the logreg head
         seen, out = set(), []
         for c in combos:
             if c.get("method") == "centroid":
                 c = {**c, "k": None}
+            if c.get("head") == "mlp":
+                c = {**c, "C": None}
             key = json.dumps(c, sort_keys=True)
             if key not in seen:
                 seen.add(key)
@@ -123,10 +125,10 @@ PLAN_SCHEMA = {
 def llm_plan(card: TaskCard, stats: DatasetStats, llm, emit: Emit, max_configs: int = 40) -> CandidatePlan:
     fallback = deterministic_plan(card, stats)
     ladder = {
-        "J": "keyword/event rules, microseconds", "A": "TF-IDF + logistic regression / linear SVM",
+        "J": "keyword/event rules, microseconds", "A": "TF-IDF + logistic regression / linear SVM; suits short keyword-heavy text",
         "E": "LightGBM on engineered features (window features for logs)", "I": "embedding kNN or centroids (local or cloud)",
-        "B": "Qwen3-Embedding-8B (cloud) + logistic regression; requires cloud_ok",
-        "C": "local MiniLM embeddings + logistic regression; offline", "K": "prompted Nemotron Nano or Lightning + retrieved examples",
+        "B": "Qwen3-Embedding-8B (cloud) + logistic regression or small MLP; requires cloud_ok; suits paraphrase-heavy text with many labels",
+        "C": "local MiniLM embeddings + logistic regression or small MLP; offline; same strengths as B", "K": "prompted Nemotron Nano or Lightning + retrieved examples",
         "L": "prompted Nemotron Super", "F": "span tagger (not implemented)", "D": "fine-tuned encoder (not implemented)",
         "G": "LoRA LLM (STRETCH, off)"}
     prompt = (

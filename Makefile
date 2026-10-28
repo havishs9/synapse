@@ -2,7 +2,7 @@ PY ?= .venv/bin/python
 NPM ?= npm
 RUN ?=
 
-.PHONY: setup dev test demo-data replay build-frontend screenshots build-procurement build-logs snapshot-demo deploy
+.PHONY: setup dev test demo-data replay build-frontend screenshots build-procurement build-logs build-support snapshot-demo deploy
 
 setup:            ## create the venv and install backend + frontend dependencies
 	python3.12 -m venv .venv
@@ -27,6 +27,9 @@ build-procurement:
 
 build-logs:
 	$(PY) -m backend.cli build hdfs_logs
+
+build-support:
+	$(PY) -m backend.cli build support_tickets
 
 replay: build-frontend   ## make replay RUN=<run_id>: serve the recorded runs; builds replay instead of training
 	APP_MODE=replay ARTIFACTS_DIR=./artifacts/demo $(PY) -m uvicorn backend.main:app --port 8000

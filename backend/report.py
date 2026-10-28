@@ -120,8 +120,14 @@ def to_markdown(rc: dict) -> str:
                      f"${p['baseline_yearly_usd']:,.0f}/year vs specialist ${p['specialist_yearly_usd']:,.2f}/year ({p['method']})")
     if rc.get("cascade"):
         c = rc["cascade"]
-        lines.append(f"- cascade {c['base']} → {c['fallback']}: escalation rate {c['escalation_rate']:.1%} "
+        stages = c.get("stages") or [{"cand": c["base"], "share": 1 - c["escalation_rate"]},
+                                     {"cand": c["fallback"], "share": c["escalation_rate"]}]
+        split = " / ".join(f"{s['cand']} {s['share']:.1%}" for s in stages)
+        lines.append(f"- cascade {' → '.join(s['cand'] for s in stages)}: answered by {split} on validation "
                      f"({'used' if c.get('used', True) else 'not used: ' + c.get('why_not', '')})")
+        sealed = (rc.get("sealed") or {}).get("stage_shares")
+        if sealed:
+            lines.append("- on the sealed test: " + " / ".join(f"{k} {v:.1%}" for k, v in sealed.items()))
     lines += ["", "## Would more data help?", ""]
     lines += [f"- {p['data_frac']:.0%} of training data: {p['val_primary']:.3f}" for p in rc.get("more_data_curve") or []]
     lines += ["", "## Known weaknesses", ""] + [f"- {w}" for w in rc.get("weaknesses") or []]

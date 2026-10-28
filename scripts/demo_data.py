@@ -2,7 +2,7 @@
 
 Task 1: USAspending FY2025 contract awards (public API) + PSC manual workbook -> config/psc_categories.yaml
 Task 2: LogHub HDFS_v1 (Zenodo) -> one window per block (data/prepared/hdfs_windows.jsonl)
-Optional: Banking77 CSVs. Licenses are recorded in config/datasets.yaml.
+Task 3: Banking77 CSVs (skip with --no-banking77). Licenses are recorded in config/datasets.yaml.
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def fetch(url: str, dest: Path):
     tmp.rename(dest)
 
 
-def main(banking77: bool = "--banking77" in sys.argv):
+def main(banking77: bool = "--no-banking77" not in sys.argv):
     py = sys.executable
     if not (D / "raw/usaspending/awards.jsonl").exists() or sum(1 for _ in (D / "raw/usaspending/awards.jsonl").open()) < 42000:
         subprocess.run([py, str(ROOT / "scripts/data/fetch_usaspending.py"), "3500"], check=True, cwd=ROOT)

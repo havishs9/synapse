@@ -4,6 +4,7 @@ import type { Msg } from "./types";
 const TASK_FOR: Record<string, string> = {
   "sort purchase records into spending categories": "procurement",
   "flag anomalies in system logs": "hdfs_logs",
+  "route support tickets to the right team": "support_tickets",
 };
 
 /** Phase 1 intake: example prompts map straight to the demo task cards. */

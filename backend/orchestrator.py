@@ -4,6 +4,7 @@ handoff is a file in runs/<run_id>/.
 """
 from __future__ import annotations
 
+import itertools
 import json
 import random
 import shutil
@@ -22,11 +23,29 @@ from backend.agents import evaluator_agent as ev
 from backend.agents.data_agent import add_targeted_examples, run_data_agent
 from backend.agents.planner_agent import run_planner
 from backend.agents.trainer_agent import Trainer, load_labels, schedule_for, train_rows
+from backend.demo_tasks import input_hint
 from backend.candidates import LLM_FAMILIES, Candidate, CascadeH
 from backend.llm_client import BudgetExceeded, LLMClient
 from backend.sealed import load_split
 from backend.schemas import (CandidateRun, ErrorPatterns, EvalReport, Event, RunState, TaskCard)
 from backend.versions import registry
+
+
+class _Uncached:
+    """LLM client view that never serves chat answers from the disk cache (for timing real calls)."""
+
+    def __init__(self, llm):
+        self._llm = llm
+
+    def chat(self, *args, **kwargs):
+        return self._llm.chat(*args, **{**kwargs, "use_cache": False})
+
+    def __getattr__(self, name):
+        return getattr(self._llm, name)
+
+
+# Cascade tiers, cheapest first: rung 1 (rules, TF-IDF, LightGBM), embeddings, prompted LLMs.
+TIER = {"J": 1, "A": 1, "E": 1, "I": 2, "B": 2, "C": 2, "K": 3, "L": 3}
 
 
 @dataclass
@@ -40,6 +59,7 @@ class Options:
     limit_per_family: int | None = None
     baseline_n: int = 300
     max_eval_llm: int = 150
+    cascade_eval_n: int = 400        # validation rows the chosen LLM stage is scored on before fitting cascades
     deploy: bool = True
     extra: dict = field(default_factory=dict)
 
@@ -147,6 +167,7 @@ class Orchestrator:
                           llm=self.llm, max_eval_llm=self.opt.max_eval_llm)
         schedule = schedule_for(train_rows(paths.train), self.opt.full_search)
         finalists = trainer.search(plan, schedule)
+        self._remeasure_latency(trainer, len(schedule), load_split(paths.val))
 
         points = self._points(trainer, schedule)
         report = EvalReport(task_id=card.task_id, primary_metric=card.optimization_metric,
@@ -322,43 +343,160 @@ class Orchestrator:
         return winner, model, wdir, calibrator, val_primary
 
     def _cascade(self, trainer, winner, model, calibrator, labels, val, report, points):
+        """Wrap the winner in cascades with one candidate per later tier (winner → embeddings → LLM) and keep the
+        best one if it beats the winner alone by more than 0.01 on the same validation rows."""
         if winner.family in LLM_FAMILIES:
             return model, winner.cand
-        llm_runs = [r for r in trainer.runs.values() if r.family in LLM_FAMILIES and r.metrics_path]
-        if not llm_runs:
+        n_rounds = max((r.round_reached or 0) for r in trainer.runs.values())
+
+        def best_of(tier: int) -> CandidateRun | None:
+            if TIER.get(winner.family) == tier:
+                return winner
+            pool = [r for r in trainer.runs.values() if TIER.get(r.family) == tier and r.metrics_path
+                    and (tier == 3 or (r.status == "done" and r.round_reached == n_rounds))]
+            return max(pool, key=lambda r: r.val_score or -1) if pool else None
+
+        reps = {t: best_of(t) for t in (1, 2, 3)}
+        reps = {t: r for t, r in reps.items() if r is not None}
+        if 3 not in reps:
             return model, winner.cand
-        best_llm = max(llm_runs, key=lambda r: r.val_score or -1)
-        lp, lids = ev.load_val_proba(Path(best_llm.metrics_path).parent)
-        bp, bids = ev.load_val_proba(Path(winner.metrics_path).parent)
-        res = ev.fit_cascade(self.card, labels, val, bp, bids, lp, lids, calibrator)
-        if not res:
+        by_id = {r["id"]: r for r in val}
+        info = {}
+        for t, r in reps.items():
+            P, ids = ev.load_val_proba(Path(r.metrics_path).parent)
+            m = json.loads(Path(r.metrics_path).read_text())
+            if r is winner:
+                cal = calibrator
+            elif t == 3:
+                cal = None
+            else:
+                cal, _ = ev.calibration_report(P, np.array([labels.index(by_id[i]["label"]) for i in ids]))
+            info[t] = {"run": r, "P": P, "ids": ids, "cost": m["cost_per_1m_usd"], "calibrator": cal, "m": m}
+        self._widen_llm_sample(info[3], val)
+        shared = set(info[3]["ids"])
+        wi = info[TIER[winner.family]]
+        # H wraps the recommended single model (spec file 03): every chain starts with the winner's tier.
+        wt = TIER[winner.family]
+        chains = [list(c) for n in (2, 3) for c in itertools.combinations(sorted(info), n) if c[0] == wt]
+        tried = []
+        for chain in chains:
+            res = ev.fit_cascade_chain(self.card, labels, val, [info[t] for t in chain], only_ids=shared)
+            if not res:
+                continue
+            res["winner_alone_same_sample"] = ev.score_on_ids(self.card, labels, val, wi["P"], wi["ids"],
+                                                              wi["calibrator"], res["ids"])
+            cands = [info[t]["run"].cand for t in chain]
+            ms = [info[t]["m"] for t in chain]
+            reach = np.cumsum([0.0] + res["shares"][:-1])
+            reach = [1.0 - x for x in reach]              # share of items that reach each stage
+            cum = np.cumsum(res["shares"])
+            k50 = int(np.searchsorted(cum, 0.5))
+            k99 = int(np.searchsorted(cum, 0.99))
+            p50 = float(sum(m["p50_ms"] for m in ms[:k50 + 1]))
+            p99 = float(sum(m["p99_ms"] for m in ms[:min(k99, len(ms) - 1) + 1]))
+            point = {"cand": "H(" + "→".join(cands) + ")", "family": "H", "rung": 0, "round": 0, "data_frac": 1.0,
+                     "val_primary": res["primary"], "cost_per_1m_usd": res["cost_per_1m_usd"], "p50_ms": p50,
+                     "p99_ms": p99, "eliminated": False, "final_round": True,
+                     "uses_cloud": any(info[t]["run"].family in LLM_FAMILIES or info[t]["run"].family == "B"
+                                       or info[t]["run"].config.get("backend") == "cloud" for t in chain),
+                     "n_val": res["n"]}
+            stages = [{"cand": c, "family": info[t]["run"].family, "share": sh,
+                       "tau": res["taus"][k] if k < len(res["taus"]) else None, "reach": rch}
+                      for k, (t, c, sh, rch) in enumerate(zip(chain, cands, res["shares"], reach))]
+            gain = res["primary"] - (res["winner_alone_same_sample"] or 0)
+            ok, why_not = ev.allowed(point, self.card)
+            tried.append({"chain": chain, "res": res, "point": point, "stages": stages, "gain": gain, "ok": ok,
+                          "why_not": why_not})
+            split = " / ".join(f"{s['cand']} {s['share']:.0%}" for s in stages)
+            self.emit("Evaluator", "cascade", f"Evaluator: cascade {' → '.join(cands)} answers {split} and scores "
+                      f"{res['primary']:.3f} vs {res['winner_alone_same_sample']:.3f} for {winner.cand} alone on the "
+                      f"same {res['n']} validation records", kind="pareto", data={"cascade_tried": point})
+        if not tried:
             return model, winner.cand
-        wm = json.loads(Path(winner.metrics_path).read_text())
-        lm = json.loads(Path(best_llm.metrics_path).read_text())
-        cost = wm["cost_per_1m_usd"] + res["escalation_rate"] * lm["cost_per_1m_usd"]
-        p50 = wm["p50_ms"] if res["escalation_rate"] < 0.5 else lm["p50_ms"]
-        report.cascade = {**res, "base": winner.cand, "fallback": best_llm.cand, "cost_per_1m_usd": cost,
-                          "cost_formula": "base cost + escalation_rate × fallback cost", "p50_ms": p50,
-                          "p99_ms": lm["p99_ms"]}
-        point = {"cand": f"H({winner.cand}→{best_llm.cand})", "family": "H", "rung": 0, "round": 0, "data_frac": 1.0,
-                 "val_primary": res["primary"], "cost_per_1m_usd": cost, "p50_ms": p50, "p99_ms": lm["p99_ms"],
-                 "eliminated": False, "final_round": True, "uses_cloud": True, "n_val": res["n"]}
-        points.append(point)
-        gain = res["primary"] - res["base_primary_same_sample"]
-        self.emit("Evaluator", "cascade", f"Evaluator: cascade {winner.cand} → {best_llm.cand} escalates "
-                  f"{res['escalation_rate']:.0%} of items and scores {res['primary']:.3f} vs {res['base_primary_same_sample']:.3f} "
-                  f"for {winner.cand} alone on the same {res['n']} validation records", kind="pareto",
-                  data={"point": point})
-        ok, _ = ev.allowed(point, self.card)
-        if gain > 0.01 and res["escalation_rate"] > 0 and ok:
-            fallback = Candidate.load(Path(best_llm.metrics_path).parent, llm=self.llm)
-            report.winner_reason += (f"; wrapped in a cascade: confident cases stay on {winner.cand}, "
-                                     f"{res['escalation_rate']:.0%} escalate to {best_llm.cand} (+{gain:.3f} on the shared sample)")
-            return CascadeH(model, fallback, res["tau"], calibrator), point["cand"]
-        report.cascade["used"] = False
-        report.cascade["why_not"] = ("gain under 0.01 on the shared validation sample" if gain <= 0.01 else
-                                     "cascade breaks a latency or deployment constraint")
-        return model, winner.cand
+        good = [t for t in tried if t["ok"] and t["gain"] > 0.01 and t["res"]["escalation_rate"] > 0]
+        summary = [{"cascade": t["point"]["cand"], "primary": t["res"]["primary"], "gain": t["gain"],
+                    "cost_per_1m_usd": t["res"]["cost_per_1m_usd"], "stages": t["stages"],
+                    "allowed": t["ok"], "why_not_allowed": t["why_not"] or None} for t in tried]
+        pick = None
+        if good:
+            top = max(t["res"]["primary"] for t in good)
+            pick = min((t for t in good if t["res"]["primary"] >= top - ev.CASCADE_TOLERANCE),
+                       key=lambda t: (t["res"]["cost_per_1m_usd"], -t["res"]["primary"]))
+        show = pick or max(tried, key=lambda t: t["gain"])
+        r = {k: v for k, v in show["res"].items() if k != "ids"}
+        report.cascade = {**r, "base": show["stages"][0]["cand"], "fallback": show["stages"][-1]["cand"],
+                          "stages": show["stages"], "cost_per_1m_usd": r["cost_per_1m_usd"],
+                          "cost_formula": "sum over stages of (share of items reaching the stage × its cost)",
+                          "p50_ms": show["point"]["p50_ms"], "p99_ms": show["point"]["p99_ms"],
+                          "cascades_tried": summary,
+                          "pick_rule": f"gain over {winner.cand} alone > 0.01, then the cheapest within "
+                                       f"{ev.CASCADE_TOLERANCE} of the best cascade"}
+        # report.pareto_points is the report's own copy of `points`; the report card reads the chosen point there.
+        points.extend(t["point"] for t in tried)
+        report.pareto_points.extend(t["point"] for t in tried)
+        self.emit("Evaluator", "cascade", f"Evaluator: {'using' if pick else 'closest'} cascade {show['point']['cand']}"
+                  + ("" if pick else " (not used)"), kind="pareto", data={"point": show["point"]})
+        if pick is None:
+            report.cascade["used"] = False
+            report.cascade["why_not"] = ("no cascade gained over 0.01 on the shared validation sample"
+                                         if not any(t["gain"] > 0.01 for t in tried) else
+                                         "the cascades that gained break a latency or deployment constraint")
+            return model, winner.cand
+        stage_models = [model if info[t]["run"] is winner else Candidate.load(Path(info[t]["run"].metrics_path).parent,
+                                                                                llm=self.llm) for t in pick["chain"]]
+        cals = [info[t]["calibrator"] for t in pick["chain"][:-1]]
+        split = ", ".join(f"{s['share']:.0%} {s['cand']}" for s in pick["stages"])
+        report.winner_reason += (f"; wrapped in a cascade that answers {split} "
+                                 f"(+{pick['gain']:.3f} on the shared sample)")
+        return (CascadeH(stage_models, r["taus"], cals, names=[s["cand"] for s in pick["stages"]]),
+                pick["point"]["cand"])
+
+    def _remeasure_latency(self, trainer, n_rounds: int, val: list[dict], n_llm: int = 10, n_emb: int = 20) -> None:
+        """Latency measured during the search is inflated for cloud candidates: dozens of jobs share the API at
+        once, and rate-limit retries count as latency. Once nothing else is running, re-measure each cloud
+        finalist one call at a time with caches bypassed, as a single caller would see it."""
+        from backend.candidates import FAMILIES
+        texts = [r["text"] for r in val[:max(n_llm, n_emb)]]
+        for r in trainer.runs.values():
+            if not (r.status == "done" and r.round_reached == n_rounds and r.metrics_path):
+                continue
+            cls = FAMILIES.get(r.family)
+            is_llm = r.family in LLM_FAMILIES
+            if not (is_llm or (cls and cls.uses_cloud) or r.config.get("backend") == "cloud"):
+                continue
+            self._check_budget()
+            model = Candidate.load(Path(r.metrics_path).parent, llm=_Uncached(self.llm))
+            model.bypass_cache = True
+            lat = []
+            for t in texts[:n_llm if is_llm else n_emb]:
+                t0 = time.perf_counter()
+                model.predict_proba([t])
+                lat.append((time.perf_counter() - t0) * 1000)
+            mp = Path(r.metrics_path)
+            m = json.loads(mp.read_text())
+            before = m["p50_ms"]
+            m.update({"p50_ms_during_search": m["p50_ms"], "p99_ms_during_search": m["p99_ms"],
+                      "p50_ms": float(np.percentile(lat, 50)), "p99_ms": float(np.percentile(lat, 99)),
+                      "latency_note": f"re-measured after the search: {len(lat)} single-item calls one at a time, "
+                                      "caches bypassed, from this machine"})
+            mp.write_text(json.dumps(m, indent=2))
+            self.emit("Evaluator", "validate", f"Evaluator: re-measured {r.cand} latency alone: p50 "
+                      f"{m['p50_ms']:.0f} ms (was {before:.0f} ms while sharing the API with the search)")
+
+    def _widen_llm_sample(self, llm_info: dict, val: list[dict]) -> None:
+        """The search scores LLM rungs on a small capped sample. Cascade thresholds need more rows (with many
+        labels, 150 rows is about two per class), so score the chosen LLM stage on a larger stratified sample."""
+        have = set(llm_info["ids"])
+        want = [r for r in ev.stratified_sample(val, self.opt.cascade_eval_n, seed=0) if r["id"] not in have]
+        if not want:
+            return
+        self._check_budget()
+        run = llm_info["run"]
+        self.emit("Evaluator", "cascade", f"Evaluator: scoring {run.cand} on {len(want)} more validation records so "
+                  f"cascade thresholds are fitted on {len(have) + len(want)} rows")
+        P = Candidate.load(Path(run.metrics_path).parent, llm=self.llm).predict_proba([r["text"] for r in want])
+        llm_info["P"] = np.vstack([llm_info["P"], P])
+        llm_info["ids"] = list(llm_info["ids"]) + [r["id"] for r in want]
 
     def _seeds(self, trainer, winner, report) -> dict:
         """Rerun the final 2 (the shipped single model and the best alternative) with 3 bootstrap seeds."""
@@ -405,8 +543,7 @@ class Orchestrator:
                 "uses_cloud": bool(model.uses_cloud), "run_id": self.run_id, "example_input": example,
                 "cost_per_1m_usd": winner_metrics.get("cost_per_1m_usd"), "p50_ms": winner_metrics.get("p50_ms"),
                 "p99_ms": winner_metrics.get("p99_ms"),
-                "expected_format": ("One HDFS block's log lines (one window), e.g. lines containing blk_…"
-                                    if self.card.input_type == "log_window" else "One purchase record description")}
+                "expected_format": input_hint(self.card.task_id, self.card.input_type)}
         (bundle / "bundle.json").write_text(json.dumps(meta, indent=2))
         v = registry.get_or_create(self.card)
         current = registry.live(v)

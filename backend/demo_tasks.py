@@ -46,4 +46,43 @@ def logs_card(**overrides) -> TaskCard:
     return card.model_copy(update=overrides)
 
 
-DEMO_TASKS = {"procurement": procurement_card, "hdfs_logs": logs_card}
+def _banking77_intents() -> list[str]:
+    """Intent names from the downloaded CSV (empty until `make demo-data` has fetched Banking77)."""
+    import csv
+    path = config.data_dir() / "raw" / "banking77" / "train.csv"
+    if not path.exists():
+        return []
+    with path.open() as f:
+        return sorted({r["category"] for r in csv.DictReader(f)})
+
+
+def support_card(**overrides) -> TaskCard:
+    card = TaskCard(
+        task_id="support_tickets", task_name="Support Ticket Router",
+        description="Route a bank customer's support message to the right intent so it reaches the right team.",
+        input_type="text", output_type="multiclass",
+        labels=[Label(name=n, definition=n.replace("_", " ").capitalize()) for n in _banking77_intents()],
+        error_preference="balanced", optimization_metric="macro_f1",
+        thresholds=Thresholds(primary_min=0.85), needs_reason=False, monthly_volume=500_000,
+        latency_budget_ms=500, deployment="cloud_ok", build_budget_usd=config.credit_budget_usd(),
+        build_budget_minutes=30, sample_inputs=SUPPORT_SAMPLES, dataset_key="banking77")
+    return card.model_copy(update=overrides)
+
+
+SUPPORT_SAMPLES = [
+    "I am still waiting on my card?",
+    "Why was I charged a fee for taking out cash?",
+    "My top up didn't go through",
+    "How do I change my PIN?",
+    "I think someone else is using my card",
+]
+
+DEMO_TASKS = {"procurement": procurement_card, "hdfs_logs": logs_card, "support_tickets": support_card}
+
+# What one input looks like, for API docs and input errors.
+INPUT_HINTS = {"procurement": "One purchase record description", "support_tickets": "One customer support message",
+               "hdfs_logs": "One HDFS block's log lines (one window), e.g. lines containing blk_…"}
+
+
+def input_hint(task_id: str, input_type: str) -> str:
+    return INPUT_HINTS.get(task_id) or ("One log window" if input_type == "log_window" else "One text record")

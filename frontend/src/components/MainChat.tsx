@@ -5,7 +5,7 @@ import { Markdown } from "./Markdown";
 export const EXAMPLES = [
   { label: "Sort purchase records into spending categories", task: "procurement" },
   { label: "Flag anomalies in system logs", task: "hdfs_logs" },
-  { label: "Route support tickets to the right team", task: null },
+  { label: "Route support tickets to the right team", task: "support_tickets" },
 ];
 
 type Props = {

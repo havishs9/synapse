@@ -180,6 +180,22 @@ The mapping's source and lookup rules must be copied into `dataset_manifest.json
 
 `gh api repos/havishs9/synapse`: visibility **public**, license **MIT**, default branch `main`. `LICENSE` is at the repo root. `README.md` is now a stub with the one-liner and a status note.
 
+## Phase 2b: model variety (2026-10-28)
+
+Targets fixed before the runs (task cards in `backend/demo_tasks.py`); numbers from `runs/<run_id>/eval_report.json`.
+
+| Task | Run | Single-model winner (validation) | Shipped | Split on the sealed test | Sealed result | Ultra vs specialist, same sealed rows | Cost per 1M | Spend |
+|---|---|---|---|---|---|---|---|---|
+| Support tickets (Banking77) | `p2b-support-c` | A-11 TF-IDF, macro-F1 0.877 (target 0.85) | H(A-11→B-02), B-02 = Qwen3-Embedding-8B + MLP | TF-IDF 75.6% / embeddings 24.4% | macro-F1 0.933, n=2,474 | 0.738 vs 0.913 (n=300) | $0.12 | $0.31 |
+| Procurement | `p2b-procurement-d` | A-07 TF-IDF, 0.617 (target 0.60) | H(A-07→K-11), K-11 = prompted Nano | TF-IDF 64.1% / Nano 35.9% | macro-F1 0.647, n=3,368 (v2, deployed) | 0.456 vs 0.627 (n=298) | $25.88 | $0.15 |
+| HDFS logs | `p2b-logs-d` | A-12 TF-IDF, recall@1%FPR 1.000 (target 0.90) | A-12 alone (cascade gained 0) | TF-IDF 100% | recall@1%FPR 1.000, PR-AUC 0.9997, n=2,850 (v2 not deployed; v1 stays) | 0.000 vs 1.000 (n=300) | $0.0036 | $0.07 |
+
+Findings while building this:
+- **Latency under contention.** During the search ~40 jobs share Token Factory, and rate-limit retries counted as latency: single Qwen3 embedding calls measured 0.8 to 20 s (laptop, eu-west2 API) mid-search. Cloud finalists are now re-measured alone after the search; in `p2b-support-c`: B-02 p50 281 ms, B-04 349 ms, I-04 263 ms (single calls from the laptop, caches bypassed).
+- **Cascade rule.** H wraps the recommended single model (file 03). A first version also tried chains starting from other candidates and picked B-02→K-12 (0% to the LLM, i.e. B-02 alone); stopped before the sealed test (`p2b-support-b`) and restricted to chains that start with the winner.
+- **Planner variance.** The Nemotron planner's family choice for procurement changed between runs (with B in neither): `p2-procurement-c` J, A, I, C, K; `p2b-procurement-d` J, A, I (local only), C, K. Embeddings didn't reach procurement's final round in `-d`.
+- **Banking77 split.** The source's train and test files are merged, deduplicated (60 duplicates) and resplit like the other tasks: 2,474 sealed, 2,475 validation; training oversampled to 150 per intent.
+
 ## Spec conflicts and issues found
 
 1. **`spec/03_ML_PIPELINE.md` is corrupted and incomplete.** Line 59 contains a stray shell heredoc (`EOFcat > spec/03_ML_PIPELINE.md << 'EOF'`), the content is duplicated after it, and the file ends after the candidate ladder. The planner rules, search schedule, sandbox, repair, cascade and evaluation-rule sections that `00_START_HERE.md` promises are missing. These are needed before Phase 2.

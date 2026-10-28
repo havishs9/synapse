@@ -141,8 +141,145 @@
       "reason": "first version; meets the target with macro_f1 0.635",
       "artifact_uri": "artifacts/specialists/procurement-categorizer/v1",
       "created": 1793164846.382684,
-      "live": true,
+      "live": false,
       "candidate": "H(A-04\u2192K-03)"
+    },
+    {
+      "version": 2,
+      "run_id": "p2b-procurement-d",
+      "sealed_metrics": {
+        "primary": 0.6467919291205547,
+        "primary_metric": "macro_f1",
+        "macro_f1": 0.6467919291205547,
+        "accuracy": 0.6873515439429929,
+        "pr_auc": null,
+        "recall_at_fpr": null,
+        "per_class": {
+          "Aircraft, Ships/Submarines & Land Vehicles": {
+            "precision": 0.36363636363636365,
+            "recall": 0.26666666666666666,
+            "f1": 0.3076923076923077,
+            "support": 15
+          },
+          "Clothing, Textiles & Subsistence S&E": {
+            "precision": 0.7887323943661971,
+            "recall": 0.9032258064516129,
+            "f1": 0.8421052631578947,
+            "support": 186
+          },
+          "Electronic & Communication Equipment": {
+            "precision": 0.5294117647058824,
+            "recall": 0.6961325966850829,
+            "f1": 0.6014319809069213,
+            "support": 181
+          },
+          "Electronic & Communication Services": {
+            "precision": 0.11764705882352941,
+            "recall": 0.09523809523809523,
+            "f1": 0.10526315789473684,
+            "support": 21
+          },
+          "Equipment Related Services": {
+            "precision": 0.4204081632653061,
+            "recall": 0.6280487804878049,
+            "f1": 0.5036674816625917,
+            "support": 164
+          },
+          "Facilities & Construction": {
+            "precision": 0.6707818930041153,
+            "recall": 0.5719298245614035,
+            "f1": 0.6174242424242424,
+            "support": 285
+          },
+          "Human Capital": {
+            "precision": 0.6625,
+            "recall": 0.6162790697674418,
+            "f1": 0.6385542168674698,
+            "support": 86
+          },
+          "IT": {
+            "precision": 0.8145454545454546,
+            "recall": 0.7859649122807018,
+            "f1": 0.8,
+            "support": 285
+          },
+          "Industrial Products & Services": {
+            "precision": 0.49834983498349833,
+            "recall": 0.5298245614035088,
+            "f1": 0.5136054421768708,
+            "support": 285
+          },
+          "Medical": {
+            "precision": 0.7965116279069767,
+            "recall": 0.8616352201257862,
+            "f1": 0.8277945619335347,
+            "support": 159
+          },
+          "Miscellaneous S&E": {
+            "precision": 0.7211538461538461,
+            "recall": 0.6818181818181818,
+            "f1": 0.7009345794392523,
+            "support": 110
+          },
+          "Office Management": {
+            "precision": 0.8059071729957806,
+            "recall": 0.764,
+            "f1": 0.784394250513347,
+            "support": 250
+          },
+          "Professional Services": {
+            "precision": 0.6344086021505376,
+            "recall": 0.6210526315789474,
+            "f1": 0.6276595744680851,
+            "support": 285
+          },
+          "Research and Development": {
+            "precision": 0.8133333333333334,
+            "recall": 0.8356164383561644,
+            "f1": 0.8243243243243243,
+            "support": 146
+          },
+          "Security and Protection": {
+            "precision": 0.6568627450980392,
+            "recall": 0.6568627450980392,
+            "f1": 0.6568627450980392,
+            "support": 102
+          },
+          "Sustainment S&E": {
+            "precision": 0.7617021276595745,
+            "recall": 0.6280701754385964,
+            "f1": 0.6884615384615385,
+            "support": 285
+          },
+          "Transportation and Logistics Services": {
+            "precision": 0.8181818181818182,
+            "recall": 0.631578947368421,
+            "f1": 0.7128712871287128,
+            "support": 285
+          },
+          "Travel & Lodging": {
+            "precision": 0.8726114649681529,
+            "recall": 0.8896103896103896,
+            "f1": 0.8810289389067524,
+            "support": 154
+          },
+          "Weapons & Ammunition": {
+            "precision": 0.6436781609195402,
+            "recall": 0.6666666666666666,
+            "f1": 0.6549707602339181,
+            "support": 84
+          }
+        },
+        "at_val_threshold": null,
+        "escalation_rate": 0.35926365795724463,
+        "n": 3368
+      },
+      "gate_result": "deployed",
+      "reason": "beats the live version (0.647 vs 0.635) and passes every threshold",
+      "artifact_uri": "artifacts/specialists/procurement-categorizer/v2",
+      "created": 1793207683.988223,
+      "live": true,
+      "candidate": "H(A-07\u2192K-11)"
     }
   ]
 }

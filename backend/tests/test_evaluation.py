@@ -91,3 +91,79 @@ def test_search_carries_cheap_candidate_to_final_round(tmp_env):
     final = {r.cand for r in t.search(plan, [0.1, 0.4, 1.0])}
     assert {"I-01", "A-01"} <= final and "C-01" not in final
     assert "cheaper candidate" in t.runs["C-01"].elimination_reason
+
+
+def _three_stage_case(n=300):
+    """Cheap stage sure and right on the first half, embeddings sure and right on the next 30%, LLM always right."""
+    labels = ["a", "b"]
+    y = [i % 2 for i in range(n)]
+    val = [{"id": f"r{i}", "label": labels[y[i]]} for i in range(n)]
+    ids = [r["id"] for r in val]
+    cheap, mid, llm = np.full((n, 2), 0.5), np.full((n, 2), 0.5), np.full((n, 2), 0.01)
+    for i in range(n):
+        t = y[i]
+        if i < n // 2:
+            cheap[i, t], cheap[i, 1 - t] = 0.97, 0.03
+        if i < int(n * 0.8):
+            mid[i, t], mid[i, 1 - t] = 0.97, 0.03
+        llm[i, t] = 0.99
+    return labels, val, ids, cheap, mid, llm
+
+
+def test_three_stage_chain_puts_each_stage_where_it_is_sure():
+    labels, val, ids, cheap, mid, llm = _three_stage_case()
+    stages = [{"P": cheap, "ids": ids, "cost": 0.001, "calibrator": None},
+              {"P": mid, "ids": ids, "cost": 0.5, "calibrator": None},
+              {"P": llm, "ids": ids, "cost": 60.0, "calibrator": None}]
+    res = ev.fit_cascade_chain(card(), labels, val, stages)
+    assert res["primary"] == 1.0
+    assert np.allclose(res["shares"], [0.5, 0.3, 0.2])
+    # every item pays for stage 0; half reach embeddings; a fifth reach the LLM
+    assert abs(res["cost_per_1m_usd"] - (0.001 + 0.5 * 0.5 + 0.2 * 60.0)) < 1e-9
+
+
+def test_chain_comparison_on_shared_rows():
+    labels, val, ids, cheap, mid, llm = _three_stage_case()
+    keep = set(ids[::2])
+    res = ev.fit_cascade_chain(card(), labels, val, [{"P": cheap, "ids": ids, "cost": 0, "calibrator": None},
+                                                      {"P": mid, "ids": ids, "cost": 1, "calibrator": None}],
+                               only_ids=keep)
+    assert res["n"] == len(keep) and set(res["ids"]) == keep
+
+
+class _Fixed:
+    """Stub stage: returns the stored proba row for each text (texts are row indices as strings)."""
+    uses_cloud = False
+
+    def __init__(self, P, family):
+        self.P, self.family = P, family
+        self.ctx = type("Ctx", (), {"llm": None, "labels": ["a", "b"]})()
+
+    def predict_proba(self, texts):
+        return self.P[[int(t) for t in texts]].copy()
+
+    def attach(self, llm):
+        pass
+
+    def reason(self, text, proba):
+        return f"{self.family} says so"
+
+
+def test_cascade_h_routes_items_through_stages():
+    from backend.candidates.cascade_h import CascadeH
+    labels, val, ids, cheap, mid, llm = _three_stage_case(100)
+    h = CascadeH([_Fixed(cheap, "A"), _Fixed(mid, "B"), _Fixed(llm, "K")], [0.9, 0.9], names=["A-1", "B-1", "K-1"])
+    P = h.predict_proba([str(i) for i in range(100)])
+    assert h.last_stage_counts == [50, 30, 20] and h.last_escalated == 50
+    assert (P.argmax(1) == np.arange(100) % 2).all()
+    assert "K-1 answered" in h.reason("90", P[90], stage=2)
+
+
+def test_cascade_h_loads_two_stage_bundles():
+    from backend.candidates.cascade_h import CascadeH
+    labels, val, ids, cheap, mid, llm = _three_stage_case(10)
+    old = CascadeH.__new__(CascadeH)
+    old.__setstate__({"base": _Fixed(cheap, "A"), "fallback": _Fixed(llm, "K"), "tau": 0.9, "calibrator": None,
+                      "params": {}, "labels": labels, "last_escalated": 0})
+    old.predict_proba([str(i) for i in range(10)])
+    assert old.names == ["A", "K"] and old.last_stage_counts == [5, 5] and old.tau == 0.9

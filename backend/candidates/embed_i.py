@@ -1,13 +1,14 @@
 """I, B, C: embedding families.
 
 I: cosine similarity to labeled examples (kNN) or class centroids; no training. Local or cloud embeddings.
-B: Qwen3-Embedding-8B (Token Factory) + logistic regression. Needs cloud_ok.
-C: local MiniLM-class model + logistic regression. Offline at inference.
+B: Qwen3-Embedding-8B (Token Factory) + logistic regression or a small MLP. Needs cloud_ok.
+C: local MiniLM-class model + logistic regression or a small MLP. Offline at inference.
 """
 from __future__ import annotations
 
 import numpy as np
 from sklearn.linear_model import LogisticRegression
+from sklearn.neural_network import MLPClassifier
 
 from backend.candidates.base import Candidate, cloud_embed, local_embed, prep_text, softmax
 
@@ -78,15 +79,31 @@ class EmbedKnnI(_Embedding):
         self.uses_cloud = self.backend == "cloud"
 
 
+def strip_mlp_training_state(clf) -> None:
+    """Drop what an MLP only needs to keep training (Adam moments, the early-stopping copy of the weights).
+    Prediction uses coefs_ / intercepts_ only; this roughly halves the bundle."""
+    for attr in ("_optimizer", "_best_coefs", "_best_intercepts"):
+        if hasattr(clf, attr):
+            delattr(clf, attr)
+
+
 class _EmbedClassifier(_Embedding):
     def fit(self, texts, y, progress=None):
         E = self._emb(texts)
         if progress:
             progress({"step": 1, "embedded": len(texts)})
-        self.clf = LogisticRegression(C=float(self.params.get("C", 4.0)), max_iter=3000,
-                                      class_weight="balanced" if self.params.get("class_weight_balanced", True) else None,
-                                      random_state=self.ctx.seed)
-        self.clf.fit(E, self.y_index(y))
+        yi = self.y_index(y)
+        if self.params.get("head", "logreg") == "mlp":
+            # One hidden layer; early stopping holds out 10% of the training rows (never validation).
+            self.clf = MLPClassifier(hidden_layer_sizes=(int(self.params.get("hidden", 256)),),
+                                     alpha=float(self.params.get("alpha", 1e-4)), early_stopping=True,
+                                     max_iter=300, random_state=self.ctx.seed)
+        else:
+            self.clf = LogisticRegression(C=float(self.params.get("C", 4.0)), max_iter=3000,
+                                          class_weight="balanced" if self.params.get("class_weight_balanced", True) else None,
+                                          random_state=self.ctx.seed)
+        self.clf.fit(E, yi)
+        strip_mlp_training_state(self.clf)
         if progress:
             progress({"step": 2})
 

@@ -5,6 +5,7 @@ This is the only module allowed to call `sealed.read_sealed` (enforced in backen
 """
 from __future__ import annotations
 
+import itertools
 import json
 import random
 from collections import Counter, defaultdict
@@ -224,36 +225,72 @@ def error_patterns(card: TaskCard, val: list[dict], P: np.ndarray, labels: list[
 CASCADE_TOLERANCE = 0.005
 
 
-def fit_cascade(card: TaskCard, labels: list[str], val: list[dict], base_P: np.ndarray, base_ids: list[str],
-                llm_P: np.ndarray, llm_ids: list[str], calibrator: TemperatureCalibrator) -> dict | None:
-    """Pick the escalation threshold on the LLM's validation sample, where both models have predictions.
+TAU_GRID = np.round(np.arange(0.3, 0.96, 0.05), 2)
 
-    Every escalation is a paid LLM call, so among thresholds scoring within CASCADE_TOLERANCE of the best,
-    take the one that escalates least.
+
+def fit_cascade_chain(card: TaskCard, labels: list[str], val: list[dict], stages: list[dict],
+                      only_ids: set[str] | None = None) -> dict | None:
+    """Fit one confidence threshold per stage (all but the last) for a chain ordered cheapest first.
+
+    `stages`: dicts with P (validation proba), ids, cost (cost_per_1m_usd) and calibrator (or None), all scored
+    on the rows every stage has (the LLM rung's capped sample), optionally limited to `only_ids` so chains
+    with and without an LLM stage are compared on the same rows. Among threshold combinations scoring within
+    CASCADE_TOLERANCE of the best, take the lowest expected cost per record: every item pays for stage 0, and
+    for each later stage it reaches.
     """
-    pos = {i: k for k, i in enumerate(base_ids)}
-    common = [i for i in llm_ids if i in pos]
+    pos = [{i: k for k, i in enumerate(s["ids"])} for s in stages]
+    common = [i for i in stages[-1]["ids"] if all(i in p for p in pos) and (only_ids is None or i in only_ids)]
     if len(common) < 30:
         return None
     by_id = {r["id"]: r for r in val}
     y = [by_id[i]["label"] for i in common]
-    Pb = calibrator.apply(base_P[[pos[i] for i in common]])
-    Pl = llm_P[[llm_ids.index(i) for i in common]]
+    Ps = []
+    for s, p in zip(stages, pos):
+        P = s["P"][[p[i] for i in common]]
+        Ps.append(s["calibrator"].apply(P) if s.get("calibrator") is not None else P)
     kw = metric_kwargs(card)
-    base_score = M.classification_metrics(y, Pb, labels, **kw)["primary"]
-    llm_score = M.classification_metrics(y, Pl, labels, **kw)["primary"]
-    tried = []
-    for tau in np.round(np.arange(0.3, 0.96, 0.05), 2):
-        esc = Pb.max(1) < tau
-        Pc = np.where(esc[:, None], Pl, Pb)
-        s = M.classification_metrics(y, Pc, labels, **kw)["primary"]
-        tried.append({"tau": float(tau), "primary": s, "escalation_rate": float(esc.mean())})
+    alone = [M.classification_metrics(y, P, labels, **kw)["primary"] for P in Ps]
+    costs = [float(s["cost"]) for s in stages]
+    n_st, tried = len(stages), []
+    for taus in itertools.product(TAU_GRID, repeat=n_st - 1):
+        stage = np.zeros(len(common), int)
+        P = Ps[0].copy()
+        todo = Ps[0].max(1) < taus[0]
+        for k in range(1, n_st):
+            P[todo], stage[todo] = Ps[k][todo], k
+            if k < n_st - 1:
+                todo = todo & (Ps[k].max(1) < taus[k])
+        reach = [float((stage >= k).mean()) for k in range(n_st)]
+        tried.append({"taus": [float(t) for t in taus], "primary": M.classification_metrics(y, P, labels, **kw)["primary"],
+                      "shares": [float((stage == k).mean()) for k in range(n_st)],
+                      "cost_per_1m_usd": sum(r * c for r, c in zip(reach, costs)), "escalation_rate": reach[1]})
     top = max(t["primary"] for t in tried)
     best = min((t for t in tried if t["primary"] >= top - CASCADE_TOLERANCE),
-               key=lambda t: (t["escalation_rate"], -t["primary"]))
-    return {**best, "n": len(common), "base_primary_same_sample": base_score, "llm_primary_same_sample": llm_score,
-            "best_primary_any_tau": top, "tau_rule": f"least escalation within {CASCADE_TOLERANCE} of the best tau",
+               key=lambda t: (t["cost_per_1m_usd"], -t["primary"]))
+    return {**best, "tau": best["taus"][0], "n": len(common), "ids": common, "alone_same_sample": alone,
+            "base_primary_same_sample": alone[0], "llm_primary_same_sample": alone[-1],
+            "best_primary_any_tau": top,
+            "tau_rule": f"lowest expected cost within {CASCADE_TOLERANCE} of the best threshold combination",
             "sample": "the LLM rung's capped validation sample"}
+
+
+def score_on_ids(card: TaskCard, labels: list[str], val: list[dict], P: np.ndarray, ids: list[str],
+                 calibrator, only_ids: list[str]) -> float:
+    """One model's primary metric on a given subset of validation rows."""
+    pos = {i: k for k, i in enumerate(ids)}
+    by_id = {r["id"]: r for r in val}
+    Q = P[[pos[i] for i in only_ids]]
+    Q = calibrator.apply(Q) if calibrator is not None else Q
+    return M.classification_metrics([by_id[i]["label"] for i in only_ids], Q, labels, **metric_kwargs(card))["primary"]
+
+
+def fit_cascade(card: TaskCard, labels: list[str], val: list[dict], base_P: np.ndarray, base_ids: list[str],
+                llm_P: np.ndarray, llm_ids: list[str], calibrator: TemperatureCalibrator,
+                base_cost: float = 0.0, llm_cost: float = 1.0) -> dict | None:
+    """Two-stage cascade: base → LLM. With the LLM dearer than the base, lowest cost = least escalation."""
+    return fit_cascade_chain(card, labels, val, [
+        {"P": base_P, "ids": base_ids, "cost": base_cost, "calibrator": calibrator},
+        {"P": llm_P, "ids": llm_ids, "cost": llm_cost, "calibrator": None}])
 
 
 # ---- final exam ----------------------------------------------------------------------
@@ -278,6 +315,7 @@ def final_exam(card: TaskCard, run_dir: Path, sealed_run_dir: Path, model: Candi
                   if k in ("per_class", "macro_f1", "macro_precision", "macro_recall", "accuracy")})
     if isinstance(model, CascadeH):
         m["escalation_rate"] = model.last_escalated / max(len(rows), 1)
+        m["stage_shares"] = {name: c / max(len(rows), 1) for name, c in zip(model.names, model.last_stage_counts)}
     np.save(run_dir / "sealed_proba.npy", P)
     (run_dir / "sealed_ids.json").write_text(json.dumps([r["id"] for r in rows]))
     emit("Evaluator", "final", f"Final score on the sealed test set: {card.optimization_metric} {m['primary']:.3f} "
