@@ -60,13 +60,24 @@ def enqueue(run_id: str, card: dict, options: dict, user_id: str | None, budget_
     """Add a build to the queue, enforcing the per-user daily build cap (MAX_BUILDS_PER_USER_PER_DAY)."""
     cap = _int("MAX_BUILDS_PER_USER_PER_DAY", 3)
     with pg.conn() as c:
-        if user_id is not None:
-            n = c.execute("select count(*) as n from builds where user_id = %s and kind = 'build' "
-                          "and created_at > now() - interval '24 hours' and status <> 'cancelled'",
-                          (user_id,)).fetchone()["n"]
-            if n >= cap:
-                raise HTTPException(429, f"You've started {n} builds in the last 24 hours (limit {cap}). "
-                                         "Try again tomorrow.")
+        # Callers without sign-in share one allowance (user_id null), so an open deployment stays capped.
+        mine = c.execute("""select count(*) filter (where kind = 'build' and status <> 'cancelled') as n,
+                                   coalesce(sum(spend_usd), 0)::float8 as spend
+                            from builds where user_id is not distinct from %s
+                              and created_at > now() - interval '24 hours'""", (user_id,)).fetchone()
+        if mine["n"] >= cap:
+            raise HTTPException(429, f"{'You have' if user_id else 'Visitors without sign-in have'} started "
+                                     f"{mine['n']} builds in the last 24 hours (limit {cap}). Try again tomorrow.")
+        allday = c.execute("select coalesce(sum(spend_usd), 0)::float8 as s from builds "
+                           "where created_at > now() - interval '24 hours'").fetchone()["s"]
+        total = c.execute("select coalesce(sum(spend_usd), 0)::float8 as s from builds").fetchone()["s"]
+        for spent, limit, what in (
+                (mine["spend"], float(config.env("USER_DAILY_BUILD_BUDGET_USD", "2.5")), "your daily build budget"),
+                (allday, float(config.env("GLOBAL_DAILY_BUILD_BUDGET_USD", "5")), "today's build budget for all users"),
+                (total, float(config.env("TOKEN_FACTORY_TOTAL_BUDGET_USD", "17")), "the demo's total build budget")):
+            if spent >= limit:
+                raise HTTPException(429, f"Builds are paused: {what} (${limit:.2f}) is used up. "
+                                         "Recorded demo runs still work.")
         c.execute("""insert into builds (run_id, user_id, kind, task_id, task_name, task_card, options, status,
                                          budget_usd, message)
                      values (%s, %s, %s, %s, %s, %s, %s, 'queued', %s, 'Waiting for a free worker')""",

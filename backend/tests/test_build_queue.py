@@ -54,6 +54,15 @@ def test_job_command_masks_secrets_and_uses_pricing(monkeypatch):
     assert "NEBIUS_API_KEY=super-secret-value" in cmd and "SYNAPSE_RUN_ID=20261029-000000-procurement-ab12" in cmd
     shown = dispatcher.describe_job_command("20261029-000000-procurement-ab12")
     assert "super-secret-value" not in shown and "NEBIUS_API_KEY=***" in shown
+    monkeypatch.setenv("WORKER_IMAGE", "cr.eu-west2.nebius.cloud/reg/synapse:main")
+    monkeypatch.setenv("NEBIUS_REGISTRY", "cr.eu-west2.nebius.cloud/reg")
+    monkeypatch.setenv("NEBIUS_REGISTRY_TOKEN", "registry-token-value")
+    cmd = dispatcher.job_command("r1")
+    assert cmd[cmd.index("--registry-password") + 1] == "registry-token-value"
+    assert "registry-token-value" not in dispatcher.describe_job_command("r1")
+    monkeypatch.setenv("WORKER_IMAGE", "python:3.12-slim")              # public image: no registry login
+    assert "--registry-password" not in dispatcher.job_command("r1")
+    cmd = dispatcher.job_command("20261029-000000-procurement-ab12")
     spec = dispatcher.worker_spec()
     assert cmd[cmd.index("--preset") + 1] == spec["preset"] and cmd[cmd.index("--parent-id") + 1] == "project-abc"
     assert cmd[cmd.index("--disk-size") + 1] == f"{spec['disk_gib']}Gi" and spec["hourly_usd"] > 0
@@ -106,6 +115,11 @@ def test_queue_caps_cancel_retry_and_stale(pg_queue, monkeypatch):
                                      (2, json.dumps({"kind": "done", "data": {"status": "cancelled"}}))])
     assert [s for s, _ in queue.events_after(f"{tag}-a", 1)] == [2]
     queue.finish(f"{tag}-a", "cancelled", "Cancelled by the user")
+    with pytest.raises(Exception) as e:                                    # anonymous callers share a daily cap
+        monkeypatch.setenv("MAX_BUILDS_PER_USER_PER_DAY", "0")
+        queue.enqueue(f"{tag}-x", _card_json(tag), {}, None, 1.0)
+    assert e.value.status_code == 429
+    monkeypatch.setenv("MAX_BUILDS_PER_USER_PER_DAY", "100")
     r = queue.retry(f"{tag}-b", f"{tag}-c")
     assert r["status"] == "queued" and r["run_id"] == f"{tag}-c"
     with pytest.raises(Exception):

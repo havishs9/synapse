@@ -246,6 +246,15 @@ Findings while building this:
 | **Token Factory spend without the cache** | **$0.80** for this build: 451 Nemotron Ultra calls $0.78 (the zero-shot baseline on 300 sealed + 150 validation log windows), 160 Lightning calls $0.02. The Phase 2b logs run (`p2b-logs-d`) reported $0.07 only because 451 of its 452 Ultra calls were answered from the laptop's response cache (`data/cache/llm`). Workers start with an empty cache, so per-build costs in TEAM_PLAN §6 ("$0.07 to $0.31") are too low for new builds |
 | Service account on the endpoint | Not tested yet: jobs were launched with the laptop's user profile. The endpoint's dispatcher needs the nebius CLI and a profile from the service account's credentials file (`nebius profile create --service-account-file`); set up with the redeploy (TEAM_PLAN §2.4) |
 
+## Phase 3: pre-built image (2026-10-29)
+
+| Item | Result |
+|---|---|
+| Build path | No Docker on the laptop; the image is built by GitHub Actions (`.github/workflows/image.yml`, linux/amd64 like the Nebius CPU VMs, layer cache) on pushes to main and on demand, and pushed as `cr.eu-west2.nebius.cloud/e04cjwm2bdv5k5b8hc/synapse:main` and `:<sha>`. It contains the dependencies, the MiniLM model, the nebius CLI and the code (replaces the ~6 min install at startup) |
+| Registry login | Static key for CONTAINER_REGISTRY issued to the service account; `docker login cr.eu-west2.nebius.cloud --username iam --password <token>` (https://docs.nebius.com/container-registry/authentication). Claude's call to issue the key and store it as a GitHub secret was blocked by its permission check (secret-store writes), so `scripts/setup_registry_ci.sh` is for Raj to run |
+| Endpoint and jobs pulling the image | `--registry-username iam --registry-password <token>` on `ai endpoint create` and `ai job create`: VERIFY at the first deploy |
+| Old Dockerfile | Replaced: it was a Phase 0 draft (frontend bundled, never built); the frontend is on Vercel now |
+
 ## Spec conflicts and issues found
 
 1. **`spec/03_ML_PIPELINE.md` is corrupted and incomplete.** Line 59 contains a stray shell heredoc (`EOFcat > spec/03_ML_PIPELINE.md << 'EOF'`), the content is duplicated after it, and the file ends after the candidate ladder. The planner rules, search schedule, sandbox, repair, cascade and evaluation-rule sections that `00_START_HERE.md` promises are missing. These are needed before Phase 2.

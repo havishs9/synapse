@@ -80,6 +80,9 @@ def job_command(run_id: str) -> list[str]:
         "--timeout", spec["timeout"], "--restart-policy", "never", "--async", "--format", "json"]
     if config.env("NEBIUS_PROJECT_ID", "").startswith("project-"):
         cmd += ["--parent-id", config.env("NEBIUS_PROJECT_ID")]
+    image, registry_host = cmd[cmd.index("--image") + 1], (config.env("NEBIUS_REGISTRY") or "").split("/")[0]
+    if registry_host and image.startswith(registry_host) and config.env("NEBIUS_REGISTRY_TOKEN"):
+        cmd += ["--registry-username", "iam", "--registry-password", config.env("NEBIUS_REGISTRY_TOKEN")]
     for k, v in env.items():
         cmd += ["--env", f"{k}={v}"]
     return cmd
@@ -89,7 +92,7 @@ def launch_job(run_id: str) -> str:
     out = subprocess.run(job_command(run_id), capture_output=True, text=True, timeout=180)
     if out.returncode != 0:
         # The CLI echoes the request on some errors; never log it (it contains the env values).
-        raise RuntimeError(f"nebius ai job create failed (exit {out.returncode}): "
+        raise RuntimeError(f"nebius ai job create failed (exit {out.returncode}): "  # last line only
                            f"{(out.stderr or out.stdout).strip().splitlines()[-1][:300] if (out.stderr or out.stdout) else ''}")
     d = json.loads(out.stdout)
     job_id = d.get("resource_id") or (d.get("metadata") or {}).get("id") or d.get("id")
@@ -180,5 +183,8 @@ def stop() -> None:
 def describe_job_command(run_id: str) -> str:
     """The job command with every env value masked (for logs and docs)."""
     cmd = job_command(run_id)
-    return " ".join(shlex.quote(a.split("=", 1)[0] + "=***" if i and cmd[i - 1] == "--env" else a)
-                    for i, a in enumerate(cmd))
+    def mask(i: int, a: str) -> str:
+        if i and cmd[i - 1] == "--env":
+            return a.split("=", 1)[0] + "=***"
+        return "***" if i and cmd[i - 1] == "--registry-password" else a
+    return " ".join(shlex.quote(mask(i, a)) for i, a in enumerate(cmd))
