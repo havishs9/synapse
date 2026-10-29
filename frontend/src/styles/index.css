@@ -31,4 +31,6 @@ body { background: var(--bg); color: var(--ink); font-family: "IBM Plex Sans", s
 
 @keyframes pulse-once { 0% { r: 7; opacity: 1; } 50% { r: 16; opacity: 0.35; } 100% { r: 7; opacity: 1; } }
 .pulse-once { animation: pulse-once 900ms ease-out 1; }
-@media (prefers-reduced-motion: reduce) { .pulse-once { animation: none; } * { transition: none !important; } }
+@keyframes monogram-in { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.monogram-in { animation: monogram-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) 1; }
+@media (prefers-reduced-motion: reduce) { .pulse-once, .monogram-in { animation: none; } * { transition: none !important; } }

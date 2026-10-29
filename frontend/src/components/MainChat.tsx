@@ -9,7 +9,7 @@ export const EXAMPLES = [
 ];
 
 type Props = {
-  messages: Msg[]; streaming: boolean; onSend: (text: string, file?: File) => void; onStop: () => void;
+  messages: Msg[]; streaming: boolean; busy?: boolean; onSend: (text: string, file?: File) => void; onStop: () => void;
   onRetry: () => void; renderSpecial: (m: Msg) => React.ReactNode; onExample: (label: string) => void;
 };
 
@@ -22,7 +22,7 @@ export function MainChat(p: Props) {
   useEffect(() => { end.current?.scrollIntoView({ block: "end" }); }, [p.messages]);
 
   const send = () => {
-    if (!text.trim() || p.streaming) return;
+    if (!text.trim() || p.streaming || p.busy) return;
     p.onSend(text.trim(), file ?? undefined);
     setText(""); setFile(null);
   };
@@ -56,7 +56,7 @@ export function MainChat(p: Props) {
               ) : m.kind && m.kind !== "text" && m.kind !== "error" ? p.renderSpecial(m) : (
                 <div>
                   {m.kind === "error" ? <p className="text-danger">{m.content}</p> : <Markdown text={m.content || "…"} />}
-                  {!p.streaming && m.content && (
+                  {!p.streaming && m.content && (!m.kind || m.kind === "text") && (
                     <div className="mt-1 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
                       <button className="btn-ghost text-xs" onClick={() => navigator.clipboard.writeText(m.content)}>Copy</button>
                       {i === p.messages.length - 1 && <button className="btn-ghost text-xs" onClick={p.onRetry}>Retry</button>}
@@ -87,7 +87,7 @@ export function MainChat(p: Props) {
             <input ref={fileInput} type="file" accept=".csv,.jsonl,.txt,.log" className="hidden"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             {p.streaming ? <button className="btn" onClick={p.onStop}>Stop</button>
-              : <button className="btn-primary" onClick={send} disabled={!text.trim()}>Send</button>}
+              : <button className="btn-primary" onClick={send} disabled={!text.trim() || p.busy}>{p.busy ? "Thinking…" : "Send"}</button>}
           </div>
         </div>
       </div>
