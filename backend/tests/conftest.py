@@ -3,10 +3,11 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _offline_registry(monkeypatch):
-    """Tests use the local-files registry and no required sign-in, even when .env points at Supabase.
-    test_registry_postgres.py opts back in to the real database."""
+    """Tests use the local-files registry, no Object Storage and no required sign-in, even when .env points at
+    Supabase and the bucket. test_registry_postgres.py / test_object_storage.py opt back in."""
     monkeypatch.setenv("REGISTRY_BACKEND", "files")
     monkeypatch.setenv("AUTH_REQUIRED", "false")
+    monkeypatch.setenv("OBJECT_STORAGE_BACKEND", "off")
 
 
 @pytest.fixture

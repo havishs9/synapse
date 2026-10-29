@@ -9,12 +9,14 @@ from __future__ import annotations
 import hmac
 import threading
 import time
+from collections import OrderedDict
 
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from backend import config
 from backend.serving.predictor import InputError, Predictor
+from backend.storage.objects import StorageError
 from backend.versions import registry
 
 
@@ -33,7 +35,7 @@ class LiveIn(BaseModel):
     version: int
 
 
-_cache: dict[tuple[str, int], Predictor] = {}
+_cache: OrderedDict[tuple[str, int], Predictor] = OrderedDict()     # most recently used last
 _lock = threading.Lock()
 _llm = None
 
@@ -47,14 +49,24 @@ def _get_llm():
 
 
 def predictor(sid: str, version: int) -> Predictor:
+    """Loaded model for a version: fetched from Object Storage on first use (hash-checked), kept in memory for
+    the SPECIALIST_CACHE_SIZE most recently used versions."""
     key = (sid, version)
     with _lock:
-        if key not in _cache:
-            d = registry.bundle_dir(sid, version)
-            if not (d / "bundle.json").exists():
-                raise HTTPException(503, f"{sid} v{version}'s model files aren't on this server yet.")
-            _cache[key] = Predictor(d, llm=_get_llm())
-        return _cache[key]
+        if key in _cache:
+            _cache.move_to_end(key)
+            return _cache[key]
+    try:
+        d = registry.ensure_bundle(sid, version)
+    except StorageError as exc:
+        raise HTTPException(503, f"{sid} v{version} can't be loaded right now ({exc}).")
+    p = Predictor(d, llm=_get_llm())
+    with _lock:
+        _cache[key] = p
+        _cache.move_to_end(key)
+        while len(_cache) > int(config.env("SPECIALIST_CACHE_SIZE", "16")):
+            _cache.popitem(last=False)
+    return p
 
 
 def _bearer(authorization: str | None) -> str:
@@ -146,6 +158,7 @@ def reload(sid: str):
     with _lock:
         for k in [k for k in _cache if k[0] == sid]:
             _cache.pop(k)
+    registry._invalidate(sid)
     return {"ok": True}
 
 

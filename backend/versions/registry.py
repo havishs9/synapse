@@ -4,8 +4,10 @@ Records live in Postgres (Supabase, `supabase/migrations/`) when SUPABASE_DB_URL
 (the local/replay fallback):
   ARTIFACTS_DIR/specialists/<specialist_id>/versions.json
   ARTIFACTS_DIR/synapse.sqlite  (list of runs)
-Artifact bundles stay on disk under ARTIFACTS_DIR/specialists/<specialist_id>/v<n>/{model.joblib, bundle.json}
-until Object Storage lands (docs/TEAM_PLAN.md §2.2).
+Version bundles: written under ARTIFACTS_DIR/specialists/<specialist_id>/v<n>/{model.joblib, bundle.json} and, with
+Object Storage configured, uploaded to users/<owner>/specialists/... (backend/storage/objects.py). A server that
+doesn't have a bundle on disk downloads it on first use (`ensure_bundle`) and loads it only if every file matches
+the SHA-256 recorded with the version.
 
 Ownership: a specialist's `user_id` is its owner; None means a public demo specialist (or a local build without
 login). Every signed-in user may use a demo specialist and gets their own key for it.
@@ -26,6 +28,7 @@ from pathlib import Path
 from backend import config
 from backend.schemas import ApiKeyRecord, TaskCard, VersionRecord, Versions
 from backend.storage import db as pg
+from backend.storage import objects
 
 # 8 accessible hues for specialist identity (DESIGN.md); the main model stays neutral.
 PALETTE = ["#2F6FDE", "#0E8F6E", "#C2410C", "#7C3AED", "#B4235A", "#0F766E", "#A16207", "#4338CA"]
@@ -165,7 +168,8 @@ def _pg_load(sid: str) -> Versions:
                       "api_route from specialists where specialist_id = %s", (sid,)).fetchone()
         if not s:
             raise KeyError(sid)
-        vers = c.execute("select version, run_id, sealed_metrics, gate_result, reason, artifact_uri, candidate, live, "
+        vers = c.execute("select version, run_id, sealed_metrics, gate_result, reason, artifact_uri, artifact_files, "
+                         "candidate, live, "
                          "extract(epoch from created_at)::float8 as created from versions where specialist_id = %s "
                          "order by version", (sid,)).fetchall()
         keys = c.execute("select key_id, hash, user_id::text as user_id, extract(epoch from created_at)::float8 as "
@@ -184,7 +188,18 @@ def load(sid: str) -> Versions:
         hit = _cache.get(sid)
     if hit and time.time() - hit[0] < CACHE_S:
         return hit[1].model_copy(deep=True)
-    v = _pg_load(sid)
+    try:
+        v = _pg_load(sid)
+    except KeyError:
+        raise
+    except Exception as exc:
+        if hit is None:
+            raise
+        # Database unreachable: keep serving the last records this process read (keys, live version) rather than
+        # failing every prediction; changes made elsewhere apply once it is back.
+        print(f"[registry] Postgres unavailable ({type(exc).__name__}); using cached {sid} from "
+              f"{time.time() - hit[0]:.0f}s ago", flush=True)
+        return hit[1].model_copy(deep=True)
     with _cache_lock:
         _cache[sid] = (time.time(), v)
     return v.model_copy(deep=True)
@@ -205,13 +220,14 @@ def save(v: Versions) -> None:
         c.execute("update versions set live = false where specialist_id = %s and live", (sid,))
         for r in v.versions:
             c.execute("""insert into versions (specialist_id, version, run_id, sealed_metrics, gate_result, reason,
-                                               artifact_uri, candidate, live, created_at)
-                         values (%s, %s, %s, %s, %s, %s, %s, %s, %s, to_timestamp(%s))
+                                               artifact_uri, artifact_files, candidate, live, created_at)
+                         values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, to_timestamp(%s))
                          on conflict (specialist_id, version) do update set gate_result = excluded.gate_result,
                            reason = excluded.reason, live = excluded.live, artifact_uri = excluded.artifact_uri,
-                           sealed_metrics = excluded.sealed_metrics""",
+                           artifact_files = excluded.artifact_files, sealed_metrics = excluded.sealed_metrics""",
                       (sid, r.version, r.run_id, json.dumps(r.sealed_metrics), r.gate_result, r.reason,
-                       r.artifact_uri, r.candidate, r.live, r.created))
+                       r.artifact_uri, json.dumps(r.artifact_files) if r.artifact_files is not None else None,
+                       r.candidate, r.live, r.created))
         for k in v.api_keys:
             c.execute("""insert into api_keys (key_id, specialist_id, user_id, hash, created_at, revoked_at)
                          values (%s, %s, %s, %s, to_timestamp(%s), to_timestamp(%s))
@@ -268,10 +284,15 @@ def add_version(v: Versions, run_id: str, bundle_dir: Path, sealed_metrics: dict
     if dest.exists():
         shutil.rmtree(dest)
     shutil.copytree(bundle_dir, dest)
+    hashes = objects.file_hashes(dest)
+    artifact_uri = f"artifacts/specialists/{v.specialist_id}/v{n}"
+    if objects.enabled():
+        prefix = objects.specialist_prefix(v.user_id, v.specialist_id, n)
+        objects.upload_dir(dest, prefix)
+        artifact_uri = objects.uri(prefix)
     rec = VersionRecord(version=n, run_id=run_id, sealed_metrics=sealed_metrics,
                         gate_result="deployed" if deploy else "rejected", reason=reason,
-                        artifact_uri=f"artifacts/specialists/{v.specialist_id}/v{n}", created=time.time(),
-                        candidate=candidate)
+                        artifact_uri=artifact_uri, artifact_files=hashes, created=time.time(), candidate=candidate)
     if deploy:
         for r in v.versions:
             r.live = False
@@ -345,5 +366,40 @@ def key_matches(v: Versions, key: str) -> bool:
     return any(hmac.compare_digest(k.hash, h) for k in v.api_keys if k.revoked is None)
 
 
+# ---- bundles -------------------------------------------------------------------------
+_bundle_locks: dict[tuple[str, int], threading.Lock] = {}
+
+
+def ensure_bundle(sid: str, version: int, only: list[str] | None = None) -> Path:
+    """Local folder of a version's bundle (or of the files in `only`), downloading it from Object Storage if this
+    server doesn't have it. Raises objects.StorageError if it can't be fetched or a file's hash doesn't match."""
+    d = bundle_dir(sid, version)
+    with _cache_lock:
+        lock = _bundle_locks.setdefault((sid, version), threading.Lock())
+    with lock:
+        rec = next((r for r in load(sid).versions if r.version == version), None)
+        if rec is None:
+            raise objects.StorageError(f"{sid} has no version {version}")
+        expected = rec.artifact_files
+        if not expected:     # recorded before hashes existed: only a bundle already on this disk is used
+            if (d / "bundle.json").exists():
+                return d
+            raise objects.StorageError(f"{sid} v{version} has no recorded file hashes and isn't on this server")
+        names = only or list(expected)
+        if objects.verify_files(d, expected, names):
+            return d
+        prefix = objects.prefix_of(rec.artifact_uri)
+        if not objects.enabled() or prefix is None:
+            raise objects.StorageError(f"{sid} v{version}'s files aren't on this server and Object Storage isn't set up")
+        for name in names:
+            tmp = d / f".{Path(name).name}.part"
+            objects.get_file(f"{prefix}/{name}", tmp)
+            if objects.sha256(tmp) != expected.get(name):
+                tmp.unlink(missing_ok=True)
+                raise objects.StorageError(f"{sid} v{version}/{name} doesn't match its recorded hash; not loading it")
+            tmp.replace(d / name)
+        return d
+
+
 def bundle_meta(sid: str, version: int) -> dict:
-    return json.loads((bundle_dir(sid, version) / "bundle.json").read_text())
+    return json.loads((ensure_bundle(sid, version, only=["bundle.json"]) / "bundle.json").read_text())
