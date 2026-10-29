@@ -26,8 +26,14 @@ caller's builds, newest first:
   "message": "Run complete", "specialist_id": "support-ticket-router", "version": 1}]
 ```
 
-- `POST /api/builds` (exists) returns `{"run_id", "status": "queued"}` once the queue lands (today it starts at once).
+- `POST /api/builds` returns `{"run_id", "status": "queued"}` with the database configured (the queue), or
+  `"status": "running"` without it (local, starts at once). 429 when the user hit `MAX_BUILDS_PER_USER_PER_DAY`.
 - `POST /api/builds/{run_id}/cancel`, `POST /api/builds/{run_id}/retry`: 200 with the build object.
+  **Landed (Raj, queue):** cancel on a queued build → `cancelled` at once; on a running one the message becomes
+  "Cancelling after the current step" and the worker stops after its current search round or stage (409 if it
+  already ended). Retry (failed/cancelled only, else 409) returns the **new** build with a new `run_id`. Both are
+  501 without the database. Builds list statuses: `queued | running | done | failed | cancelled`; `stage` is
+  `null` while a worker is starting.
 - Progress stays on the existing stream `GET /api/runs/{run_id}/events` (same event schema as spec file 02).
   It must keep working after a reconnect: it replays from the first event, and `?after=<n>` skips the first n.
 - Raj ships a day-1 stub of `GET /api/builds` that reads `run_state.json` files, so the shape is real at once.
@@ -77,7 +83,7 @@ Order matters; each step is usable on its own.
 2. **Nebius Object Storage.** (**Done 2026-10-28**; the endpoint switches over at the step-4 redeploy.) Bucket, `backend/storage/`: bundles and run folders under
    `users/<user_id>/...`. The endpoint loads a specialist's bundle on first call and keeps recent ones in memory
    (LRU); it loads only bundles our pipeline wrote. Replaces the repo download at startup.
-3. **Build queue and workers.** `builds` table as the queue (`FOR UPDATE SKIP LOCKED`), a dispatcher loop on the
+3. **Build queue and workers.** (**Done 2026-10-29**; see `docs/VERIFICATION.md` "Phase 3: build queue".) `builds` table as the queue (`FOR UPDATE SKIP LOCKED`), a dispatcher loop on the
    endpoint with caps (default 2 builds at once overall because of the Token Factory rate limit, 1 per user),
    one **Nebius AI Job** per build (`nebius ai job create`: run-to-completion container, 1 h to 168 h timeout,
    Object Storage volume). Worker heartbeats; a stale heartbeat marks the build failed. Cancel between rounds;
@@ -181,7 +187,11 @@ embedding responses) makes specialist predictions that hit embeddings or Nano fr
 Budgets are enforced by the backend (Raj, step 5) from the `.env` values in `.env.example`. With open sign-up
 the hard totals matter most: when one is reached, live builds and chat pause and replay keeps working.
 
-**Token Factory ($25).** Measured: Phase 2b builds cost $0.07 to $0.31 each (`docs/VERIFICATION.md`).
+**Token Factory ($25).** Measured: Phase 2b builds cost $0.07 to $0.31 each (`docs/VERIFICATION.md`), **but those
+runs reused the laptop's response cache**. The first build on a fresh worker (logs, phase-1 profile) cost $0.80, almost
+all of it the Nemotron Ultra baseline (451 calls). Expect roughly $0.5 to $1 per new build: at $1 per build
+(`CREDIT_BUDGET_USD`) a full build can hit the cap. Decision pending (Raj): raise the per-build cap, or score
+the baseline on fewer records.
 
 | Use | Limit | Variable |
 |---|---|---|

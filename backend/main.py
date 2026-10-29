@@ -11,6 +11,7 @@ import io
 import json
 import threading
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
@@ -36,12 +37,14 @@ from backend.storage import objects
 from backend.storage.objects import StorageError
 from backend.versions import registry
 
-app = FastAPI(title="Synapse")
-
-
-@app.on_event("startup")
-def _start_dispatcher():
+@asynccontextmanager
+async def _lifespan(_app):
     dispatcher.start()      # only with a database (build queue) and outside replay mode
+    yield
+    dispatcher.stop()
+
+
+app = FastAPI(title="Synapse", lifespan=_lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=config.cors_origins(), allow_methods=["*"], allow_headers=["*"])
 app.include_router(spec_server.router)          # fallback serving: /health, /v1/specialists/...
 app.include_router(builds_api.router)           # GET /api/builds, cancel, retry (TEAM_PLAN §1)

@@ -49,7 +49,7 @@ each run and never adjusted after seeing results.
 Split between Raj (backend platform) and Havish (product, frontend, hosting, demo): see `docs/TEAM_PLAN.md` for the contracts, file ownership and setup.
 
 - [x] [Raj] Builds list stub `GET /api/builds` (contract TEAM_PLAN §1), `?after=n` on the event stream, `CORS_ORIGINS` (2026-10-28)
-- [ ] [Raj] Build queue and workers: `builds` table in Supabase, dispatcher with caps, one Nebius AI Job per build, heartbeats, cancel/retry, events in Postgres (TEAM_PLAN §2.3)
+- [x] [Raj] Build queue and workers (done 2026-10-29; first AI Job build verified, see VERIFICATION.md; the endpoint's dispatcher switches over with the redeploy): `builds` table in Supabase, dispatcher with caps, one Nebius AI Job per build, heartbeats, cancel/retry, events in Postgres (TEAM_PLAN §2.3)
 - [ ] [Raj] Pre-built image in Nebius Container Registry; fix `_reload_remote`; per-user budgets (TEAM_PLAN §2.4-2.5)
 - [ ] [Havish] Builds sidebar and cascade split display (TEAM_PLAN §3.2-3.3)
 
