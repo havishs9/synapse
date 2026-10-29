@@ -9,9 +9,11 @@ import json
 import time
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from backend import config
+from backend.auth import User, current_user, uid
+from backend.versions import registry
 
 router = APIRouter(prefix="/api/builds")
 
@@ -82,25 +84,28 @@ def build_view(run: Path) -> dict | None:
 
 
 @router.get("")
-def list_builds():
-    """The caller's builds, newest first. Until logins land (TEAM_PLAN §2.1) that is every run in RUNS_DIR."""
-    views = [v for d in config.runs_dir().iterdir() if d.is_dir() and (v := build_view(d))] \
+def list_builds(user: User | None = Depends(current_user)):
+    """The caller's builds, newest first: runs they started, plus runs with no owner (recorded demo runs and
+    builds started without sign-in)."""
+    owners = registry.run_owners()
+    views = [v for d in config.runs_dir().iterdir()
+             if d.is_dir() and owners.get(d.name) in (None, uid(user)) and (v := build_view(d))] \
         if config.runs_dir().exists() else []
     return sorted(views, key=lambda v: -(v["created_at"] or 0))
 
 
-def _not_yet(run_id: str, action: str):
+def _not_yet(run_id: str, action: str, user: User | None):
     d = (config.runs_dir() / run_id).resolve()
-    if d.parent != config.runs_dir() or not build_view(d):
+    if d.parent != config.runs_dir() or not build_view(d) or registry.run_owners().get(run_id) not in (None, uid(user)):
         raise HTTPException(404, "No such build.")
     raise HTTPException(501, f"{action} arrives with the build queue (TEAM_PLAN §2.3).")
 
 
 @router.post("/{run_id}/cancel")
-def cancel_build(run_id: str):
-    _not_yet(run_id, "Cancel")
+def cancel_build(run_id: str, user: User | None = Depends(current_user)):
+    _not_yet(run_id, "Cancel", user)
 
 
 @router.post("/{run_id}/retry")
-def retry_build(run_id: str):
-    _not_yet(run_id, "Retry")
+def retry_build(run_id: str, user: User | None = Depends(current_user)):
+    _not_yet(run_id, "Retry", user)

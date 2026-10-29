@@ -208,6 +208,19 @@ Findings while building this:
 | AI Jobs | `nebius ai job create` exists with `--image`, `--inject-file`, `--env`/`--env-secret`, `--volume`, `--preemptible`, `--timeout` (1 h to 168 h, default 24 h), `--restart-policy` (default never). Pricing and start time: VERIFY on the first worker run |
 | Nebius frontend hosting | None: the CLI's services are ai, applications, compute, dns, iam, kms, logging, mk8s, msp, mysterybox, registry, storage, vpc and others; no static-site hosting. Frontend goes to Vercel |
 
+## Phase 3: Supabase (2026-10-28)
+
+| Item | Result |
+|---|---|
+| Project | `kcwqhcmvanweadzrpwsp`, region us-west-2, Postgres 17.11. Direct host `db.<ref>.supabase.co` resolves to IPv6 only, so the backend uses the session pooler (`aws-1-us-west-2.pooler.supabase.com:5432`, user `postgres.<ref>`). From the laptop: connect ~0.9 s, query round trip median 59 ms |
+| Keys | New-format keys: `sb_publishable_...` (browser) and `sb_secret_...`. Signing keys: one ES256 key in `/auth/v1/.well-known/jwks.json`, so tokens are verified with the public key; the legacy JWT secret isn't needed |
+| Schema | `supabase/migrations/20261028120000_init.sql` applied with `scripts/db_migrate.py` (recorded in `supabase_migrations.schema_migrations`): specialists, versions (one live per specialist, unique index), api_keys (hashes only), builds, build_events; RLS on all five |
+| RLS check | With the publishable key through the REST API: all five tables return `[]` (HTTP 200) and an insert into specialists is refused (42501, HTTP 401) |
+| Registry on Postgres | `make test-pg`: round trip of versions, live version, rollback, key create/regenerate/revoke and build rows on the real database: 2 passed (test rows deleted). Demo specialists loaded with `make db-seed` (log-anomaly-detector live v1, procurement-categorizer live v2, support-ticket-router live v1) |
+| Keys survive a restart | Key created through the app, prediction with it 200 (wrong specialist 403), then a new process (as after an endpoint restart) still accepts it; the test key was revoked afterwards |
+| Latency | First registry read in a process ~1.4 s (pool connect); cached reads 0.3 ms; the cache refreshes every 15 s (`CACHE_S`), so a revoked key stops working within 15 s on other processes |
+| Endpoint | Not switched yet: the CLI has no `endpoint update` (only create, delete, start, stop, restart), so adding the database settings means recreating the endpoint, which changes its URL. Done once with the pre-built image (TEAM_PLAN §2.4) |
+
 ## Spec conflicts and issues found
 
 1. **`spec/03_ML_PIPELINE.md` is corrupted and incomplete.** Line 59 contains a stray shell heredoc (`EOFcat > spec/03_ML_PIPELINE.md << 'EOF'`), the content is duplicated after it, and the file ends after the candidate ladder. The planner rules, search schedule, sandbox, repair, cascade and evaluation-rule sections that `00_START_HERE.md` promises are missing. These are needed before Phase 2.

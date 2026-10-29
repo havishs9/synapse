@@ -48,6 +48,7 @@ each run and never adjusted after seeing results.
 
 Split between Raj (backend platform) and Havish (product, frontend, hosting, demo): see `docs/TEAM_PLAN.md` for the contracts, file ownership and setup.
 
+- [x] [Raj] Builds list stub `GET /api/builds` (contract TEAM_PLAN §1), `?after=n` on the event stream, `CORS_ORIGINS` (2026-10-28)
 - [ ] [Raj] Build queue and workers: `builds` table in Supabase, dispatcher with caps, one Nebius AI Job per build, heartbeats, cancel/retry, events in Postgres (TEAM_PLAN §2.3)
 - [ ] [Raj] Pre-built image in Nebius Container Registry; fix `_reload_remote`; per-user budgets (TEAM_PLAN §2.4-2.5)
 - [ ] [Havish] Builds sidebar and cascade split display (TEAM_PLAN §3.2-3.3)
@@ -64,13 +65,13 @@ Split between Raj (backend platform) and Havish (product, frontend, hosting, dem
 - [ ] [Havish] `docs/DEVPOST.md` and `docs/VIDEO_SCRIPT.md`
 - [ ] [Havish] Record the 3-minute video (human)
 - [ ] [Both] Acceptance criteria check (file 05 section 5)
-- [ ] [Raj backend, Havish login UI] Users with per-user separation on one shared endpoint (agreed with the team 2026-10-28; extends the spec, which has no accounts). Depends on the storage choice below.
+- [~] [Raj backend, Havish login UI] Users with per-user separation on one shared endpoint. **Backend done 2026-10-28** (`backend/auth.py`: Supabase token verification, `AUTH_REQUIRED` switch, ownership on every specialist, key, run and build route, per-user keys on demo specialists); login screens (Havish) and the switch to `AUTH_REQUIRED=true` on the public deployment still to do (agreed with the team 2026-10-28; extends the spec, which has no accounts). Depends on the storage choice below.
   - Login, and a `user_id` on every run, specialist, version and API key; every route checks ownership.
   - Files under `users/<user_id>/...` in storage; specialist keys stay per specialist, scoped to their owner.
   - One shared serving endpoint for everyone: load a specialist's bundle from storage on first call, keep recently used ones in memory (LRU). No endpoint per user (each is ~$0.07/h while running, minutes to start, no scale-to-zero seen). Later: more shared endpoints with routing by user, or a dedicated endpoint as a paid option.
   - Serve only bundles our own pipeline wrote (joblib loading runs code); never accept uploaded model files.
   - Per-user budgets for training spend and for cascade escalations on public predictions.
-- [ ] [Raj] Durable storage instead of local disk and the repo download. Decided 2026-10-28: **Supabase** (Postgres for records: users, specialists, versions, hashed keys, runs; Supabase Auth for login) and **Nebius Object Storage** for files (bundles, run folders, uploaded datasets) under `users/<user_id>/...`. Nebius Managed PostgreSQL was considered (pgvector, but no auth, ~$0.14/h for 2 vCPU / 8 GB) and dropped for now. Fixes keys being lost on endpoint restart and the missing replay runs on the endpoint. Replaces the spec's SQLite: update file 02. Needs from a human: a Supabase project (URL, anon key, service key, JWT secret in `.env`) and a Nebius Object Storage bucket + access key.
+- [~] [Raj] Durable storage instead of local disk and the repo download. **Records done 2026-10-28** (Supabase: schema in `supabase/migrations/`, registry on Postgres with local files as the fallback, keys survive restarts); files (Object Storage, TEAM_PLAN §2.2) still to do. Decided 2026-10-28: **Supabase** (Postgres for records: users, specialists, versions, hashed keys, runs; Supabase Auth for login) and **Nebius Object Storage** for files (bundles, run folders, uploaded datasets) under `users/<user_id>/...`. Nebius Managed PostgreSQL was considered (pgvector, but no auth, ~$0.14/h for 2 vCPU / 8 GB) and dropped for now. Fixes keys being lost on endpoint restart and the missing replay runs on the endpoint. Replaces the spec's SQLite: update file 02. Needs from a human: a Supabase project (URL, anon key, service key, JWT secret in `.env`) and a Nebius Object Storage bucket + access key.
 - [ ] [Raj backend, Havish UI] Data sourcing beyond the pre-downloaded demo datasets (spec file 03 §1.1; today the Data agent only loads registry datasets by key):
   - Upload in the chat (CSV, JSONL, plain-text logs) → saved as the user's own dataset → same dedupe / sealed split as the demo data. Unlabeled uploads: teacher labels from Nano (file 03 §1.2), reported as teacher-labeled.
   - Not enough labeled data → vetted registry first, then live Tavily and Hugging Face Hub search: record the license, reject incompatible ones, format-match score against the user's samples, user approves in the chat. The demo never depends on live results.

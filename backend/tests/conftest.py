@@ -1,6 +1,14 @@
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _offline_registry(monkeypatch):
+    """Tests use the local-files registry and no required sign-in, even when .env points at Supabase.
+    test_registry_postgres.py opts back in to the real database."""
+    monkeypatch.setenv("REGISTRY_BACKEND", "files")
+    monkeypatch.setenv("AUTH_REQUIRED", "false")
+
+
 @pytest.fixture
 def tmp_env(tmp_path, monkeypatch):
     """Point data, runs and artifacts at a temp dir; set a fake pepper/admin token."""
