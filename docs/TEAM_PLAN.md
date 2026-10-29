@@ -31,6 +31,9 @@ caller's builds, newest first:
 - Progress stays on the existing stream `GET /api/runs/{run_id}/events` (same event schema as spec file 02).
   It must keep working after a reconnect: it replays from the first event, and `?after=<n>` skips the first n.
 - Raj ships a day-1 stub of `GET /api/builds` that reads `run_state.json` files, so the shape is real at once.
+  **Done** (`backend/builds/api.py`): also returns `deployed` (true/false once the build ends: whether its version
+  passed the gate) and `kind` (`build | improve`). Until the queue lands, cancel/retry return 501, a `running`
+  build with no event for 20 min shows as `failed`, and every run in `RUNS_DIR` is listed (no users yet).
 
 **Auth.** The frontend signs in with Supabase Auth (`@supabase/supabase-js`) and sends
 `Authorization: Bearer <Supabase access token>` on every `/api/*` call. The backend verifies it. Until Raj's

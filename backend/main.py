@@ -22,6 +22,7 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from backend import config
+from backend.builds import api as builds_api
 from backend.demo_tasks import DEMO_TASKS
 from backend.llm_client import LLMClient
 from backend.orchestrator import Options, Orchestrator
@@ -32,8 +33,9 @@ from backend.serving.predictor import InputError
 from backend.versions import registry
 
 app = FastAPI(title="Synapse")
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=config.cors_origins(), allow_methods=["*"], allow_headers=["*"])
 app.include_router(spec_server.router)          # fallback serving: /health, /v1/specialists/...
+app.include_router(builds_api.router)           # GET /api/builds, cancel, retry (TEAM_PLAN §1)
 _builds: dict[str, Orchestrator] = {}
 _chat_llm = LLMClient(budget_usd=float("inf"))
 
@@ -163,23 +165,28 @@ def run_state(run_id: str):
 
 
 @app.get("/api/runs/{run_id}/events")
-async def run_events(run_id: str, replay: bool = False, speed: float = 1.0):
-    """SSE: live runs stream as events are written; replay plays recorded events with their original timing."""
+async def run_events(run_id: str, replay: bool = False, speed: float = 1.0, after: int = 0):
+    """SSE: live runs stream as events are written; replay plays recorded events with their original timing.
+    Every connection starts from the first event; `after=n` skips the first n (reconnects)."""
     d = run_dir(run_id)
     path = d / "events.jsonl"
 
     async def live():
-        pos, idle = 0, 0
+        pos, idle, seen = 0, 0, 0
         while True:
             chunk = ""
             if path.exists():
-                with path.open() as f:
+                with path.open("rb") as f:
                     f.seek(pos)
-                    chunk = f.read()
-                    pos = f.tell()
+                    raw = f.read()
+                raw = raw[:raw.rfind(b"\n") + 1]          # a line still being written is read next time
+                pos += len(raw)
+                chunk = raw.decode()
                 for line in chunk.splitlines():
                     if line.strip():
-                        yield {"data": line}
+                        seen += 1
+                        if seen > after:
+                            yield {"data": line}
                         if json.loads(line).get("kind") == "done":
                             return
             idle = 0 if chunk else idle + 1
@@ -188,7 +195,7 @@ async def run_events(run_id: str, replay: bool = False, speed: float = 1.0):
             await asyncio.sleep(0.25)
 
     async def play():
-        events = [json.loads(l) for l in path.open() if l.strip()]
+        events = [json.loads(l) for l in path.open() if l.strip()][max(after, 0):]
         prev = events[0]["ts"] if events else 0
         for e in events:
             await asyncio.sleep(min(max(e["ts"] - prev, 0) / max(speed, 0.01), 2.0))
