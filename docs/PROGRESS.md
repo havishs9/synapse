@@ -64,7 +64,19 @@ Split between Raj (backend platform) and Havish (product, frontend, hosting, dem
 - [x] [Havish] Complete README and `docs/FEEDBACK.md` — README has placeholders for the demo URL and video link
 - [x] [Havish] `docs/DEVPOST.md` and `docs/VIDEO_SCRIPT.md`
 - [ ] [Havish] Record the 3-minute video (human)
-- [ ] [Both] Acceptance criteria check (file 05 section 5)
+- [~] [Both] Acceptance criteria check (file 05 section 5) — Havish's pass, 2026-10-29:
+  - [x] Describe procurement → questions → task card → build with live Pareto: in replay (smoke test); live builds use the unchanged `POST /api/builds` (not re-run through the new UI this session)
+  - [x] Specialist panel returns label, confidence, reason (and which stage answered)
+  - [x] Compare: both outputs, measured latency and cost, yearly projection
+  - [x] Report card: sealed per-class metrics, validation vs sealed, baseline, teacher agreement (labeled), seed error bars, Pareto chart (existing report)
+  - [~] HDFS through the same pipeline with a different winner: the single-model winner is TF-IDF on all three tasks; what ships differs (TF-IDF alone for logs, TF-IDF → Nano for procurement, TF-IDF → Qwen3 for support). Reported honestly in the README
+  - [x] v1 → v2 through the gate: deploy (two recorded runs), reject and rollback (tests)
+  - [x] Per-specialist versioned routes and keys, cross-specialist 403 (Phase 2, VERIFICATION §4)
+  - [x] Replay reproduces the three builds and two improve runs
+  - [ ] Public demo URL (Vercel link + `CORS_ORIGINS`)
+  - [x] UI per spec 01 §2.11 (screenshots); builds list added to the sidebar per TEAM_PLAN §3.3
+  - [~] README, VERIFICATION, FEEDBACK done; demo URL and video link still placeholders
+  - [~] Tests: 64 pass; `test_builds_api.py::test_cancel_retry_not_yet_and_unknown` fails when `frontend/dist` exists (VERIFICATION, issue 0)
 - [~] [Raj backend, Havish login UI] Users with per-user separation on one shared endpoint. **Backend done 2026-10-28** (`backend/auth.py`: Supabase token verification, `AUTH_REQUIRED` switch, ownership on every specialist, key, run and build route, per-user keys on demo specialists); login screens done 2026-10-29 (Google sign-in via Supabase behind `VITE_AUTH_ENABLED`, sign-out in the sidebar; needs `VITE_SUPABASE_URL` and the anon key in `frontend/.env.local` / Vercel); the switch to `AUTH_REQUIRED=true` on the public deployment still to do (agreed with the team 2026-10-28; extends the spec, which has no accounts). Depends on the storage choice below.
   - Login, and a `user_id` on every run, specialist, version and API key; every route checks ownership.
   - Files under `users/<user_id>/...` in storage; specialist keys stay per specialist, scoped to their owner.
