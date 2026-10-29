@@ -31,6 +31,8 @@ from backend.schemas import TaskCard
 from backend.sealed import is_sealed_path
 from backend.serving import server as spec_server
 from backend.serving.predictor import InputError
+from backend.storage import objects
+from backend.storage.objects import StorageError
 from backend.versions import registry
 
 app = FastAPI(title="Synapse")
@@ -150,12 +152,30 @@ def start_build(body: BuildIn, user: User | None = Depends(current_user)):
 def run_dir(run_id: str, user: User | None = None) -> Path:
     """A run folder the caller may read: their own builds, and runs with no owner (recorded demo runs)."""
     d = (config.runs_dir() / run_id).resolve()
-    if d.parent != config.runs_dir() or not d.is_dir():
+    if d.parent != config.runs_dir():
         raise HTTPException(404, "No such run.")
     known, owner = registry.run_owner(run_id)
     if known and owner is not None and owner != uid(user):
         raise HTTPException(404, "No such run.")
+    if not d.is_dir():
+        _fetch_run(run_id, owner, d)
     return d
+
+
+_run_fetch_lock = threading.Lock()
+
+
+def _fetch_run(run_id: str, owner: str | None, d: Path) -> None:
+    """A run this server didn't execute (another server or a build worker): fetch its folder from Object Storage."""
+    if not objects.enabled():
+        raise HTTPException(404, "No such run.")
+    with _run_fetch_lock:
+        if d.is_dir():
+            return
+        try:
+            objects.download_dir(objects.run_prefix(owner, run_id), d)
+        except StorageError:
+            raise HTTPException(404, "No such run.")
 
 
 @app.get("/api/runs")
@@ -244,7 +264,10 @@ def _spec(sid: str, user: User | None = None):
 
 
 def _version_view(v, rec) -> dict:
-    meta = registry.bundle_meta(v.specialist_id, rec.version)
+    try:
+        meta = registry.bundle_meta(v.specialist_id, rec.version)
+    except StorageError:
+        meta = None
     rd = config.runs_dir() / rec.run_id
     rc = json.loads((rd / "report_card.json").read_text()) if (rd / "report_card.json").exists() else None
     return {**rec.model_dump(), "bundle": meta, "report": rc}
@@ -307,7 +330,12 @@ def panel_predict(sid: str, body: PredictIn, user: User | None = Depends(current
 async def panel_batch(sid: str, file: UploadFile = File(...), user: User | None = Depends(current_user)):
     raw = (await file.read()).decode("utf-8", errors="replace")
     v = _spec(sid, user)
-    meta = registry.bundle_meta(sid, registry.live(v).version)
+    if registry.live(v) is None:
+        raise HTTPException(503, "This specialist has no live version yet.")
+    try:
+        meta = registry.bundle_meta(sid, registry.live(v).version)
+    except StorageError as exc:
+        raise HTTPException(503, f"The model can't be loaded right now ({exc}).")
     if meta["input_type"] == "log_window":
         texts = [json.loads(l)["text"] for l in raw.splitlines() if l.strip()] if file.filename.endswith(".jsonl") \
             else [w for w in raw.split("\n\n") if w.strip()]

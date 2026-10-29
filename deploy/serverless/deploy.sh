@@ -24,8 +24,10 @@ ENVS=(
   "DEMO_DAILY_BUDGET_USD=${DEMO_DAILY_BUDGET_USD:-3}"
   "NEBIUS_API_KEY=${NEBIUS_API_KEY}" "SPECIALIST_ADMIN_TOKEN=${SPECIALIST_ADMIN_TOKEN}" "API_KEY_PEPPER=${API_KEY_PEPPER}"
 )
-# Optional: records in Supabase (keys survive restarts), sign-in checks, the frontend's origin.
-for v in SUPABASE_URL SUPABASE_DB_URL SUPABASE_JWT_SECRET AUTH_REQUIRED CORS_ORIGINS; do
+# Optional: records in Supabase (keys survive restarts), sign-in checks, the frontend's origin, and Object
+# Storage (model bundles and run folders are fetched from the bucket on first use).
+for v in SUPABASE_URL SUPABASE_DB_URL SUPABASE_JWT_SECRET AUTH_REQUIRED CORS_ORIGINS OBJECT_STORAGE_ENDPOINT \
+         OBJECT_STORAGE_REGION OBJECT_STORAGE_BUCKET OBJECT_STORAGE_ACCESS_KEY OBJECT_STORAGE_SECRET_KEY; do
   [ -n "${!v:-}" ] && ENVS+=("$v=${!v}")
 done
 ENV_FLAGS=()

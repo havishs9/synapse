@@ -241,6 +241,7 @@ class VersionRecord(Schema):
     created: float
     live: bool = False
     candidate: Optional[str] = None
+    artifact_files: Optional[dict[str, str]] = None     # file name -> SHA-256, written with the bundle
 
 
 class Versions(Schema):

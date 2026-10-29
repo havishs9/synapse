@@ -221,6 +221,18 @@ Findings while building this:
 | Latency | First registry read in a process ~1.4 s (pool connect); cached reads 0.3 ms; the cache refreshes every 15 s (`CACHE_S`), so a revoked key stops working within 15 s on other processes |
 | Endpoint | Not switched yet: the CLI has no `endpoint update` (only create, delete, start, stop, restart), so adding the database settings means recreating the endpoint, which changes its URL. Done once with the pre-built image (TEAM_PLAN §2.4) |
 
+## Phase 3: Object Storage (2026-10-28)
+
+| Item | Result |
+|---|---|
+| S3 client | boto3 1.43 against `https://storage.eu-west2.nebius.cloud`: path-style and virtual-hosted addressing both work, uploads larger than one part work, new objects get the bucket's ENHANCED_THROUGHPUT class. Used: path style, checksums only when required, connect timeout 10 s (the 60 s default made one probe hang while retrying) |
+| Layout | `users/<owner>/specialists/<id>/v<n>/` and `users/<owner>/runs/<run_id>/` (`public` for demo / no-login). Run folders skip `candidates/` model files (kept: `metrics.json`, `error.log`) and `bundle/`: `p2b-support-c` is 576 MB on disk, of which 553 MB are candidate models |
+| Integrity | `versions.artifact_files` (migration `20261028180000`) holds the SHA-256 of every bundle file; a downloaded bundle is loaded only if all hashes match. Test: a tampered `model.joblib` in the bucket is refused (503 on predict) |
+| Demo data | `make db-seed` uploaded the 5 demo version bundles and the 3 recorded runs (59 + 68 + 91 files) in 93 s from the laptop and recorded their hashes |
+| Fresh server | A server with empty ARTIFACTS_DIR and RUNS_DIR: first support prediction 200 in 13.9 s (downloads the 11 MB bundle over the laptop's connection), next one 18 ms; recorded run `p2b-procurement-d` fetched in 9.8 s (5.1 MB), report card 200; the specialist view fetched only `bundle.json` for the other versions. From the endpoint (same region as the bucket): VERIFY at the redeploy |
+| Real bucket test | `SYNAPSE_TEST_S3=1`: upload/download/hash-compare/delete of a folder including a 9 MB multipart file: passed |
+| Database outage | During this session the Supabase pooler was unreachable from the laptop for a few minutes (TCP "No route to host", HTTPS timed out; status page: all operational). Since then the registry serves its last-read records when Postgres is down (keys and live versions keep working) and waits at most `DB_POOL_TIMEOUT_S` (8 s) for a connection |
+
 ## Spec conflicts and issues found
 
 1. **`spec/03_ML_PIPELINE.md` is corrupted and incomplete.** Line 59 contains a stray shell heredoc (`EOFcat > spec/03_ML_PIPELINE.md << 'EOF'`), the content is duplicated after it, and the file ends after the candidate ladder. The planner rules, search schedule, sandbox, repair, cascade and evaluation-rule sections that `00_START_HERE.md` promises are missing. These are needed before Phase 2.

@@ -9,7 +9,7 @@ import pytest
 
 from backend.schemas import Label, TaskCard, Thresholds
 
-pytestmark = pytest.mark.skipif(os.environ.get("SYNAPSE_TEST_PG") != "1", reason="set SYNAPSE_TEST_PG=1 to run")
+real_db = pytest.mark.skipif(os.environ.get("SYNAPSE_TEST_PG") != "1", reason="set SYNAPSE_TEST_PG=1 to run")
 
 
 @pytest.fixture
@@ -26,6 +26,7 @@ def pg_registry(tmp_env, monkeypatch):
     registry._invalidate()
 
 
+@real_db
 def test_round_trip_keys_versions_rollback(pg_registry, tmp_path):
     registry, tag = pg_registry
     card = TaskCard(task_id="t", task_name=tag, description="d", input_type="text", output_type="multiclass",
@@ -54,6 +55,7 @@ def test_round_trip_keys_versions_rollback(pg_registry, tmp_path):
     assert tag in [s.specialist_id for s in registry.list_specialists()]
 
 
+@real_db
 def test_builds_rows(pg_registry):
     registry, tag = pg_registry
     rid = f"{tag}-build"
@@ -63,3 +65,27 @@ def test_builds_rows(pg_registry):
     assert registry.run_owner(rid) == (True, None) and rid in registry.run_owners()
     row = next(r for r in registry.list_runs() if r["run_id"] == rid)
     assert (row["status"], row["specialist_id"]) == ("failed", "sid-x")
+
+
+def test_stale_records_served_when_database_is_down(monkeypatch):
+    """Not opt-in: fakes the database. Keys keep working from the last read while Postgres is unreachable."""
+    from backend.schemas import Versions
+    from backend.versions import registry
+    monkeypatch.setattr(registry.pg, "enabled", lambda: True)
+    v = Versions(specialist_id="cached-x", display_name="X", monogram="XX", color="#000", task_id="t", api_route="/r")
+    calls = {"n": 0}
+
+    def flaky(sid):
+        calls["n"] += 1
+        if calls["n"] > 1:
+            raise ConnectionError("no route to host")
+        return v
+    monkeypatch.setattr(registry, "_pg_load", flaky)
+    monkeypatch.setattr(registry, "CACHE_S", 0.0)
+    registry._invalidate()
+    assert registry.load("cached-x").specialist_id == "cached-x"          # fresh read
+    assert registry.load("cached-x").specialist_id == "cached-x"          # database down: stale copy
+    registry._invalidate()
+    import pytest as _p
+    with _p.raises(ConnectionError):                                       # nothing cached: the error surfaces
+        registry.load("cached-x")

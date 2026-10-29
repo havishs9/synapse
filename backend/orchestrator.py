@@ -28,6 +28,7 @@ from backend.candidates import LLM_FAMILIES, Candidate, CascadeH
 from backend.llm_client import BudgetExceeded, LLMClient
 from backend.sealed import load_split
 from backend.schemas import (CandidateRun, ErrorPatterns, EvalReport, Event, RunState, TaskCard)
+from backend.storage import objects
 from backend.versions import registry
 
 
@@ -141,7 +142,18 @@ class Orchestrator:
                                 spend_usd=self.state.spend_usd, budget_usd=self.budget, message=self.state.message,
                                 version=self.result.get("version"), deployed=self.result.get("deployed"))
             self.emit("Orchestrator", "end", "", kind="done", data={"status": self.state.status, **self.result})
+            self._upload_run()
         return self.result
+
+    def _upload_run(self) -> None:
+        """Copy the run folder (without candidate model files) to Object Storage, so any server can show it."""
+        if not objects.enabled():
+            return
+        try:
+            n = objects.upload_run(self.dir, self.user_id)
+            print(f"[orchestrator] uploaded {n} files of {self.run_id} to object storage", flush=True)
+        except Exception as exc:     # the build itself succeeded; the local folder still has everything
+            print(f"[orchestrator] couldn't upload {self.run_id}: {type(exc).__name__}: {exc}", flush=True)
 
     def _run(self):
         card = self.card

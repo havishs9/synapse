@@ -23,7 +23,7 @@ def pool():
         if _pool is None:
             from psycopg.rows import dict_row
             from psycopg_pool import ConnectionPool
-            _pool = ConnectionPool(config.env("SUPABASE_DB_URL"), min_size=1, max_size=4, open=True, timeout=30,
+            _pool = ConnectionPool(config.env("SUPABASE_DB_URL"), min_size=1, max_size=4, open=True, timeout=float(config.env("DB_POOL_TIMEOUT_S", "8")),
                                    kwargs={"row_factory": dict_row, "connect_timeout": 15},
                                    check=ConnectionPool.check_connection, name="synapse")
         return _pool

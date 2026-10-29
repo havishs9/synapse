@@ -74,7 +74,7 @@ Order matters; each step is usable on its own.
    (`backend/versions/registry.py`) reads and writes Postgres, with the current files kept as the local/replay
    fallback. JWT verification in `backend/auth.py`; every route checks ownership. Fixes: keys lost on endpoint
    restart; anyone can regenerate (revoke) a key on the public demo.
-2. **Nebius Object Storage.** Bucket, `backend/storage/`: bundles and run folders under
+2. **Nebius Object Storage.** (**Done 2026-10-28**; the endpoint switches over at the step-4 redeploy.) Bucket, `backend/storage/`: bundles and run folders under
    `users/<user_id>/...`. The endpoint loads a specialist's bundle on first call and keeps recent ones in memory
    (LRU); it loads only bundles our pipeline wrote. Replaces the repo download at startup.
 3. **Build queue and workers.** `builds` table as the queue (`FOR UPDATE SKIP LOCKED`), a dispatcher loop on the
