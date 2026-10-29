@@ -109,6 +109,14 @@ def claim(worker_kind: str, run_id_like: str = "%") -> dict | None:
     return get(row["run_id"])
 
 
+def requeue(run_id: str, message: str) -> None:
+    """Put a claimed build back in the queue (its worker couldn't be started yet); it keeps its place."""
+    with pg.conn() as c:
+        c.execute("""update builds set status = 'queued', started_at = null, heartbeat_at = null, worker_id = null,
+                     attempts = greatest(attempts - 1, 0), message = %s, updated_at = now()
+                     where run_id = %s and status = 'running' and stage is null""", (message, run_id))
+
+
 def set_worker(run_id: str, worker_id: str) -> None:
     with pg.conn() as c:
         c.execute("update builds set worker_id = %s, updated_at = now() where run_id = %s", (worker_id, run_id))
