@@ -625,16 +625,29 @@ def holdback(sid: str, limit: int = 200, user: User | None = Depends(current_use
 
 
 # ---- improve ------------------------------------------------------------------------------
+@router.get("/specialists/{sid}/improve")
+def improve_info(sid: str, user: User | None = Depends(current_user)):
+    """What the Improve section can do here: run a new improve (live mode), or replay the recorded one."""
+    v = _spec(sid, user)
+    replay = config.app_mode() == "replay"
+    run = recorded_improve(v.task_id) if replay else None
+    rep = None
+    if run and (config.runs_dir() / run / "improve_report.json").exists():
+        r = json.loads((config.runs_dir() / run / "improve_report.json").read_text())
+        rep = {k: r.get(k) for k in ("live_version_before", "new_version", "corrections", "gate")}
+    return {"mode": config.app_mode(), "recorded_run": run, "recorded": rep}
+
+
 @router.post("/specialists/{sid}/improve")
 def improve(sid: str, user: User | None = Depends(current_user)):
     v = _spec(sid, user)
-    require_edit(v, user)
-    if config.app_mode() == "replay":
+    if config.app_mode() == "replay":           # watching a recording changes nothing, so no edit rights needed
         run = recorded_improve(v.task_id)
         if not run:
             raise HTTPException(409, "Replay mode plays recorded runs only, and there's no recorded improve run for "
                                      "this specialist.")
         return {"run_id": run, "replay": True}
+    require_edit(v, user)
     rows = _load_corrections(sid, user)
     if not rows:
         raise HTTPException(422, "Add at least one correction first.")

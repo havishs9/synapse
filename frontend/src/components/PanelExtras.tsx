@@ -15,8 +15,13 @@ export function PanelExtras({ spec, sid, onChanged, lastResult, lastInput, onImp
   const [held, setHeld] = useState<any>(null);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState<any>(null);
 
-  useEffect(() => { getJSON(`/api/specialists/${sid}/corrections`).then((r) => setRows(r.corrections)).catch(() => {}); }, [sid]);
+  useEffect(() => {
+    getJSON(`/api/specialists/${sid}/corrections`).then((r) => setRows(r.corrections)).catch(() => {});
+    getJSON(`/api/specialists/${sid}/improve`).then(setInfo).catch(() => {});
+  }, [sid]);
+  const replayMode = info?.mode === "replay";
   useEffect(() => { setFix(""); }, [lastResult]);
 
   const act = async (what: string, fn: () => Promise<void>) => {
@@ -53,7 +58,16 @@ export function PanelExtras({ spec, sid, onChanged, lastResult, lastInput, onImp
           Corrections go into the training set only. The new version takes one final exam on the same sealed test set v{live?.version} was scored on,
           and goes live only if it beats v{live?.version} and passes every threshold.
         </p>
-        {lastResult && labels.length > 0 && (
+        {replayMode && (
+          <div className="mt-2 rounded border border-border p-3 text-sm">
+            {info.recorded_run ? <>
+              <p>This server plays recordings. The recorded improve run took v{info.recorded?.live_version_before} with {info.recorded?.corrections} corrections
+                to v{info.recorded?.new_version}: {info.recorded?.gate?.passed ? "the gate passed and it deployed" : "the gate rejected it"} ({info.recorded?.gate?.reason}).</p>
+              <button className="btn mt-2" onClick={improve} disabled={!!busy}>Replay the improve run</button>
+            </> : <p className="text-ink-2">This server plays recordings, and there's no recorded improve run for this specialist. Run the app in live mode to build a new version.</p>}
+          </div>
+        )}
+        {lastResult && labels.length > 0 && !replayMode && (
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
             <span className="text-ink-2">Wrong label for the last input?</span>
             <select className="input w-auto max-w-[240px] py-1 text-sm" value={fix} onChange={(e) => setFix(e.target.value)} aria-label="Correct label">
@@ -68,7 +82,7 @@ export function PanelExtras({ spec, sid, onChanged, lastResult, lastInput, onImp
           {held && (
             <span className="text-sm text-ink-2">
               v{live?.version} gets {held.n_wrong} of {held.scored.toLocaleString()} held-back records wrong.{" "}
-              {held.n_wrong > 0 && <button className="btn ml-1" onClick={addHeld} disabled={!!busy}>Add all {held.n_wrong} as corrections</button>}
+              {held.n_wrong > 0 && !replayMode && <button className="btn ml-1" onClick={addHeld} disabled={!!busy}>Add all {held.n_wrong} as corrections</button>}
             </span>
           )}
         </div>
@@ -91,7 +105,7 @@ export function PanelExtras({ spec, sid, onChanged, lastResult, lastInput, onImp
                   </tr>))}</tbody>
               </table>
             </div>
-            <button className="btn-primary mt-2" onClick={improve} disabled={!!busy}>{busy === "improve" ? "Starting…" : `Build v${Math.max(...spec.versions.map((v: any) => v.version)) + 1}`}</button>
+            {!replayMode && <button className="btn-primary mt-2" onClick={improve} disabled={!!busy}>{busy === "improve" ? "Starting…" : `Build v${Math.max(...spec.versions.map((v: any) => v.version)) + 1}`}</button>}
           </div>
         )}
         {error && <p className="mt-2 text-sm text-danger" role="alert">{error}</p>}

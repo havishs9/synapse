@@ -1,0 +1,31 @@
+{
+  "rows": 13477,
+  "label_counts": {
+    "Aircraft, Ships/Submarines & Land Vehicles": 58,
+    "Clothing, Textiles & Subsistence S&E": 746,
+    "Electronic & Communication Equipment": 726,
+    "Electronic & Communication Services": 85,
+    "Equipment Related Services": 658,
+    "Facilities & Construction": 1140,
+    "Human Capital": 346,
+    "IT": 1140,
+    "Industrial Products & Services": 1140,
+    "Medical": 635,
+    "Miscellaneous S&E": 440,
+    "Office Management": 1002,
+    "Professional Services": 1140,
+    "Research and Development": 582,
+    "Security and Protection": 406,
+    "Sustainment S&E": 1140,
+    "Transportation and Logistics Services": 1140,
+    "Travel & Lodging": 615,
+    "Weapons & Ammunition": 338
+  },
+  "n_classes": 19,
+  "imbalance_ratio": 19.655172413793103,
+  "smallest_class": 58,
+  "avg_input_chars": 72.92795132447874,
+  "keyword_density": 0.19331188353816128,
+  "structured": false,
+  "input_type": "text"
+}

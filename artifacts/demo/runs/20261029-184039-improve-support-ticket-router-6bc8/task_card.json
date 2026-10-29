@@ -1,0 +1,342 @@
+{
+  "task_id": "support_tickets",
+  "task_name": "Support Ticket Router",
+  "description": "Route a bank customer's support message to the right intent so it reaches the right team.",
+  "input_type": "text",
+  "output_type": "multiclass",
+  "labels": [
+    {
+      "name": "Refund_not_showing_up",
+      "definition": "Refund not showing up"
+    },
+    {
+      "name": "activate_my_card",
+      "definition": "Activate my card"
+    },
+    {
+      "name": "age_limit",
+      "definition": "Age limit"
+    },
+    {
+      "name": "apple_pay_or_google_pay",
+      "definition": "Apple pay or google pay"
+    },
+    {
+      "name": "atm_support",
+      "definition": "Atm support"
+    },
+    {
+      "name": "automatic_top_up",
+      "definition": "Automatic top up"
+    },
+    {
+      "name": "balance_not_updated_after_bank_transfer",
+      "definition": "Balance not updated after bank transfer"
+    },
+    {
+      "name": "balance_not_updated_after_cheque_or_cash_deposit",
+      "definition": "Balance not updated after cheque or cash deposit"
+    },
+    {
+      "name": "beneficiary_not_allowed",
+      "definition": "Beneficiary not allowed"
+    },
+    {
+      "name": "cancel_transfer",
+      "definition": "Cancel transfer"
+    },
+    {
+      "name": "card_about_to_expire",
+      "definition": "Card about to expire"
+    },
+    {
+      "name": "card_acceptance",
+      "definition": "Card acceptance"
+    },
+    {
+      "name": "card_arrival",
+      "definition": "Card arrival"
+    },
+    {
+      "name": "card_delivery_estimate",
+      "definition": "Card delivery estimate"
+    },
+    {
+      "name": "card_linking",
+      "definition": "Card linking"
+    },
+    {
+      "name": "card_not_working",
+      "definition": "Card not working"
+    },
+    {
+      "name": "card_payment_fee_charged",
+      "definition": "Card payment fee charged"
+    },
+    {
+      "name": "card_payment_not_recognised",
+      "definition": "Card payment not recognised"
+    },
+    {
+      "name": "card_payment_wrong_exchange_rate",
+      "definition": "Card payment wrong exchange rate"
+    },
+    {
+      "name": "card_swallowed",
+      "definition": "Card swallowed"
+    },
+    {
+      "name": "cash_withdrawal_charge",
+      "definition": "Cash withdrawal charge"
+    },
+    {
+      "name": "cash_withdrawal_not_recognised",
+      "definition": "Cash withdrawal not recognised"
+    },
+    {
+      "name": "change_pin",
+      "definition": "Change pin"
+    },
+    {
+      "name": "compromised_card",
+      "definition": "Compromised card"
+    },
+    {
+      "name": "contactless_not_working",
+      "definition": "Contactless not working"
+    },
+    {
+      "name": "country_support",
+      "definition": "Country support"
+    },
+    {
+      "name": "declined_card_payment",
+      "definition": "Declined card payment"
+    },
+    {
+      "name": "declined_cash_withdrawal",
+      "definition": "Declined cash withdrawal"
+    },
+    {
+      "name": "declined_transfer",
+      "definition": "Declined transfer"
+    },
+    {
+      "name": "direct_debit_payment_not_recognised",
+      "definition": "Direct debit payment not recognised"
+    },
+    {
+      "name": "disposable_card_limits",
+      "definition": "Disposable card limits"
+    },
+    {
+      "name": "edit_personal_details",
+      "definition": "Edit personal details"
+    },
+    {
+      "name": "exchange_charge",
+      "definition": "Exchange charge"
+    },
+    {
+      "name": "exchange_rate",
+      "definition": "Exchange rate"
+    },
+    {
+      "name": "exchange_via_app",
+      "definition": "Exchange via app"
+    },
+    {
+      "name": "extra_charge_on_statement",
+      "definition": "Extra charge on statement"
+    },
+    {
+      "name": "failed_transfer",
+      "definition": "Failed transfer"
+    },
+    {
+      "name": "fiat_currency_support",
+      "definition": "Fiat currency support"
+    },
+    {
+      "name": "get_disposable_virtual_card",
+      "definition": "Get disposable virtual card"
+    },
+    {
+      "name": "get_physical_card",
+      "definition": "Get physical card"
+    },
+    {
+      "name": "getting_spare_card",
+      "definition": "Getting spare card"
+    },
+    {
+      "name": "getting_virtual_card",
+      "definition": "Getting virtual card"
+    },
+    {
+      "name": "lost_or_stolen_card",
+      "definition": "Lost or stolen card"
+    },
+    {
+      "name": "lost_or_stolen_phone",
+      "definition": "Lost or stolen phone"
+    },
+    {
+      "name": "order_physical_card",
+      "definition": "Order physical card"
+    },
+    {
+      "name": "passcode_forgotten",
+      "definition": "Passcode forgotten"
+    },
+    {
+      "name": "pending_card_payment",
+      "definition": "Pending card payment"
+    },
+    {
+      "name": "pending_cash_withdrawal",
+      "definition": "Pending cash withdrawal"
+    },
+    {
+      "name": "pending_top_up",
+      "definition": "Pending top up"
+    },
+    {
+      "name": "pending_transfer",
+      "definition": "Pending transfer"
+    },
+    {
+      "name": "pin_blocked",
+      "definition": "Pin blocked"
+    },
+    {
+      "name": "receiving_money",
+      "definition": "Receiving money"
+    },
+    {
+      "name": "request_refund",
+      "definition": "Request refund"
+    },
+    {
+      "name": "reverted_card_payment?",
+      "definition": "Reverted card payment?"
+    },
+    {
+      "name": "supported_cards_and_currencies",
+      "definition": "Supported cards and currencies"
+    },
+    {
+      "name": "terminate_account",
+      "definition": "Terminate account"
+    },
+    {
+      "name": "top_up_by_bank_transfer_charge",
+      "definition": "Top up by bank transfer charge"
+    },
+    {
+      "name": "top_up_by_card_charge",
+      "definition": "Top up by card charge"
+    },
+    {
+      "name": "top_up_by_cash_or_cheque",
+      "definition": "Top up by cash or cheque"
+    },
+    {
+      "name": "top_up_failed",
+      "definition": "Top up failed"
+    },
+    {
+      "name": "top_up_limits",
+      "definition": "Top up limits"
+    },
+    {
+      "name": "top_up_reverted",
+      "definition": "Top up reverted"
+    },
+    {
+      "name": "topping_up_by_card",
+      "definition": "Topping up by card"
+    },
+    {
+      "name": "transaction_charged_twice",
+      "definition": "Transaction charged twice"
+    },
+    {
+      "name": "transfer_fee_charged",
+      "definition": "Transfer fee charged"
+    },
+    {
+      "name": "transfer_into_account",
+      "definition": "Transfer into account"
+    },
+    {
+      "name": "transfer_not_received_by_recipient",
+      "definition": "Transfer not received by recipient"
+    },
+    {
+      "name": "transfer_timing",
+      "definition": "Transfer timing"
+    },
+    {
+      "name": "unable_to_verify_identity",
+      "definition": "Unable to verify identity"
+    },
+    {
+      "name": "verify_my_identity",
+      "definition": "Verify my identity"
+    },
+    {
+      "name": "verify_source_of_funds",
+      "definition": "Verify source of funds"
+    },
+    {
+      "name": "verify_top_up",
+      "definition": "Verify top up"
+    },
+    {
+      "name": "virtual_card_not_working",
+      "definition": "Virtual card not working"
+    },
+    {
+      "name": "visa_or_mastercard",
+      "definition": "Visa or mastercard"
+    },
+    {
+      "name": "why_verify_identity",
+      "definition": "Why verify identity"
+    },
+    {
+      "name": "wrong_amount_of_cash_received",
+      "definition": "Wrong amount of cash received"
+    },
+    {
+      "name": "wrong_exchange_rate_for_cash_withdrawal",
+      "definition": "Wrong exchange rate for cash withdrawal"
+    }
+  ],
+  "positive_definition": null,
+  "error_preference": "balanced",
+  "per_class_error_costs": null,
+  "optimization_metric": "macro_f1",
+  "fpr_target": null,
+  "thresholds": {
+    "primary_min": 0.85,
+    "per_class_floor": null
+  },
+  "needs_reason": false,
+  "monthly_volume": 500000,
+  "latency_budget_ms": 500.0,
+  "deployment": "cloud_ok",
+  "build_budget_usd": 5.0,
+  "build_budget_minutes": 30.0,
+  "sample_inputs": [
+    "I am still waiting on my card?",
+    "Why was I charged a fee for taking out cash?",
+    "My top up didn't go through",
+    "How do I change my PIN?",
+    "I think someone else is using my card"
+  ],
+  "window_spec": null,
+  "dataset_key": "banking77",
+  "plan_changes": []
+}

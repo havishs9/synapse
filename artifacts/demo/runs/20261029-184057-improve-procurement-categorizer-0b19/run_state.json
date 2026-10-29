@@ -1,0 +1,14 @@
+{
+  "run_id": "20261029-184057-improve-procurement-categorizer-0b19",
+  "task_id": "procurement",
+  "stage": "end",
+  "repair_round": 0,
+  "spend_usd": 0.079985,
+  "budget_usd": 5.0,
+  "started": 1793313657.6188102,
+  "updated": 1793314400.820878,
+  "finished": 1793314400.818649,
+  "status": "done",
+  "message": "Improve complete",
+  "kind": "improve"
+}

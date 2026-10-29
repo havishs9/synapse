@@ -326,6 +326,8 @@ class Improver:
         rc.update({"run_id": self.run_id, "sealed": final, "improve": rep, "cost_per_1m_usd": cost,
                    "decision": {"passes_thresholds": passed, "reason": reason, "target": self.card.thresholds.model_dump()}})
         rc.setdefault("winner", {})["candidate"] = chosen_id
+        rc["pareto_points"] = [{k: v for k, v in pt.items() if k != "metrics_path"}     # paths on the base machine
+                               for pt in rc.get("pareto_points", [])]
         if rc.get("monthly_volume") and rc.get("baseline", {}).get("cost_per_1m_usd") and cost is not None:
             yearly = rc["monthly_volume"] * 12 / 1e6
             rc["projection"] = {**rc.get("projection", {}), "specialist_yearly_usd": cost * yearly}

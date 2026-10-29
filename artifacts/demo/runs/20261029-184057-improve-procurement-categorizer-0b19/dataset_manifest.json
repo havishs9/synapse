@@ -1,0 +1,211 @@
+{
+  "sources": [
+    {
+      "name": "usaspending_contracts",
+      "url": "https://api.usaspending.gov/api/v2/search/spending_by_award/",
+      "license": "USAspending.gov data: free to copy, adapt, redistribute, commercial or non-commercial, subject to the Limitation on Permissible Use of Dun & Bradstreet data",
+      "license_ok": true,
+      "rows_used": 17732,
+      "is_synthetic": false,
+      "citation": [
+        "USAspending.gov, U.S. Department of Treasury, Bureau of the Fiscal Service, https://www.usaspending.gov. Accessed 27 October 2026."
+      ]
+    }
+  ],
+  "label_mapping": {
+    "type": "psc_level1",
+    "source": {
+      "name": "PSC Manual April 2025 (FY2025), Level 1 Category column",
+      "url": "https://www.acquisition.gov/sites/default/files/manual/PSC%20April%202025.xlsx"
+    },
+    "lookup_order": [
+      "psc_to_category",
+      "prefix3_to_category",
+      "prefix2_to_category"
+    ],
+    "legacy_prefix_overrides": {
+      "D3": {
+        "category": "IT",
+        "reason": "Group D3 'IT AND TELECOM' (ended 2020-10-29), replaced by DA-DK, all Level 1 IT"
+      },
+      "70": {
+        "category": "IT",
+        "reason": "Group 70 'INFORMATION TECHNOLOGY EQUIPMENT...' (ended 2020-10-29), replaced by 7A-7K, all Level 1 IT"
+      }
+    }
+  },
+  "format_match": {
+    "score": 0.752,
+    "sample_profile": {
+      "avg_len": 38.2,
+      "upper": 0.8691099476439791,
+      "digit": 0.010471204188481676,
+      "lines": 1.0
+    },
+    "source_profile": {
+      "avg_len": 64.3575,
+      "upper": 0.7633842209532689,
+      "digit": 0.06469331468748786,
+      "lines": 1.0
+    },
+    "explanation": "Your samples average 38 characters vs 64 in the source; uppercase share 87% vs 76%; lines per item 1.0 vs 1.0."
+  },
+  "splits": {
+    "train": {
+      "rows": 10298,
+      "class_counts": {
+        "Aircraft, Ships/Submarines & Land Vehicles": 150,
+        "Clothing, Textiles & Subsistence S&E": 559,
+        "Electronic & Communication Equipment": 544,
+        "Electronic & Communication Services": 150,
+        "Equipment Related Services": 493,
+        "Facilities & Construction": 855,
+        "Human Capital": 259,
+        "IT": 855,
+        "Industrial Products & Services": 855,
+        "Medical": 476,
+        "Miscellaneous S&E": 330,
+        "Office Management": 751,
+        "Professional Services": 855,
+        "Research and Development": 437,
+        "Security and Protection": 305,
+        "Sustainment S&E": 855,
+        "Transportation and Logistics Services": 855,
+        "Travel & Lodging": 461,
+        "Weapons & Ammunition": 253
+      }
+    },
+    "train_before_rebalance": {
+      "rows": 10106,
+      "class_counts": {
+        "Aircraft, Ships/Submarines & Land Vehicles": 44,
+        "Clothing, Textiles & Subsistence S&E": 559,
+        "Electronic & Communication Equipment": 544,
+        "Electronic & Communication Services": 64,
+        "Equipment Related Services": 493,
+        "Facilities & Construction": 855,
+        "Human Capital": 259,
+        "IT": 855,
+        "Industrial Products & Services": 855,
+        "Medical": 476,
+        "Miscellaneous S&E": 330,
+        "Office Management": 751,
+        "Professional Services": 855,
+        "Research and Development": 437,
+        "Security and Protection": 305,
+        "Sustainment S&E": 855,
+        "Transportation and Logistics Services": 855,
+        "Travel & Lodging": 461,
+        "Weapons & Ammunition": 253
+      }
+    },
+    "val": {
+      "rows": 3371,
+      "class_counts": {
+        "Aircraft, Ships/Submarines & Land Vehicles": 14,
+        "Clothing, Textiles & Subsistence S&E": 187,
+        "Electronic & Communication Equipment": 182,
+        "Electronic & Communication Services": 21,
+        "Equipment Related Services": 165,
+        "Facilities & Construction": 285,
+        "Human Capital": 87,
+        "IT": 285,
+        "Industrial Products & Services": 285,
+        "Medical": 159,
+        "Miscellaneous S&E": 110,
+        "Office Management": 251,
+        "Professional Services": 285,
+        "Research and Development": 145,
+        "Security and Protection": 101,
+        "Sustainment S&E": 285,
+        "Transportation and Logistics Services": 285,
+        "Travel & Lodging": 154,
+        "Weapons & Ammunition": 85
+      }
+    },
+    "test": {
+      "rows": 3368,
+      "class_counts": {
+        "Aircraft, Ships/Submarines & Land Vehicles": 15,
+        "Clothing, Textiles & Subsistence S&E": 186,
+        "Electronic & Communication Equipment": 181,
+        "Electronic & Communication Services": 21,
+        "Equipment Related Services": 164,
+        "Facilities & Construction": 285,
+        "Human Capital": 86,
+        "IT": 285,
+        "Industrial Products & Services": 285,
+        "Medical": 159,
+        "Miscellaneous S&E": 110,
+        "Office Management": 250,
+        "Professional Services": 285,
+        "Research and Development": 146,
+        "Security and Protection": 102,
+        "Sustainment S&E": 285,
+        "Transportation and Logistics Services": 285,
+        "Travel & Lodging": 154,
+        "Weapons & Ammunition": 84
+      }
+    },
+    "holdback": {
+      "rows": 887,
+      "class_counts": {
+        "Aircraft, Ships/Submarines & Land Vehicles": 4,
+        "Clothing, Textiles & Subsistence S&E": 49,
+        "Electronic & Communication Equipment": 48,
+        "Electronic & Communication Services": 6,
+        "Equipment Related Services": 43,
+        "Facilities & Construction": 75,
+        "Human Capital": 23,
+        "IT": 75,
+        "Industrial Products & Services": 75,
+        "Medical": 42,
+        "Miscellaneous S&E": 29,
+        "Office Management": 66,
+        "Professional Services": 75,
+        "Research and Development": 38,
+        "Security and Protection": 27,
+        "Sustainment S&E": 75,
+        "Transportation and Logistics Services": 75,
+        "Travel & Lodging": 40,
+        "Weapons & Ammunition": 22
+      }
+    }
+  },
+  "processing": [
+    "dropped empty descriptions and unmapped PSC codes",
+    "stripped boilerplate tokens",
+    "deduplicated on normalized text before splitting"
+  ],
+  "sampling": {
+    "cap_per_class": 1500,
+    "min_count": 60,
+    "capped_from": {
+      "Facilities & Construction": 12073,
+      "IT": 3560,
+      "Industrial Products & Services": 4143,
+      "Professional Services": 2149,
+      "Sustainment S&E": 1938,
+      "Transportation and Logistics Services": 1607
+    },
+    "dropped_classes_below_min": {},
+    "dedupe": {
+      "before": 42000,
+      "after": 34202,
+      "duplicate_texts_with_conflicting_labels": 161
+    },
+    "load": {
+      "raw_rows": 42000,
+      "dropped": {}
+    },
+    "rebalance": {
+      "min_per_class": 150,
+      "oversampled": {
+        "Aircraft, Ships/Submarines & Land Vehicles": 106,
+        "Electronic & Communication Services": 86
+      }
+    },
+    "seed": 13,
+    "split": "holdback 5%, then train/val/test 60/20/20 stratified"
+  }
+}
