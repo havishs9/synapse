@@ -47,6 +47,7 @@ async def _lifespan(_app):
 app = FastAPI(title="Synapse", lifespan=_lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=config.cors_origins(), allow_methods=["*"], allow_headers=["*"])
 app.include_router(spec_server.router)          # fallback serving: /health, /v1/specialists/...
+app.include_router(spec_server.admin)           # /admin/... (SPECIALIST_ADMIN_TOKEN), used by _reload_remote
 app.include_router(builds_api.router)           # GET /api/builds, cancel, retry (TEAM_PLAN §1)
 _builds: dict[str, Orchestrator] = {}
 _chat_llm = LLMClient(budget_usd=float("inf"))
@@ -123,6 +124,7 @@ class BuildIn(BaseModel):
     task_card: dict | None = None
     task_id: str | None = None
     profile: str = "full"          # "phase1" runs the hardcoded single-round pipeline
+    replay: bool = False           # play the recorded run of a demo task instead of building (also APP_MODE=replay)
 
 
 def recorded_runs() -> dict[str, str]:
@@ -146,7 +148,7 @@ def start_build(body: BuildIn, user: User | None = Depends(current_user)):
         card = DEMO_TASKS[body.task_id]()
     else:
         raise HTTPException(400, "Send a task_card or a known task_id.")
-    if config.app_mode() == "replay":
+    if config.app_mode() == "replay" or body.replay:
         run = recorded_runs().get(card.task_id)
         if not run:
             raise HTTPException(404, f"Replay mode: no recorded run for {card.task_id}.")
@@ -427,13 +429,15 @@ def regenerate_key(sid: str, user: User | None = Depends(current_user)):
 
 
 def _reload_remote(sid: str):
+    """Tell the deployed endpoint to drop its cached records of this specialist, so a new key, rollback or live
+    version applies at once there (otherwise within the registry's 15 s cache). Both read the same database."""
     url, token = config.env("SPECIALIST_ENDPOINT_URL"), config.env("SPECIALIST_ADMIN_TOKEN")
     if url and token:
         try:
-            from backend.serving.sync import push_specialist
-            push_specialist(sid)
-        except Exception:
-            pass
+            httpx.post(f"{url.rstrip('/')}/admin/specialists/{sid}/reload", timeout=10,
+                       headers={"Authorization": f"Bearer {token}"}).raise_for_status()
+        except Exception as exc:
+            print(f"[main] endpoint reload of {sid} failed ({type(exc).__name__}); it applies within 15 s", flush=True)
 
 
 @app.post("/api/specialists/{sid}/rollback")

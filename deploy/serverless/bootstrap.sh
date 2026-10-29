@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Startup script for the Nebius Serverless CPU endpoint (injected with --inject-file; no custom image needed).
+# Superseded by the pre-built image (Dockerfile, deploy.sh). Kept for the endpoint created on 2026-10-28, which
+# still runs it: injected with --inject-file, no custom image needed.
 # Downloads this public repo, installs dependencies, and serves the app + shared specialist server on :8000.
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive PIP_DISABLE_PIP_VERSION_CHECK=1

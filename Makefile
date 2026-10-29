@@ -2,7 +2,7 @@ PY ?= .venv/bin/python
 NPM ?= npm
 RUN ?=
 
-.PHONY: setup dev test test-pg demo-data replay build-frontend screenshots build-procurement build-logs build-support snapshot-demo deploy db-migrate db-seed upload-datasets
+.PHONY: setup dev test test-pg demo-data replay build-frontend screenshots build-procurement build-logs build-support snapshot-demo deploy db-migrate db-seed upload-datasets image
 
 setup:            ## create the venv and install backend + frontend dependencies
 	python3.12 -m venv .venv
@@ -51,6 +51,9 @@ upload-datasets:  ## copy the registry datasets from DATA_DIR to the bucket (bui
 
 db-seed:          ## load the demo specialists into Postgres as public demo specialists
 	$(PY) scripts/seed_registry.py
+
+image:            ## build and push the image to Nebius Container Registry (GitHub Actions; also runs on push to main)
+	gh workflow run image.yml --repo havishs9/synapse --ref main && sleep 3 && gh run list --workflow image.yml --repo havishs9/synapse --limit 1
 
 deploy:           ## create the Nebius Serverless endpoint (needs the nebius CLI, logged in)
 	./deploy/serverless/deploy.sh

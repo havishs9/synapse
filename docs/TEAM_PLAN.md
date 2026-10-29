@@ -26,6 +26,8 @@ caller's builds, newest first:
   "message": "Run complete", "specialist_id": "support-ticket-router", "version": 1}]
 ```
 
+- `POST /api/builds` takes `"replay": true` to play a demo task's recorded run instead of building (the public
+  endpoint runs in live mode now, so the video and "Try an example" should send it).
 - `POST /api/builds` returns `{"run_id", "status": "queued"}` with the database configured (the queue), or
   `"status": "running"` without it (local, starts at once). 429 when the user hit `MAX_BUILDS_PER_USER_PER_DAY`.
 - `POST /api/builds/{run_id}/cancel`, `POST /api/builds/{run_id}/retry`: 200 with the build object.
@@ -89,9 +91,14 @@ Order matters; each step is usable on its own.
    Object Storage volume). Worker heartbeats; a stale heartbeat marks the build failed. Cancel between rounds;
    retry button. Events written to `build_events`; the stream reads from there. VERIFY and record: job pricing,
    job start time, service-account permissions.
-4. **Pre-built image** in Nebius Container Registry for the endpoint and the workers (startup is ~10 min today,
+4. **Pre-built image** (**built 2026-10-29**: `Dockerfile`, `.github/workflows/image.yml` pushes `synapse:main` and
+   `synapse:<sha>`; one-time step for Raj: `bash scripts/setup_registry_ci.sh`; then the endpoint is recreated with
+   `make deploy`, which gives it a **new URL**) in Nebius Container Registry for the endpoint and the workers (startup is ~10 min today,
    mostly `pip install`). Fix `_reload_remote` (imports a missing `backend.serving.sync`). The running endpoint was created with `RUNS_DIR=./runs`; `deploy.sh` now sets `./artifacts/demo/runs`, so replay on the endpoint needs this redeploy.
-5. **Budgets.** Per-user training budget; cascade escalations on public predictions count against the daily
+5. **Budgets.** (**Builds part done 2026-10-29**: at enqueue, 429 when the caller's builds in the last 24 h reach
+   `MAX_BUILDS_PER_USER_PER_DAY` or `USER_DAILY_BUILD_BUDGET_USD`, all builds today reach `GLOBAL_DAILY_BUILD_BUDGET_USD`,
+   or all builds ever reach `TOKEN_FACTORY_TOTAL_BUDGET_USD`; callers without sign-in share one allowance. Still to do:
+   chat/compare spend in the total, escalations.) Per-user training budget; cascade escalations on public predictions count against the daily
    demo guard.
 6. **Data sourcing backend** (spec file 03 §1.1): uploads saved as the user's own dataset (Object Storage) →
    same dedupe / sealed split; unlabeled uploads get teacher labels from Nano; live Tavily + Hugging Face search
@@ -189,17 +196,16 @@ the hard totals matter most: when one is reached, live builds and chat pause and
 
 **Token Factory ($25).** Measured: Phase 2b builds cost $0.07 to $0.31 each (`docs/VERIFICATION.md`), **but those
 runs reused the laptop's response cache**. The first build on a fresh worker (logs, phase-1 profile) cost $0.80, almost
-all of it the Nemotron Ultra baseline (451 calls). Expect roughly $0.5 to $1 per new build: at $1 per build
-(`CREDIT_BUDGET_USD`) a full build can hit the cap. Decision pending (Raj): raise the per-build cap, or score
-the baseline on fewer records.
+all of it the Nemotron Ultra baseline (451 calls). Expect roughly $0.5 to $1 per new build. **Decided (Raj, 2026-10-29):** per-build cap raised to $2.50; the Ultra
+baseline stays at 300 sealed records (accuracy of the comparison first). The $17 total then covers ~20 typical builds.
 
 | Use | Limit | Variable |
 |---|---|---|
 | Kept for the final demo recordings and rehearsals | $8 (outside the app's total) | |
 | Hard total for everything live (builds, chat, compare, escalations) | $17 | `TOKEN_FACTORY_TOTAL_BUDGET_USD` |
-| One build | $1.00 | `CREDIT_BUDGET_USD` |
-| One user's builds per day | $1.00, at most 3 builds | `USER_DAILY_BUILD_BUDGET_USD`, `MAX_BUILDS_PER_USER_PER_DAY` |
-| All users' builds per day | $3.00 | `GLOBAL_DAILY_BUILD_BUDGET_USD` |
+| One build | $2.50 | `CREDIT_BUDGET_USD` |
+| One user's builds per day | $2.50, at most 3 builds | `USER_DAILY_BUILD_BUDGET_USD`, `MAX_BUILDS_PER_USER_PER_DAY` |
+| All users' builds per day | $5.00 | `GLOBAL_DAILY_BUILD_BUDGET_USD` |
 | Public chat, compare, cascade escalations per day | $1.00 | `DEMO_DAILY_BUDGET_USD` |
 | Builds running at once | 2 overall, 1 per user (rate limit is shared) | `MAX_CONCURRENT_BUILDS`, `MAX_CONCURRENT_BUILDS_PER_USER` |
 
