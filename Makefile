@@ -2,7 +2,7 @@ PY ?= .venv/bin/python
 NPM ?= npm
 RUN ?=
 
-.PHONY: setup dev test test-pg demo-data replay build-frontend screenshots build-procurement build-logs build-support snapshot-demo deploy db-migrate db-seed
+.PHONY: setup dev test test-pg demo-data replay build-frontend screenshots build-procurement build-logs build-support snapshot-demo deploy db-migrate db-seed upload-datasets
 
 setup:            ## create the venv and install backend + frontend dependencies
 	python3.12 -m venv .venv
@@ -45,6 +45,9 @@ screenshots:
 
 db-migrate:       ## apply supabase/migrations/*.sql to SUPABASE_DB_URL (idempotent)
 	$(PY) scripts/db_migrate.py
+
+upload-datasets:  ## copy the registry datasets from DATA_DIR to the bucket (build workers download them)
+	$(PY) -c "from backend.storage import datasets; print('\n'.join(datasets.upload()))"
 
 db-seed:          ## load the demo specialists into Postgres as public demo specialists
 	$(PY) scripts/seed_registry.py

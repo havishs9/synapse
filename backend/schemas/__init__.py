@@ -280,7 +280,9 @@ class RunState(Schema):
     started: float
     updated: float
     finished: Optional[float] = None
-    status: Literal["running", "done", "failed", "stopped_budget"] = "running"
+    status: Literal["running", "done", "failed", "stopped_budget", "cancelled"] = "running"
+    round: Optional[int] = None
+    n_rounds: Optional[int] = None
     message: str = ""
     kind: Literal["build", "improve"] = "build"
 

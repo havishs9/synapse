@@ -233,6 +233,19 @@ Findings while building this:
 | Real bucket test | `SYNAPSE_TEST_S3=1`: upload/download/hash-compare/delete of a folder including a 9 MB multipart file: passed |
 | Database outage | During this session the Supabase pooler was unreachable from the laptop for a few minutes (TCP "No route to host", HTTPS timed out; status page: all operational). Since then the registry serves its last-read records when Postgres is down (keys and live versions keep working) and waits at most `DB_POOL_TIMEOUT_S` (8 s) for a connection |
 
+## Phase 3: build queue and AI Job workers (2026-10-29)
+
+| Item | Result |
+|---|---|
+| Queue | `builds` table, claimed under a Postgres advisory lock with `FOR UPDATE SKIP LOCKED`; caps `MAX_CONCURRENT_BUILDS` (2) and `MAX_CONCURRENT_BUILDS_PER_USER` (1) at claim time, `MAX_BUILDS_PER_USER_PER_DAY` (3) at enqueue (429). Tested on the real database (`make test-pg`): caps, cancel of queued and running builds, retry, stale-heartbeat reaping, event append/read, and a full worker run on the fixture whose `build_events` match its `events.jsonl` line for line |
+| First AI Job build | `20261029-184136-hdfs_logs-adaa` (logs task, phase-1 profile), launched by the dispatcher of a local API server with `TRAINING_BACKEND=jobs` as `aijob-e04tqxcgbystte36kv` on cpu-d3 / 4vcpu-16gb, 40 GiB disk, image `python:3.12-slim`, using the laptop's CLI profile |
+| Job start time | Created 22:41:52 UTC; PROVISIONING → STARTING (~1 min) → IMAGE_PULLING → container RUNNING 22:43:58 (2.1 min after create); dependency install (torch CPU + requirements) ~6 min; first heartbeat with a stage at 22:50; build done 22:55:59; job COMPLETED. Claimed → finished 14.3 min, of which ~8 min startup |
+| Worker access | With env vars only: downloaded the HDFS dataset from the bucket (`datasets/`), wrote events to Postgres, uploaded its run folder (23 files) and the version bundle to the bucket, recorded the version in Postgres. The API streamed the build's events from `build_events` and fetched the finished run folder from the bucket |
+| Job pricing | Billed as Compute (no separate AI Jobs price found); estimate from `config/pricing.yaml` `ai_jobs`: 4 vCPU + 16 GiB + 40 GiB disk = $0.136/h, so this job ≈ $0.03. VERIFY against the billing console |
+| Gate | The build's model was rejected by the version gate (live v1 kept). Because the test build had no owner it was attached to the public demo specialist as v3; that version, its bundle and the build row were deleted afterwards |
+| **Token Factory spend without the cache** | **$0.80** for this build: 451 Nemotron Ultra calls $0.78 (the zero-shot baseline on 300 sealed + 150 validation log windows), 160 Lightning calls $0.02. The Phase 2b logs run (`p2b-logs-d`) reported $0.07 only because 451 of its 452 Ultra calls were answered from the laptop's response cache (`data/cache/llm`). Workers start with an empty cache, so per-build costs in TEAM_PLAN §6 ("$0.07 to $0.31") are too low for new builds |
+| Service account on the endpoint | Not tested yet: jobs were launched with the laptop's user profile. The endpoint's dispatcher needs the nebius CLI and a profile from the service account's credentials file (`nebius profile create --service-account-file`); set up with the redeploy (TEAM_PLAN §2.4) |
+
 ## Spec conflicts and issues found
 
 1. **`spec/03_ML_PIPELINE.md` is corrupted and incomplete.** Line 59 contains a stray shell heredoc (`EOFcat > spec/03_ML_PIPELINE.md << 'EOF'`), the content is duplicated after it, and the file ends after the candidate ladder. The planner rules, search schedule, sandbox, repair, cascade and evaluation-rule sections that `00_START_HERE.md` promises are missing. These are needed before Phase 2.

@@ -13,12 +13,15 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from backend import config
 from backend.auth import User, current_user, uid
+from backend.builds import queue
+from backend.storage import db as pg
 from backend.versions import registry
 
 router = APIRouter(prefix="/api/builds")
 
 STALE_S = 20 * 60          # a running build with no new event for this long is reported as failed
-_STATUS = {"running": "running", "done": "done", "failed": "failed", "stopped_budget": "failed"}
+_STATUS = {"running": "running", "done": "done", "failed": "failed", "stopped_budget": "failed",
+           "cancelled": "cancelled", "queued": "queued"}
 _cache: dict[Path, tuple[tuple, dict]] = {}
 
 
@@ -85,27 +88,38 @@ def build_view(run: Path) -> dict | None:
 
 @router.get("")
 def list_builds(user: User | None = Depends(current_user)):
-    """The caller's builds, newest first: runs they started, plus runs with no owner (recorded demo runs and
-    builds started without sign-in)."""
+    """The caller's builds, newest first: builds they started, plus builds with no owner (recorded demo runs and
+    builds started without sign-in). With the database, the builds table is the source; run folders that aren't in
+    it (recorded demo runs, old local runs) are added from their files."""
     owners = registry.run_owners()
-    views = [v for d in config.runs_dir().iterdir()
-             if d.is_dir() and owners.get(d.name) in (None, uid(user)) and (v := build_view(d))] \
-        if config.runs_dir().exists() else []
+    views = queue.list_for(uid(user)) if pg.enabled() else []
+    if config.runs_dir().exists():
+        views += [v for d in config.runs_dir().iterdir()
+                  if d.is_dir() and d.name not in owners and (v := build_view(d))]
     return sorted(views, key=lambda v: -(v["created_at"] or 0))
 
 
-def _not_yet(run_id: str, action: str, user: User | None):
-    d = (config.runs_dir() / run_id).resolve()
-    if d.parent != config.runs_dir() or not build_view(d) or registry.run_owners().get(run_id) not in (None, uid(user)):
+def _own_build(run_id: str, user: User | None) -> dict:
+    if not pg.enabled():
+        raise HTTPException(501, "Cancel and retry need the build queue (SUPABASE_DB_URL).")
+    row = queue.get(run_id)
+    if not row or row["user_id"] not in (None, uid(user)):
         raise HTTPException(404, "No such build.")
-    raise HTTPException(501, f"{action} arrives with the build queue (TEAM_PLAN §2.3).")
+    return row
 
 
 @router.post("/{run_id}/cancel")
 def cancel_build(run_id: str, user: User | None = Depends(current_user)):
-    _not_yet(run_id, "Cancel", user)
+    """Queued: cancelled at once. Running: stops after the current search round or stage."""
+    row = _own_build(run_id, user)
+    if row["status"] not in ("queued", "running"):
+        raise HTTPException(409, f"This build already ended ({row['status']}).")
+    return queue.request_cancel(run_id)
 
 
 @router.post("/{run_id}/retry")
 def retry_build(run_id: str, user: User | None = Depends(current_user)):
-    _not_yet(run_id, "Retry", user)
+    """Queue a new build (new run_id) with the same task card; returns the new build."""
+    row = _own_build(run_id, user)
+    from backend.orchestrator import new_run_id
+    return queue.retry(run_id, new_run_id(row["task_id"]))
