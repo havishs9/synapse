@@ -142,3 +142,27 @@ def test_improve_deploys_or_rejects_through_the_gate(fixture_env):
     assert c.post(f"/api/specialists/{sid}/rollback").json()["live_version"] == 1
     assert _sha(sealed) == sealed_before
     assert config.runs_dir() == orch.dir.parent
+
+
+def test_improve_on_a_server_without_the_files(fixture_env, monkeypatch):
+    """With Object Storage, a server that didn't run the build fetches the run folder and the live bundle, and the
+    improve run is uploaded so the next server (or the next improve) can use it."""
+    import shutil
+    from backend import config
+    from backend.improve import Improver
+    from backend.storage import objects
+    from backend.versions import registry
+    monkeypatch.setenv("OBJECT_STORAGE_BACKEND", f"local:{fixture_env / 'bucket'}")
+    orch, sid = _build_v1()
+    v = registry.load(sid)
+    registry.live(v).sealed_metrics["primary"] = 0.01
+    registry.save(v)
+    shutil.rmtree(orch.dir)                                       # this server never had the build's files
+    shutil.rmtree(registry.bundle_dir(sid, 1))
+    rows = [{"input": "PURCHASE OF LAPTOP SERVER", "predicted_label": "Medical", "corrected_label": "IT",
+             "timestamp": 0.0, "source": "user"}]
+    imp = Improver(sid, rows)
+    res = imp.run()
+    assert imp.state.status == "done", imp.state.message
+    assert res["deployed"] is True and (config.runs_dir() / "fixture-v1" / "sealed" / "test.jsonl").exists()
+    assert objects.list_keys(objects.run_prefix(None, imp.run_id))      # the improve run went to the bucket

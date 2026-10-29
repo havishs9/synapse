@@ -29,6 +29,7 @@ from backend.candidates import Candidate, CascadeH
 from backend.llm_client import BudgetExceeded, LLMClient
 from backend.schemas import Corrections, Event, RunState, TaskCard
 from backend.sealed import load_split, sealed_exists
+from backend.storage import objects
 from backend.versions import registry
 
 MAX_CORRECTIONS = 2000
@@ -41,15 +42,26 @@ class ImproveUnavailable(ValueError):
     """The live version's run folder lacks what an improve needs (train/val/sealed files)."""
 
 
+def ensure_run(run_id: str) -> Path:
+    """Local folder of a run; a run this server didn't execute is fetched from Object Storage when configured."""
+    d = config.runs_dir() / run_id
+    if not d.is_dir() and objects.enabled():
+        try:
+            objects.download_dir(objects.run_prefix(registry.run_owner(run_id)[1], run_id), d)
+        except objects.StorageError:
+            pass
+    return d
+
+
 def lineage(live) -> tuple[Path, Path, dict | None]:
     """(data run, benchmark run, previous improve report) for the live version.
 
     Training data comes from the live version's own run, so corrections accumulate across improvements. The
     sealed test set, search records and Pareto points come from the original build: every version in a chain is
     graded on that build's sealed test set, the fixed benchmark."""
-    data = config.runs_dir() / live.run_id
+    data = ensure_run(live.run_id)
     prev = json.loads((data / "improve_report.json").read_text()) if (data / "improve_report.json").exists() else None
-    bench = config.runs_dir() / prev["benchmark_run_id"] if prev else data
+    bench = ensure_run(prev["benchmark_run_id"]) if prev else data
     missing = [str(d.name + "/" + n) for d, names in ((data, ("task_card.json", "train.jsonl", "val.jsonl")),
                                                      (bench, ("runs.json", "eval_report.json")))
                for n in names if not (d / n).exists()]
@@ -133,6 +145,11 @@ class Improver:
                                 version=self.result.get("version"), deployed=self.result.get("deployed"))
             self.emit("Orchestrator", "end", "", kind="done",
                       data={"status": self.state.status, "kind": "improve", "specialist_id": sid, **self.result})
+            if objects.enabled():          # so any server can show it and a later improve can build on it
+                try:
+                    objects.upload_run(self.dir, self.user_id)
+                except Exception as exc:
+                    print(f"[improve] couldn't upload {self.run_id}: {type(exc).__name__}: {exc}", flush=True)
         return self.result
 
     # ---- stages ---------------------------------------------------------------------------
@@ -222,7 +239,7 @@ class Improver:
                                            calibrator.apply(P)[:, labels.index(card.positive_definition)],
                                            card.fpr_target or 0.01)
         chosen, chosen_id, stage_costs = model, best_p.cand, [best_m["cost_per_1m_usd"]]
-        live_model = Candidate.load(registry.bundle_dir(self.v.specialist_id, live.version), llm=self.llm)
+        live_model = Candidate.load(registry.ensure_bundle(self.v.specialist_id, live.version), llm=self.llm)
         if isinstance(live_model, CascadeH):
             chosen = CascadeH([model] + live_model.stages[1:], live_model.taus,
                               [calibrator] + list(live_model.calibrators[1:]),

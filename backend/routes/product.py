@@ -26,12 +26,13 @@ from backend.agents import evaluator_agent as ev
 from backend.auth import User, current_user, require_edit, require_view, uid
 from backend.candidates import CascadeH
 from backend.demo_tasks import DEMO_TASKS
-from backend.improve import Improver, ImproveUnavailable, recorded_improve
+from backend.improve import Improver, ImproveUnavailable, ensure_run, recorded_improve
 from backend.llm_client import LLMClient, call_cost_usd
 from backend.schemas import TaskCard
 from backend.sealed import load_split
 from backend.serving import server as spec_server
 from backend.serving.predictor import InputError
+from backend.storage.objects import StorageError
 from backend.versions import registry
 
 router = APIRouter(prefix="/api")
@@ -415,8 +416,15 @@ def _live(v):
     return rec
 
 
+def _meta(sid: str, version: int) -> dict:
+    try:
+        return registry.bundle_meta(sid, version)
+    except StorageError as exc:
+        raise HTTPException(503, f"The model can't be loaded right now ({exc}).")
+
+
 def _run_files(run_id: str) -> tuple[TaskCard | None, dict, dict]:
-    d = config.runs_dir() / run_id
+    d = ensure_run(run_id)
     card = TaskCard.read(d / "task_card.json") if (d / "task_card.json").exists() else None
     rc = json.loads((d / "report_card.json").read_text()) if (d / "report_card.json").exists() else {}
     rep = json.loads((d / "eval_report.json").read_text()) if (d / "eval_report.json").exists() else {}
@@ -482,7 +490,7 @@ def compare(sid: str, body: CompareIn, user: User | None = Depends(current_user)
     card, rc, rep = _run_files(live.run_id)
     if card is None:
         raise HTTPException(503, f"The task card for v{live.version} isn't on this server.")
-    bundle = registry.bundle_meta(sid, live.version)
+    bundle = _meta(sid, live.version)
     labels = bundle["labels"]
     try:
         from backend.serving.predictor import validate
@@ -553,7 +561,7 @@ def list_corrections(sid: str, user: User | None = Depends(current_user)):
 @router.post("/specialists/{sid}/corrections")
 def add_corrections(sid: str, body: CorrectionsIn, user: User | None = Depends(current_user)):
     v = _spec(sid, user)
-    labels = registry.bundle_meta(sid, _live(v).version)["labels"]
+    labels = _meta(sid, _live(v).version)["labels"]
     rows = _load_corrections(sid, user)
     have = {(r["input"], r["corrected_label"]) for r in rows}
     for c in body.corrections:
@@ -591,7 +599,7 @@ def holdback(sid: str, limit: int = 200, user: User | None = Depends(current_use
     if key not in _holdback_cache:
         path = None
         for run_id in [live.run_id] + [r.run_id for r in sorted(v.versions, key=lambda r: r.version)]:
-            p = config.runs_dir() / run_id / "holdback.jsonl"
+            p = ensure_run(run_id) / "holdback.jsonl"
             if p.exists():
                 path = p
                 break
