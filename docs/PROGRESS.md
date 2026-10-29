@@ -51,21 +51,21 @@ Split between Raj (backend platform) and Havish (product, frontend, hosting, dem
 - [x] [Raj] Builds list stub `GET /api/builds` (contract TEAM_PLAN §1), `?after=n` on the event stream, `CORS_ORIGINS` (2026-10-28)
 - [x] [Raj] Build queue and workers (done 2026-10-29; first AI Job build verified, see VERIFICATION.md; the endpoint's dispatcher switches over with the redeploy): `builds` table in Supabase, dispatcher with caps, one Nebius AI Job per build, heartbeats, cancel/retry, events in Postgres (TEAM_PLAN §2.3)
 - [ ] [Raj] Pre-built image in Nebius Container Registry; fix `_reload_remote`; per-user budgets (TEAM_PLAN §2.4-2.5)
-- [ ] [Havish] Builds sidebar and cascade split display (TEAM_PLAN §3.2-3.3)
+- [x] [Havish] Builds sidebar and cascade split display (TEAM_PLAN §3.2-3.3) — sidebar on `GET /api/builds` (polls every 4 s while one runs), status/stage/round/spend, reopens the training view, Cancel/Retry (show the 501 message until the queue lands); split in the panel header, dashboard and history ("TF-IDF 64% / Prompted Nemotron 36%"), `answered_by` on each prediction and in batch CSV (2026-10-29)
 
-- [ ] [Havish] Clarifying questions → editable task card, with plan-change lines
-- [ ] [Havish] Compare mode with measured latency, cost and yearly projection
-- [ ] [Havish] "Use via API": URL, reveal-once API key with regenerate, curl and Python snippets
-- [ ] [Havish] v1 → v2 improvement flow: corrections, version gate, deploy or reject, rollback, version history
-- [ ] [Havish] Agent lanes, tournament bracket, budget meter
-- [ ] [Havish] UI polish pass against file 01 section 2.11, with screenshots
+- [x] [Havish] Clarifying questions → editable task card, with plan-change lines — `POST /api/intake/start` (Nemotron Ultra, JSON schema: task match + question wording; canned wording and keyword match as fallback) and `/api/intake/card` (answers → card, one plan-change line per answer, free text parsed by Ultra with number parsing as fallback); card fields editable, lines recomputed on each edit
+- [x] [Havish] Compare mode with measured latency, cost and yearly projection — `POST /api/specialists/{id}/compare`: both calls in parallel; Ultra latency and token cost measured on the call (cached answer labeled "cached" if unreachable); specialist cost = measured cost per 1M of the stage that answered; projection from the build's measured costs × task card volume, method on hover
+- [x] [Havish] "Use via API": URL, reveal-once API key with regenerate, curl and Python snippets — live and pinned routes, Create/Regenerate (revokes only the caller's earlier key), copy buttons
+- [x] [Havish] v1 → v2 improvement flow: corrections, version gate, deploy or reject, rollback, version history — `backend/improve.py` + routes; recorded: procurement v2 → v3 (95 held-back corrections, 0.655 vs 0.647 on 3,368 sealed records, $0.08) and support v1 → v2 (18 + 54 variants, 0.935 vs 0.933); chained improves keep the original build's sealed set; tests in `test_product.py` (deploy, reject, chain, rollback, sealed file unchanged, Object Storage)
+- [x] [Havish] Agent lanes, tournament bracket, budget meter — `TrainingExtras.tsx`
+- [x] [Havish] UI polish pass against file 01 section 2.11, with screenshots — `docs/screenshots/` (light, dark, 390 px mobile); `make screenshots` is the frontend smoke test (spec 05 §4); Phase 1 notes fixed (build button state, cost format, "Same sealed records: specialist vs Nemotron Ultra" label); logs "Try a template example" built from event templates and labeled
 - [x] Replay mode with recorded runs for both showcase tasks committed to the repo — all three tasks in `artifacts/demo/runs/` (2026-10-28), served by `make replay`; saved paths made relative
-- [ ] [Havish] Public demo URL (frontend on Vercel, API on the Nebius endpoint)
-- [ ] [Havish] Complete README and `docs/FEEDBACK.md`
-- [ ] [Havish] `docs/DEVPOST.md` and `docs/VIDEO_SCRIPT.md`
+- [~] [Havish] Public demo URL (frontend on Vercel, API on the Nebius endpoint) — `vercel.json` and `VITE_API_BASE_URL` support done; still needs Havish's Vercel login/project link and `CORS_ORIGINS` with the Vercel URL on the endpoint (Raj redeploys)
+- [x] [Havish] Complete README and `docs/FEEDBACK.md` — README has placeholders for the demo URL and video link
+- [x] [Havish] `docs/DEVPOST.md` and `docs/VIDEO_SCRIPT.md`
 - [ ] [Havish] Record the 3-minute video (human)
 - [ ] [Both] Acceptance criteria check (file 05 section 5)
-- [~] [Raj backend, Havish login UI] Users with per-user separation on one shared endpoint. **Backend done 2026-10-28** (`backend/auth.py`: Supabase token verification, `AUTH_REQUIRED` switch, ownership on every specialist, key, run and build route, per-user keys on demo specialists); login screens (Havish) and the switch to `AUTH_REQUIRED=true` on the public deployment still to do (agreed with the team 2026-10-28; extends the spec, which has no accounts). Depends on the storage choice below.
+- [~] [Raj backend, Havish login UI] Users with per-user separation on one shared endpoint. **Backend done 2026-10-28** (`backend/auth.py`: Supabase token verification, `AUTH_REQUIRED` switch, ownership on every specialist, key, run and build route, per-user keys on demo specialists); login screens done 2026-10-29 (Google sign-in via Supabase behind `VITE_AUTH_ENABLED`, sign-out in the sidebar; needs `VITE_SUPABASE_URL` and the anon key in `frontend/.env.local` / Vercel); the switch to `AUTH_REQUIRED=true` on the public deployment still to do (agreed with the team 2026-10-28; extends the spec, which has no accounts). Depends on the storage choice below.
   - Login, and a `user_id` on every run, specialist, version and API key; every route checks ownership.
   - Files under `users/<user_id>/...` in storage; specialist keys stay per specialist, scoped to their owner.
   - One shared serving endpoint for everyone: load a specialist's bundle from storage on first call, keep recently used ones in memory (LRU). No endpoint per user (each is ~$0.07/h while running, minutes to start, no scale-to-zero seen). Later: more shared endpoints with routing by user, or a dedicated endpoint as a paid option.
