@@ -53,6 +53,7 @@ class Trainer:
         self.train_path, self.val_path = train_path, val_path
         self.spend, self.budget_usd, self.llm, self.max_eval_llm = spend, budget_usd, llm, max_eval_llm
         self.launcher = get_launcher(lambda msg: emit("Trainer", "train", msg))
+        self.should_stop: Callable[[], bool] = lambda: False     # cancel requested (checked between rounds)
         templates = config.data_dir() / "raw" / "hdfs_v1" / "preprocessed" / "HDFS.log_templates.csv"
         self.templates = None
         if card.input_type == "log_window":
@@ -198,6 +199,9 @@ class Trainer:
             self._write_runs()
             if self.spend() >= self.budget_usd:
                 self.emit("Trainer", "train", "Trainer: LLM budget reached; stopping the search early")
+                break
+            if self.should_stop() and i < len(schedule) - 1:
+                self.emit("Trainer", "train", f"Trainer: cancel requested; stopping after round {round_no}")
                 break
         self._write_runs()
         return [r for r in self.runs.values() if r.status == "done" and r.round_reached == len(schedule)] or active

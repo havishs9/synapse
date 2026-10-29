@@ -24,6 +24,7 @@ from sse_starlette.sse import EventSourceResponse
 from backend import config
 from backend.auth import User, current_user, require_edit, require_view, uid
 from backend.builds import api as builds_api
+from backend.builds import dispatcher, queue as build_queue
 from backend.demo_tasks import DEMO_TASKS
 from backend.llm_client import LLMClient
 from backend.orchestrator import Options, Orchestrator
@@ -36,6 +37,11 @@ from backend.storage.objects import StorageError
 from backend.versions import registry
 
 app = FastAPI(title="Synapse")
+
+
+@app.on_event("startup")
+def _start_dispatcher():
+    dispatcher.start()      # only with a database (build queue) and outside replay mode
 app.add_middleware(CORSMiddleware, allow_origins=config.cors_origins(), allow_methods=["*"], allow_headers=["*"])
 app.include_router(spec_server.router)          # fallback serving: /health, /v1/specialists/...
 app.include_router(builds_api.router)           # GET /api/builds, cancel, retry (TEAM_PLAN §1)
@@ -142,11 +148,17 @@ def start_build(body: BuildIn, user: User | None = Depends(current_user)):
         if not run:
             raise HTTPException(404, f"Replay mode: no recorded run for {card.task_id}.")
         return {"run_id": run, "replay": True}
+    if dispatcher.enabled():      # queued: a dispatcher starts it when a worker slot is free
+        from backend.orchestrator import new_run_id
+        budget = min(config.credit_budget_usd(), card.build_budget_usd or float("inf"))
+        b = build_queue.enqueue(new_run_id(card.task_id), card.model_dump(mode="json"), {"profile": body.profile},
+                                uid(user), budget)
+        return {"run_id": b["run_id"], "status": b["status"], "replay": False}
     from backend.orchestrator import PHASE1
     orch = Orchestrator(card, options=PHASE1 if body.profile == "phase1" else Options(), user_id=uid(user))
     _builds[orch.run_id] = orch
     threading.Thread(target=orch.run, daemon=True).start()
-    return {"run_id": orch.run_id, "replay": False}
+    return {"run_id": orch.run_id, "status": "running", "replay": False}
 
 
 def run_dir(run_id: str, user: User | None = None) -> Path:
@@ -185,15 +197,33 @@ def runs(user: User | None = Depends(current_user)):
 
 @app.get("/api/runs/{run_id}/state")
 def run_state(run_id: str, user: User | None = Depends(current_user)):
+    qb = _queued_build(run_id, user)
+    local = config.runs_dir() / run_id / "run_state.json"
+    if qb and qb["status"] in ("queued", "running") and not local.exists():
+        return {**build_queue.view(qb), "started": qb["started_at"], "updated": qb["updated_at"]}   # on a worker
     p = run_dir(run_id, user) / "run_state.json"
     return json.loads(p.read_text()) if p.exists() else {"stage": "starting"}
+
+
+def _queued_build(run_id: str, user: User | None) -> dict | None:
+    """The builds row of a queued/worker build the caller may see (None without a database or row)."""
+    if not dispatcher.enabled():
+        return None
+    row = build_queue.get(run_id)
+    if row and row["user_id"] not in (None, uid(user)):
+        raise HTTPException(404, "No such run.")
+    return row
 
 
 @app.get("/api/runs/{run_id}/events")
 async def run_events(run_id: str, replay: bool = False, speed: float = 1.0, after: int = 0,
                      user: User | None = Depends(current_user)):
     """SSE: live runs stream as events are written; replay plays recorded events with their original timing.
-    Every connection starts from the first event; `after=n` skips the first n (reconnects)."""
+    Every connection starts from the first event; `after=n` skips the first n (reconnects).
+    Builds from the queue stream from build_events (the worker may run on another machine)."""
+    qb = None if replay else _queued_build(run_id, user)
+    if qb is not None:
+        return EventSourceResponse(_db_events(run_id, after))
     d = run_dir(run_id, user)
     path = d / "events.jsonl"
 
@@ -229,6 +259,32 @@ async def run_events(run_id: str, replay: bool = False, speed: float = 1.0, afte
             yield {"data": json.dumps({**e, "replay": True})}
 
     return EventSourceResponse(play() if replay else live())
+
+
+async def _db_events(run_id: str, after: int):
+    seen, idle = max(after, 0), 0
+    while True:
+        rows = await asyncio.to_thread(build_queue.events_after, run_id, seen)
+        for seq, e in rows:
+            seen = seq
+            yield {"data": json.dumps(e)}
+            if e.get("kind") == "done":
+                return
+        if not rows:
+            idle += 1
+            if idle % 20 == 0:      # every ~20 s: stop if the build ended without a done event
+                b = await asyncio.to_thread(build_queue.get, run_id)
+                if b and b["status"] in ("failed", "cancelled") and not build_queue.events_after(run_id, seen):
+                    yield {"data": json.dumps({"ts": time.time(), "agent": "Orchestrator", "stage": "end",
+                                               "message": b["message"], "data_ref": None,
+                                               "spend_usd": b["spend_usd"], "kind": "done",
+                                               "data": {"status": b["status"]}})}
+                    return
+            if idle > 4 * 3600:
+                return
+        else:
+            idle = 0
+        await asyncio.sleep(1.0)
 
 
 @app.get("/api/runs/{run_id}/files/{name:path}")

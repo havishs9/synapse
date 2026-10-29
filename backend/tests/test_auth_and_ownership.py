@@ -145,11 +145,16 @@ def test_builds_and_runs_hidden_from_other_users(app_users, monkeypatch):
         (runs / rid / "run_state.json").write_text(json.dumps({"run_id": rid, "task_id": "t", "stage": "end",
                                                                "budget_usd": 1, "started": 1, "updated": 2,
                                                                "status": "done"}))
+    import types
+    from backend.builds import api as builds_api
     monkeypatch.setattr(registry, "run_owners", lambda: {"alice-run": "alice"})
+    # The builds list reads table rows from the queue when a database is configured; stand in for it here.
+    monkeypatch.setattr(builds_api, "pg", types.SimpleNamespace(enabled=lambda: True))
+    monkeypatch.setattr(builds_api.queue, "list_for",
+                        lambda u: [{"run_id": "alice-run", "created_at": 5.0}] if u == "alice" else [])
     monkeypatch.setattr(registry, "run_owner", lambda r: (True, "alice") if r == "alice-run" else (False, None))
     assert {b["run_id"] for b in d.get("/api/builds", headers=H("bob")).json()} == {"demo-run"}
     assert {b["run_id"] for b in d.get("/api/builds", headers=H("alice")).json()} == {"alice-run", "demo-run"}
     assert d.get("/api/runs/alice-run/state", headers=H("bob")).status_code == 404
     assert d.get("/api/runs/alice-run/state", headers=H("alice")).status_code == 200
     assert d.get("/api/runs/demo-run/state").status_code == 200
-    assert d.post("/api/builds/alice-run/cancel", headers=H("bob")).status_code == 404

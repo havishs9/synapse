@@ -31,6 +31,14 @@ serverless_cpu:
   chosen_preset: 2vcpu-8gb            # what deploy/serverless/deploy.sh creates, so cost numbers match the endpoint
   disk_gib: 40                        # deployed disk (torch + requirements are installed at startup); >= min_disk_gib
 
+ai_jobs:
+  # Build workers (backend/builds/dispatcher.py): one Nebius AI Job per build on a CPU VM. Billed as Compute VM +
+  # disk at the serverless_cpu rates above (VERIFY on the first worker run; docs/VERIFICATION.md Phase 3 queue).
+  platform: cpu-d3
+  preset: 4vcpu-16gb
+  disk_gib: 40                        # the CLI defaults to 250Gi; torch + requirements fit in 40
+  timeout: 3h                         # job wall clock limit (CLI min 1h); a build takes 20 to 60 min (estimate)
+
 object_storage:
   # https://nebius.com/prices, read 2026-10-27
   standard_gib_month: 0.0147

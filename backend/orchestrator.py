@@ -69,6 +69,10 @@ PHASE1 = Options(llm_planner=False, full_search=False, repair=False, cascade=Fal
                  families=["J", "A", "I", "E", "K"], limit_per_family=1)
 
 
+class BuildCancelled(RuntimeError):
+    """The user cancelled the build; raised at the next stage boundary or after the current search round."""
+
+
 def new_run_id(task_id: str) -> str:
     return f"{time.strftime('%Y%m%d-%H%M%S')}-{task_id}-{uuid.uuid4().hex[:4]}"
 
@@ -90,6 +94,9 @@ class Orchestrator:
         self.state = RunState(run_id=self.run_id, task_id=card.task_id, stage="intake", budget_usd=budget,
                               started=self.t0, updated=self.t0)
         self.result: dict = {}
+        self.cancelled = threading.Event()     # set by the build worker when the user cancels
+        self.listeners: list = []              # called with (line_no, event) for every event, in order
+        self._n_events = 0
 
     # ---- bookkeeping ---------------------------------------------------------
     def spend(self) -> float:
@@ -111,10 +118,17 @@ class Orchestrator:
         with self._lock:
             with (self.dir / "events.jsonl").open("a") as f:
                 f.write(e.model_dump_json() + "\n")
+            self._n_events += 1
             self.state.stage, self.state.updated, self.state.spend_usd = stage, e.ts, e.spend_usd
+            if kind == "round" and data:
+                self.state.round, self.state.n_rounds = data.get("round"), data.get("n_rounds")
             self.state.write(self.dir / "run_state.json")
+            for listener in self.listeners:
+                listener(self._n_events, e)
 
     def _check_budget(self):
+        if self.cancelled.is_set():
+            raise BuildCancelled("Cancelled by the user")
         if self.spend() >= self.budget:
             raise BudgetExceeded(f"LLM spend reached the budget of ${self.budget:.2f}")
 
@@ -125,6 +139,9 @@ class Orchestrator:
         try:
             self._run()
             self.state.status, self.state.message = "done", "Run complete"
+        except BuildCancelled as exc:
+            self.state.status, self.state.message = "cancelled", str(exc)
+            self.emit("Orchestrator", "cancelled", f"Stopped: {exc}", kind="error")
         except BudgetExceeded as exc:
             self.state.status, self.state.message = "stopped_budget", str(exc)
             self.emit("Orchestrator", "stopped", f"Stopped: {exc}", kind="error")
@@ -182,8 +199,10 @@ class Orchestrator:
 
         trainer = Trainer(card, self.dir, paths.train, paths.val, labels, self.emit, self.spend, self.budget,
                           llm=self.llm, max_eval_llm=self.opt.max_eval_llm)
+        trainer.should_stop = self.cancelled.is_set
         schedule = schedule_for(train_rows(paths.train), self.opt.full_search)
         finalists = trainer.search(plan, schedule)
+        self._check_budget()
         self._remeasure_latency(trainer, len(schedule), load_split(paths.val))
 
         points = self._points(trainer, schedule)
