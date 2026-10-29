@@ -228,6 +228,7 @@ class ApiKeyRecord(Schema):
     hash: str
     created: float
     revoked: Optional[float] = None
+    user_id: Optional[str] = None        # who created it (Supabase user); None = local dev / no login
 
 
 class VersionRecord(Schema):
@@ -249,6 +250,7 @@ class Versions(Schema):
     color: str
     task_id: str
     api_route: str
+    user_id: Optional[str] = None        # owner (Supabase user); None = public demo specialist / local dev
     api_keys: list[ApiKeyRecord] = Field(default_factory=list)
     versions: list[VersionRecord] = Field(default_factory=list)
 

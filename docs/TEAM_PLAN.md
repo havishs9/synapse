@@ -39,6 +39,18 @@ caller's builds, newest first:
 `Authorization: Bearer <Supabase access token>` on every `/api/*` call. The backend verifies it. Until Raj's
 verification lands, the backend accepts calls without a token (local dev, replay), so login UI never blocks.
 Specialist prediction routes keep their own per-specialist API keys (unchanged).
+**Landed (Raj, 2026-10-28, `backend/auth.py`):**
+- A token that is sent is always verified (project signing keys, ES256). `AUTH_REQUIRED=false` (default) lets
+  calls without a token through as anonymous; the public deployment switches it to `true` once the login screens ship.
+- The SSE stream (`GET /api/runs/{id}/events`) also takes the token as `?access_token=<token>`, because the
+  browser's `EventSource` can't send headers. Other calls: use the header.
+- What a user sees: their own specialists and builds plus the public demo ones (no owner); someone else's
+  specialist or run is a 404. `GET /api/specialists/{id}` adds `"owned": true|false`, and `keys`/`has_key`
+  cover only the caller's own keys.
+- Keys: on a demo specialist every signed-in user has their own key; "Regenerate" revokes only the caller's
+  earlier key. Rollback (and later deploy/improve) needs the owner: 403 on demo specialists when sign-in is required.
+- Havish's routes in `backend/routes/product.py` use the same helpers: `user: User | None = Depends(current_user)`,
+  then `require_view(spec, user)` / `require_edit(spec, user)` and `uid(user)` (all in `backend/auth.py`).
 
 **Frontend → API origin.** The frontend reads `VITE_API_BASE_URL` (empty = same origin, as today). The backend
 allows the origins in `CORS_ORIGINS` (comma-separated).
@@ -57,7 +69,7 @@ Work on short-lived branches (`raj/<topic>`, `havish/<topic>`), open PRs to `mai
 
 Order matters; each step is usable on its own.
 
-1. **Supabase.** Project, schema as SQL migrations in `supabase/migrations/`: `specialists`, `versions`,
+1. **Supabase.** (**Done 2026-10-28**, see `docs/VERIFICATION.md` "Phase 3: Supabase".) Project, schema as SQL migrations in `supabase/migrations/`: `specialists`, `versions`,
    `api_keys` (hashes only), `builds`, `build_events`, all with `user_id` and row-level security. The registry
    (`backend/versions/registry.py`) reads and writes Postgres, with the current files kept as the local/replay
    fallback. JWT verification in `backend/auth.py`; every route checks ownership. Fixes: keys lost on endpoint
@@ -135,7 +147,7 @@ embedding responses) makes specialist predictions that hit embeddings or Nano fr
 
 | # | What | Status |
 |---|---|---|
-| R-a | Supabase project: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_DB_URL` in `.env` | **To do (Raj)**: create the project at supabase.com, region close to eu-west2 (e.g. London) |
+| R-a | Supabase project: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `SUPABASE_DB_URL` in `.env` | **Done (Raj)**: project `kcwqhcmvanweadzrpwsp` in us-west-2 (kept there for now; ~130-150 ms per query from eu-west2, reads are cached); session pooler URL; signing keys ES256, so `SUPABASE_JWT_SECRET` isn't needed. Schema applied with `make db-migrate`, demo specialists loaded with `make db-seed` |
 | R-b | Login: **Google sign-in, open sign-up** | Decided. **To do (Raj)**: set up Google OAuth (steps below) |
 | R-c | Object Storage bucket | **Done**: `synapse-artifacts-e04crhvwbc` (eu-west2, 50 GiB cap, endpoint `https://storage.eu-west2.nebius.cloud`) |
 | R-d | Container Registry | **Done**: `registry-e04cjwm2bdv5k5b8hc` (`cr.eu-west2.nebius.cloud/e04cjwm2bdv5k5b8hc`; push/pull path VERIFY on first push) |

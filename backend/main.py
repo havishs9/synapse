@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -22,6 +22,7 @@ from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
 from backend import config
+from backend.auth import User, current_user, require_edit, require_view, uid
 from backend.builds import api as builds_api
 from backend.demo_tasks import DEMO_TASKS
 from backend.llm_client import LLMClient
@@ -127,7 +128,7 @@ def recorded_runs() -> dict[str, str]:
 
 
 @app.post("/api/builds")
-def start_build(body: BuildIn):
+def start_build(body: BuildIn, user: User | None = Depends(current_user)):
     if body.task_card:
         card = TaskCard.model_validate(body.task_card)
     elif body.task_id in DEMO_TASKS:
@@ -140,35 +141,40 @@ def start_build(body: BuildIn):
             raise HTTPException(404, f"Replay mode: no recorded run for {card.task_id}.")
         return {"run_id": run, "replay": True}
     from backend.orchestrator import PHASE1
-    orch = Orchestrator(card, options=PHASE1 if body.profile == "phase1" else Options())
+    orch = Orchestrator(card, options=PHASE1 if body.profile == "phase1" else Options(), user_id=uid(user))
     _builds[orch.run_id] = orch
     threading.Thread(target=orch.run, daemon=True).start()
     return {"run_id": orch.run_id, "replay": False}
 
 
-def run_dir(run_id: str) -> Path:
+def run_dir(run_id: str, user: User | None = None) -> Path:
+    """A run folder the caller may read: their own builds, and runs with no owner (recorded demo runs)."""
     d = (config.runs_dir() / run_id).resolve()
     if d.parent != config.runs_dir() or not d.is_dir():
+        raise HTTPException(404, "No such run.")
+    known, owner = registry.run_owner(run_id)
+    if known and owner is not None and owner != uid(user):
         raise HTTPException(404, "No such run.")
     return d
 
 
 @app.get("/api/runs")
-def runs():
-    return registry.list_runs()
+def runs(user: User | None = Depends(current_user)):
+    return registry.list_runs(uid(user))
 
 
 @app.get("/api/runs/{run_id}/state")
-def run_state(run_id: str):
-    p = run_dir(run_id) / "run_state.json"
+def run_state(run_id: str, user: User | None = Depends(current_user)):
+    p = run_dir(run_id, user) / "run_state.json"
     return json.loads(p.read_text()) if p.exists() else {"stage": "starting"}
 
 
 @app.get("/api/runs/{run_id}/events")
-async def run_events(run_id: str, replay: bool = False, speed: float = 1.0, after: int = 0):
+async def run_events(run_id: str, replay: bool = False, speed: float = 1.0, after: int = 0,
+                     user: User | None = Depends(current_user)):
     """SSE: live runs stream as events are written; replay plays recorded events with their original timing.
     Every connection starts from the first event; `after=n` skips the first n (reconnects)."""
-    d = run_dir(run_id)
+    d = run_dir(run_id, user)
     path = d / "events.jsonl"
 
     async def live():
@@ -206,8 +212,8 @@ async def run_events(run_id: str, replay: bool = False, speed: float = 1.0, afte
 
 
 @app.get("/api/runs/{run_id}/files/{name:path}")
-def run_file(run_id: str, name: str):
-    d = run_dir(run_id)
+def run_file(run_id: str, name: str, user: User | None = Depends(current_user)):
+    d = run_dir(run_id, user)
     p = (d / name).resolve()
     if d not in p.parents or is_sealed_path(p) or not p.is_file():
         raise HTTPException(404, "File not available.")
@@ -220,8 +226,8 @@ def run_file(run_id: str, name: str):
 
 
 @app.get("/api/runs/{run_id}/report")
-def report(run_id: str, fmt: str = "json"):
-    d = run_dir(run_id)
+def report(run_id: str, fmt: str = "json", user: User | None = Depends(current_user)):
+    d = run_dir(run_id, user)
     p = d / ("report_card.md" if fmt == "md" else "report_card.json")
     if not p.exists():
         raise HTTPException(404, "Report card not ready yet.")
@@ -229,10 +235,12 @@ def report(run_id: str, fmt: str = "json"):
 
 
 # ---- specialists ----------------------------------------------------------------------
-def _spec(sid: str):
-    if not registry.path(sid).exists():
+def _spec(sid: str, user: User | None = None):
+    if not registry.exists(sid):
         raise HTTPException(404, f"No specialist '{sid}'.")
-    return registry.load(sid)
+    v = registry.load(sid)
+    require_view(v, user)
+    return v
 
 
 def _version_view(v, rec) -> dict:
@@ -243,9 +251,9 @@ def _version_view(v, rec) -> dict:
 
 
 @app.get("/api/specialists")
-def specialists():
+def specialists(user: User | None = Depends(current_user)):
     out = []
-    for v in registry.list_specialists():
+    for v in registry.list_specialists(uid(user)):
         live = registry.live(v)
         out.append({"specialist_id": v.specialist_id, "display_name": v.display_name, "color": v.color,
                     "monogram": v.monogram, "task_id": v.task_id, "live_version": live.version if live else None,
@@ -254,14 +262,15 @@ def specialists():
 
 
 @app.get("/api/specialists/{sid}")
-def specialist(sid: str):
-    v = _spec(sid)
+def specialist(sid: str, user: User | None = Depends(current_user)):
+    v = _spec(sid, user)
     live = registry.live(v)
+    mine = [k for k in v.api_keys if k.user_id == uid(user)]       # each caller sees only their own keys
     return {"specialist_id": sid, "display_name": v.display_name, "color": v.color, "monogram": v.monogram,
             "task_id": v.task_id, "api_route": v.api_route,
             "api_base": config.env("SPECIALIST_ENDPOINT_URL") or None,
-            "has_key": any(k.revoked is None for k in v.api_keys),
-            "keys": [{"key_id": k.key_id, "created": k.created, "revoked": k.revoked} for k in v.api_keys],
+            "has_key": any(k.revoked is None for k in mine), "owned": v.user_id is not None and v.user_id == uid(user),
+            "keys": [{"key_id": k.key_id, "created": k.created, "revoked": k.revoked} for k in mine],
             "live": _version_view(v, live) if live else None,
             "versions": [_version_view(v, r) for r in sorted(v.versions, key=lambda r: -r.version)]}
 
@@ -272,8 +281,9 @@ class PredictIn(BaseModel):
     explain: bool = False
 
 
-def _local_predict(sid: str, texts: list[str], version: int | None = None, explain: bool = False) -> dict:
-    v = _spec(sid)
+def _local_predict(sid: str, texts: list[str], version: int | None = None, explain: bool = False,
+                   user: User | None = None) -> dict:
+    v = _spec(sid, user)
     ver = version or (registry.live(v).version if registry.live(v) else None)
     if ver is None:
         raise HTTPException(503, "This specialist has no live version yet.")
@@ -286,17 +296,17 @@ def _local_predict(sid: str, texts: list[str], version: int | None = None, expla
 
 
 @app.post("/api/specialists/{sid}/predict")
-def panel_predict(sid: str, body: PredictIn):
+def panel_predict(sid: str, body: PredictIn, user: User | None = Depends(current_user)):
     if body.explain:
         demo_guard()
-    out = _local_predict(sid, [body.input], body.version, body.explain)
+    out = _local_predict(sid, [body.input], body.version, body.explain, user)
     return {"version": out["version"], **out["predictions"][0], "wall_ms": out["wall_ms"]}
 
 
 @app.post("/api/specialists/{sid}/predict_batch")
-async def panel_batch(sid: str, file: UploadFile = File(...)):
+async def panel_batch(sid: str, file: UploadFile = File(...), user: User | None = Depends(current_user)):
     raw = (await file.read()).decode("utf-8", errors="replace")
-    v = _spec(sid)
+    v = _spec(sid, user)
     meta = registry.bundle_meta(sid, registry.live(v).version)
     if meta["input_type"] == "log_window":
         texts = [json.loads(l)["text"] for l in raw.splitlines() if l.strip()] if file.filename.endswith(".jsonl") \
@@ -314,16 +324,17 @@ async def panel_batch(sid: str, file: UploadFile = File(...)):
                                  "or blank-line-separated log windows.")
     if len(texts) > 5000:
         raise HTTPException(422, f"{len(texts)} records; the batch limit is 5,000.")
-    out = _local_predict(sid, texts)
+    out = _local_predict(sid, texts, user=user)
     return {"version": out["version"], "rows": [{"input": t, **p} for t, p in zip(texts, out["predictions"])],
             "wall_ms": out["wall_ms"]}
 
 
 @app.post("/api/specialists/{sid}/keys")
-def regenerate_key(sid: str):
-    """Revokes existing keys and returns a new plain key once. Only its hash is stored."""
-    v = _spec(sid)
-    key = registry.create_key(v)
+def regenerate_key(sid: str, user: User | None = Depends(current_user)):
+    """Revokes the caller's existing keys for this specialist and returns a new plain key once. Only its hash is
+    stored. On a demo specialist every user has their own key, so nobody can revoke someone else's."""
+    v = _spec(sid, user)
+    key = registry.create_key(v, user_id=uid(user))
     _reload_remote(sid)
     return {"api_key": key, "note": "Copy it now; it won't be shown again."}
 
@@ -339,8 +350,9 @@ def _reload_remote(sid: str):
 
 
 @app.post("/api/specialists/{sid}/rollback")
-def rollback(sid: str):
-    v = _spec(sid)
+def rollback(sid: str, user: User | None = Depends(current_user)):
+    v = _spec(sid, user)
+    require_edit(v, user)
     try:
         target = registry.rollback(v)
     except ValueError as exc:

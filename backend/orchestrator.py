@@ -73,8 +73,10 @@ def new_run_id(task_id: str) -> str:
 
 
 class Orchestrator:
-    def __init__(self, card: TaskCard, run_id: str | None = None, options: Options | None = None):
+    def __init__(self, card: TaskCard, run_id: str | None = None, options: Options | None = None,
+                 user_id: str | None = None):
         self.card = card
+        self.user_id = user_id          # Supabase user who started the build; None = local / demo
         self.run_id = run_id or new_run_id(card.task_id)
         self.dir = config.runs_dir() / self.run_id
         self.dir.mkdir(parents=True, exist_ok=True)
@@ -117,7 +119,8 @@ class Orchestrator:
 
     # ---- stages -----------------------------------------------------------------
     def run(self) -> dict:
-        registry.record_run(self.run_id, self.card.task_id, "build", "running")
+        registry.record_run(self.run_id, self.card.task_id, "build", "running", task_name=self.card.task_name,
+                            user_id=self.user_id, budget_usd=self.budget)
         try:
             self._run()
             self.state.status, self.state.message = "done", "Run complete"
@@ -134,7 +137,9 @@ class Orchestrator:
             self.state.spend_usd = self.spend()
             self.state.write(self.dir / "run_state.json")
             registry.record_run(self.run_id, self.card.task_id, "build", self.state.status,
-                                self.result.get("specialist_id"))
+                                self.result.get("specialist_id"), task_name=self.card.task_name, user_id=self.user_id,
+                                spend_usd=self.state.spend_usd, budget_usd=self.budget, message=self.state.message,
+                                version=self.result.get("version"), deployed=self.result.get("deployed"))
             self.emit("Orchestrator", "end", "", kind="done", data={"status": self.state.status, **self.result})
         return self.result
 
@@ -545,14 +550,14 @@ class Orchestrator:
                 "p99_ms": winner_metrics.get("p99_ms"),
                 "expected_format": input_hint(self.card.task_id, self.card.input_type)}
         (bundle / "bundle.json").write_text(json.dumps(meta, indent=2))
-        v = registry.get_or_create(self.card)
+        v = registry.get_or_create(self.card, user_id=self.user_id)
         current = registry.live(v)
         passed, reason = ev.version_gate(self.card, final, current.sealed_metrics if current else None)
         summary = {k: final.get(k) for k in ("primary", "primary_metric", "macro_f1", "accuracy", "pr_auc",
                                               "recall_at_fpr", "per_class", "at_val_threshold", "escalation_rate", "n")}
         rec = registry.add_version(v, self.run_id, bundle, summary, passed, reason, cand_id)
         if passed and not any(k.revoked is None for k in v.api_keys):
-            registry.create_key(v)   # plain key is not kept; the UI's "Use" dialog regenerates and reveals once
+            registry.create_key(v, user_id=self.user_id)   # plain key is not kept; the UI's "Use" dialog regenerates and reveals once
         self.result = {"specialist_id": v.specialist_id, "version": rec.version, "deployed": passed, "reason": reason}
         self.emit("Deploy", "deploy", f"Deployed v{rec.version}" if passed else f"v{rec.version} not deployed: {reason}",
                   data_ref="eval_report.json", kind="handoff", data=self.result)

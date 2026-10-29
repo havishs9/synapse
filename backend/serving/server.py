@@ -50,7 +50,10 @@ def predictor(sid: str, version: int) -> Predictor:
     key = (sid, version)
     with _lock:
         if key not in _cache:
-            _cache[key] = Predictor(registry.root() / sid / f"v{version}", llm=_get_llm())
+            d = registry.bundle_dir(sid, version)
+            if not (d / "bundle.json").exists():
+                raise HTTPException(503, f"{sid} v{version}'s model files aren't on this server yet.")
+            _cache[key] = Predictor(d, llm=_get_llm())
         return _cache[key]
 
 
@@ -61,7 +64,7 @@ def _bearer(authorization: str | None) -> str:
 
 
 def _specialist(sid: str):
-    if not registry.path(sid).exists():
+    if not registry.exists(sid):
         raise HTTPException(404, f"No specialist '{sid}'.")
     return registry.load(sid)
 
@@ -105,7 +108,7 @@ router = APIRouter()
 
 @router.get("/health")
 def health():
-    return {"ok": True, "specialists": len(registry.list_specialists()), "ts": time.time()}
+    return {"ok": True, "specialists": len(registry.list_specialists(everyone=True)), "ts": time.time()}
 
 
 @router.post("/v1/specialists/{sid}/predict")

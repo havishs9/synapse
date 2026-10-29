@@ -2,7 +2,7 @@ PY ?= .venv/bin/python
 NPM ?= npm
 RUN ?=
 
-.PHONY: setup dev test demo-data replay build-frontend screenshots build-procurement build-logs build-support snapshot-demo deploy
+.PHONY: setup dev test test-pg demo-data replay build-frontend screenshots build-procurement build-logs build-support snapshot-demo deploy db-migrate db-seed
 
 setup:            ## create the venv and install backend + frontend dependencies
 	python3.12 -m venv .venv
@@ -18,6 +18,9 @@ dev: build-frontend   ## backend on :8000 serving the built UI (use `cd frontend
 
 test:
 	$(PY) -m pytest -q
+
+test-pg:          ## registry tests against the Supabase database in .env (creates and deletes test rows)
+	SYNAPSE_TEST_PG=1 $(PY) -m pytest -q backend/tests/test_registry_postgres.py
 
 demo-data:
 	$(PY) scripts/demo_data.py
@@ -39,6 +42,12 @@ snapshot-demo:    ## copy the demo specialists and recorded runs into the commit
 
 screenshots:
 	$(PY) scripts/screenshots.py
+
+db-migrate:       ## apply supabase/migrations/*.sql to SUPABASE_DB_URL (idempotent)
+	$(PY) scripts/db_migrate.py
+
+db-seed:          ## load the demo specialists into Postgres as public demo specialists
+	$(PY) scripts/seed_registry.py
 
 deploy:           ## create the Nebius Serverless endpoint (needs the nebius CLI, logged in)
 	./deploy/serverless/deploy.sh
