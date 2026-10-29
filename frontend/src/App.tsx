@@ -16,6 +16,7 @@ const save = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.str
 
 export function App() {
   const auth = useAuth();
+  if (auth.enabled && !auth.ready) return null;            // a saved session is restored before anything shows
   if (auth.enabled && !auth.session) return <SignIn auth={auth} />;
   return <Workspace email={auth.session?.user?.email} onSignOut={auth.enabled ? auth.signOut : undefined} />;
 }
@@ -35,6 +36,10 @@ function Workspace({ email, onSignOut }: { email?: string | null; onSignOut?: ()
   const [switcher, setSwitcher] = useState(false);
   const [notice, setNotice] = useState("");
   const abort = useRef<AbortController | null>(null);
+  // The chat that pushes write to. A ref, not `active`, so every message and stream delta of one send lands in
+  // the same chat (closures over `active` all saw "" and each created a new chat).
+  const activeRef = useRef(active);
+  const selectChat = (id: string) => { activeRef.current = id; setActive(id); };
 
   useEffect(() => { save("synapse.chats", chats.slice(0, 50)); }, [chats]);
   useEffect(() => { save("synapse.active", active); }, [active]);
@@ -63,12 +68,10 @@ function Workspace({ email, onSignOut }: { email?: string | null; onSignOut?: ()
   const chat = chats.find((c) => c.id === active);
   const messages = chat?.messages ?? [];
   const update = (fn: (m: Msg[]) => Msg[], title?: string) => {
+    if (!activeRef.current) selectChat(uid());
+    const id = activeRef.current;
     setChats((cs) => {
-      let id = active, list = cs;
-      if (!cs.find((c) => c.id === id)) {
-        id = uid(); setActive(id);
-        list = [{ id, title: title ?? "New chat", messages: [], updated: Date.now() }, ...cs];
-      }
+      const list = cs.find((c) => c.id === id) ? cs : [{ id, title: title ?? "New chat", messages: [], updated: Date.now() }, ...cs];
       return list.map((c) => (c.id === id ? { ...c, messages: fn(c.messages), updated: Date.now(), title: c.title === "New chat" && title ? title : c.title } : c))
         .sort((a, b) => b.updated - a.updated);
     });
@@ -158,8 +161,8 @@ function Workspace({ email, onSignOut }: { email?: string | null; onSignOut?: ()
           <Sidebar chats={chats} activeChat={active} specialists={specialists} builds={builds}
             activeSpecialist={pane?.kind === "specialist" ? pane.sid : undefined}
             activeRun={pane?.kind === "build" ? pane.runId : undefined}
-            onNewChat={() => { setActive(""); setPane(null); setTab("chat"); }}
-            onOpenChat={(id) => { setActive(id); setTab("chat"); if (window.innerWidth < 768) setSidebarOpen(false); }}
+            onNewChat={() => { selectChat(""); setPane(null); setTab("chat"); }}
+            onOpenChat={(id) => { selectChat(id); setTab("chat"); if (window.innerWidth < 768) setSidebarOpen(false); }}
             onOpenSpecialist={(sid) => { openPane({ kind: "specialist", sid }); if (window.innerWidth < 768) setSidebarOpen(false); }}
             onOpenBuild={(b) => { openPane({ kind: "build", runId: b.run_id, replay: false, taskId: b.task_id, title: b.task_name, improveOf: b.kind === "improve" ? b.specialist_id ?? undefined : undefined }); if (window.innerWidth < 768) setSidebarOpen(false); }}
             onCancelBuild={(b) => buildAction(b, "cancel")} onRetryBuild={(b) => buildAction(b, "retry")}
@@ -195,7 +198,7 @@ function Workspace({ email, onSignOut }: { email?: string | null; onSignOut?: ()
         </div>
       </main>
       {switcher && <QuickSwitcher chats={chats} specialists={specialists} onClose={() => setSwitcher(false)}
-        onChat={(id) => { setActive(id); setSwitcher(false); setTab("chat"); }}
+        onChat={(id) => { selectChat(id); setSwitcher(false); setTab("chat"); }}
         onSpecialist={(sid) => { openPane({ kind: "specialist", sid }); setSwitcher(false); }} />}
       {notice && <div role="status" className="card fixed bottom-4 left-1/2 z-50 -translate-x-1/2 px-4 py-2 text-sm">{notice}</div>}
     </div>

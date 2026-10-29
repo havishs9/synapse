@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { setTokenGetter } from "./api";
 
-/** Sign-in with Supabase Auth (Google), behind VITE_AUTH_ENABLED. Off: no login screen, calls go without a token
- * (local dev, replay; the backend lets them through while AUTH_REQUIRED=false). */
-export const AUTH_ENABLED = String(import.meta.env.VITE_AUTH_ENABLED ?? "").toLowerCase() === "true";
+/** Sign-in with Supabase Auth (Google). On whenever VITE_SUPABASE_URL and the anon key are set (or
+ * VITE_AUTH_ENABLED=true), so the page opens on the sign-in screen unless a saved session exists.
+ * VITE_AUTH_ENABLED=false turns it off: no login screen, calls go without a token (local dev, replay; the backend
+ * lets them through while AUTH_REQUIRED=false). */
 const URL_ = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const FLAG = String(import.meta.env.VITE_AUTH_ENABLED ?? "").trim().toLowerCase();
+export const AUTH_ENABLED = FLAG === "true" || (FLAG !== "false" && !!URL_ && !!ANON);
 
 let client: SupabaseClient | null = null;
 async function supabase(): Promise<SupabaseClient | null> {

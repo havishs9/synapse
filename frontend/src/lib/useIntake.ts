@@ -4,6 +4,8 @@ import type { Msg } from "./types";
 
 /** Requests that should go through intake (clarifying questions → task card) instead of plain chat. */
 const BUILD_INTENT = /\b(sort|categori[sz]e|classif|route|routing|flag|detect|label|triage|tag|automate|specialist|build|anomal)/i;
+/** "Create / make / train a model that…" */
+const MODEL_INTENT = /\b(create|make|train|need|want|new)\b.*\b(model|classifier|predictor)s?\b/i;
 
 type Deps = {
   push: (m: Omit<Msg, "id">) => void;
@@ -25,7 +27,7 @@ export function useIntake({ push, patch }: Deps) {
     busy,
     /** Returns true when the message was handled as a build request. */
     async handle(text: string, file?: File): Promise<boolean> {
-      if (!BUILD_INTENT.test(text) && !file) return false;
+      if (!BUILD_INTENT.test(text) && !MODEL_INTENT.test(text) && !file) return false;
       setBusy(true);
       try {
         const samples = await sampleRows(file);

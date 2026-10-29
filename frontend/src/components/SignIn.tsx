@@ -1,6 +1,6 @@
 import type { AuthState } from "../lib/auth";
 
-/** Sign-in screen (Supabase Auth, Google). Shown only when VITE_AUTH_ENABLED=true. */
+/** Sign-in screen (Supabase Auth, Google). Shown when sign-in is on (lib/auth.ts) and no session is saved. */
 export function SignIn({ auth }: { auth: AuthState }) {
   return (
     <div className="flex h-full items-center justify-center px-4">
