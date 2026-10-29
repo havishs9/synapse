@@ -93,3 +93,9 @@ def max_repair_rounds() -> int:
 
 def demo_monthly_volume() -> int:
     return int(env("DEMO_MONTHLY_VOLUME", "1000000"))
+
+
+def cors_origins() -> list[str]:
+    """Local Vite dev server plus the comma-separated CORS_ORIGINS (e.g. the Vercel URL)."""
+    extra = [o.strip().rstrip("/") for o in (env("CORS_ORIGINS") or "").split(",") if o.strip()]
+    return list(dict.fromkeys(["http://localhost:5173", "http://127.0.0.1:5173", *extra]))

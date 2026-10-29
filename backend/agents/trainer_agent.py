@@ -158,7 +158,7 @@ class Trainer:
         for i, frac in enumerate(schedule):
             round_no = i + 1
             self.emit("Trainer", "train", f"Trainer: round {round_no}, {len(active)} candidates on {frac:.0%} of data",
-                      kind="round", data={"round": round_no, "data_frac": frac, "n": len(active),
+                      kind="round", data={"round": round_no, "n_rounds": len(schedule), "data_frac": frac, "n": len(active),
                                           "cands": [r.cand for r in active]})
             t0 = time.time()
             self._run_round(active, round_no, frac)
