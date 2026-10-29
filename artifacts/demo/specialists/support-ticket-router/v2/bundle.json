@@ -91,7 +91,7 @@
   "run_id": "20261029-184039-improve-support-ticket-router-6bc8",
   "example_input": "Where should I look for my PIN number at?",
   "cost_per_1m_usd": 0.09429498024085932,
-  "p50_ms": 0.29772904235869646,
+  "p50_ms": 0.29574950167443603,
   "p99_ms": 1543.000373408431,
   "expected_format": "One customer support message",
   "improved_from": 1,

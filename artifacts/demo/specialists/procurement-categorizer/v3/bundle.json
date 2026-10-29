@@ -33,7 +33,7 @@
   "run_id": "20261029-184057-improve-procurement-categorizer-0b19",
   "example_input": "FIFTY (50) STANDARD LAPTOPS AND FIFTY (50) MONITORS",
   "cost_per_1m_usd": 23.853766000649898,
-  "p50_ms": 0.2324995002709329,
+  "p50_ms": 0.2965420026157517,
   "p99_ms": 673.797248119954,
   "expected_format": "One purchase record description",
   "improved_from": 2,

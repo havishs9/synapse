@@ -292,7 +292,9 @@ class Improver:
         meta.update({"candidate": cand_id, "family": model.family, "run_id": self.run_id, "threshold": threshold,
                      "calibrator_T": None if isinstance(model, CascadeH) else calibrator.T,
                      "uses_cloud": bool(model.uses_cloud), "cost_per_1m_usd": cost,
-                     "p50_ms": metrics.get("p50_ms") if not isinstance(model, CascadeH) else meta.get("p50_ms"),
+                     # p50 is the new first stage's measured latency (it answers most items); a cascade's p99 is set
+                     # by its later stages, which are unchanged, so it carries over from the live version
+                     "p50_ms": metrics.get("p50_ms"),
                      "p99_ms": metrics.get("p99_ms") if not isinstance(model, CascadeH) else meta.get("p99_ms"),
                      "improved_from": self.live.version, "corrections": len(self.corrections)})
         (bundle / "bundle.json").write_text(json.dumps(meta, indent=2))
