@@ -4,21 +4,30 @@ export type RunEvent = {
 };
 
 export type QuestionOption = { value: any; label: string };
-export type Question = { id: string; text: string; options: QuestionOption[]; default: any };
+/** `free_text_first`: the answer is mainly free text (e.g. what a user likes for a recommender). */
+export type Question = { id: string; text: string; options: QuestionOption[]; default: any; free_text_first?: boolean };
 export type PlanChange = { question: string; answer: string; change: string };
 
 /** A training-data choice for a custom task (backend/data_sourcing.py): a Hugging Face dataset or synthetic. */
 export type DataOption = {
-  id: string; kind: "hf" | "synthetic"; name: string; url?: string; license: string; rows?: number; why?: string;
+  id: string; kind: "hf" | "api" | "synthetic"; name: string; url?: string; license: string; rows?: number; why?: string;
   fit?: number; found_by?: string; labels: string[]; gap_labels: string[]; label_map?: Record<string, string>;
   text_column?: string; label_column?: string; samples?: { text: string; label: string }[];
   format_match?: { score: number | null; explanation: string };
+  teacher?: string;                 // API items: the model that labels them
 };
 export type RejectedDataset = { name: string; url: string; license: string; reason: string };
+/** The data step of intake (backend/routes/product.py): the dataset search and, for demo tasks, the vetted dataset. */
+export type DataStep = {
+  search?: { hub_queries: string[]; web_query?: string | null; candidates: number; searched_at?: string; summary: string;
+             left_out: RejectedDataset[] } | null;
+  dataset?: { name: string; url: string; source: string; license: string; license_full: string; citation: string[];
+              rows?: number | null; labels: number; about?: string };
+};
 
 export type Msg = {
   id: string; role: "user" | "assistant"; content: string;
-  kind?: "text" | "questions" | "taskcard" | "build" | "error";
+  kind?: "text" | "questions" | "data" | "ask" | "taskcard" | "build" | "error";
   card?: any; runId?: string; attachment?: { name: string; rows: number };
   // intake
   taskId?: string; questions?: Question[]; categories?: string[]; samplesHint?: string; samples?: string[];
@@ -27,6 +36,8 @@ export type Msg = {
   // custom task: the drafted card and its data choices
   draftCard?: any; dataOptions?: DataOption[]; dataChoice?: string; dataRejected?: RejectedDataset[];
   dataOption?: DataOption;
+  // conversational intake: the data step, then one message of questions answered in a chat reply
+  dataStep?: DataStep; ask?: string; replyNote?: boolean;
 };
 
 export type Chat = { id: string; title: string; messages: Msg[]; updated: number };

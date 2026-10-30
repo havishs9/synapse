@@ -43,10 +43,18 @@ _llm = None
 
 
 def _get_llm():
+    """Client for cascade escalations at prediction time: one quick retry and a short timeout (a build's client
+    retries for minutes), so a slow Token Factory call can't hold a prediction for 30 s or more."""
     global _llm
     if _llm is None:
         from backend.llm_client import LLMClient
-        _llm = LLMClient(budget_usd=float("inf"))
+        client = None
+        if config.env("SYNAPSE_FAKE_LLM") != "1":
+            from openai import OpenAI
+            client = OpenAI(api_key=config.env("NEBIUS_API_KEY"), base_url=config.env("NEBIUS_BASE_URL"),
+                            timeout=float(config.env("PREDICT_LLM_TIMEOUT_S", "15")), max_retries=0)
+        _llm = LLMClient(budget_usd=float("inf"), client=client)
+        _llm.RETRY_ATTEMPTS = 2
     return _llm
 
 

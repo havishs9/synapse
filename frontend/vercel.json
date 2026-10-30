@@ -1,24 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
+  "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "framework": null,
   "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud/api/:path*"
-    },
-    {
-      "source": "/v1/:path*",
-      "destination": "https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud/v1/:path*"
-    },
-    {
-      "source": "/health",
-      "destination": "https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud/health"
-    },
-    {
-      "source": "/((?!assets/).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/:path*", "destination": "https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud/api/:path*" },
+    { "source": "/v1/:path*", "destination": "https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud/v1/:path*" },
+    { "source": "/health", "destination": "https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud/health" },
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
   ]
 }

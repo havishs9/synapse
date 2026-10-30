@@ -138,6 +138,7 @@ def to_markdown(rc: dict) -> str:
     lines += ["", "## Data sources", ""]
     for src in rc["data_sources"]:
         lines.append(f"- {src['name']} ({src['url']}): {src['license']}; {src['rows_used']:,} rows" +
+                     (f", labels by the {src['labeled_by']}: scores measure agreement with it" if src.get("labeled_by") else "") +
                      (f". Cite: {'; '.join(src['citation'])}" if src.get("citation") else ""))
     return "\n".join(lines) + "\n"
 

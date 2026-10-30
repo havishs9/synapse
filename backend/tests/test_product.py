@@ -67,6 +67,63 @@ def test_intake_without_the_model(tmp_env, monkeypatch):
     assert c.post("/api/intake/card", json={"task_id": "nope"}).status_code == 404
 
 
+# The replies in docs/VIDEO_SCRIPT.md, each matching its recorded build's task card.
+SCRIPTED = {
+    "procurement": ("About 2 million records a month. All categories matter equally. Give me the category with a "
+                    "short reason. Cloud calls are fine, but keep each answer under 50 ms.",
+                    {"monthly_volume": 2_000_000, "error_preference": "balanced", "needs_reason": True,
+                     "deployment": "cloud_ok", "latency_budget_ms": 50}),
+    "hdfs_logs": ("Around 5 million log windows a month. Missing a real anomaly is much worse than a false alarm. "
+                  "A short reason with each verdict, please. Cloud calls are fine, under 20 ms each.",
+                  {"monthly_volume": 5_000_000, "error_preference": "recall_first", "needs_reason": True,
+                   "deployment": "cloud_ok", "latency_budget_ms": 20}),
+    "support_tickets": ("About 500k tickets a month. All intents matter equally. Just the category. Cloud is fine, "
+                        "under 500 ms.",
+                        {"monthly_volume": 500_000, "error_preference": "balanced", "needs_reason": False,
+                         "deployment": "cloud_ok", "latency_budget_ms": 500}),
+}
+
+
+def test_reply_parsing_needs_no_model(monkeypatch):
+    monkeypatch.setattr(product, "llm", lambda: pytest.fail("the scripted replies must parse without Nemotron"))
+    for task, (reply, want) in SCRIPTED.items():
+        assert product.parse_reply(reply, product.base_card(task)) == want, task
+    logs = product.base_card("hdfs_logs")
+    assert product._rules_reply("False alarms are worse than missing one; no latency limit; our own servers only, $3",
+                                True) == {"error_preference": "precision_first", "latency_budget_ms": None,
+                                          "deployment": "offline", "build_budget_usd": 3}
+    assert product._rules_reply("respond within 2 seconds, without a reason", False) == {
+        "latency_budget_ms": 2000, "needs_reason": False}
+    assert logs.output_type == "binary"
+
+
+def test_conversational_intake(tmp_env, monkeypatch):
+    """Data step first (the recorded search, then the vetted dataset to approve), then one message of questions,
+    then one free-text reply → task card that matches the recorded build's settings."""
+    import backend.main as main
+    monkeypatch.setattr(product, "_llm_intake", lambda text, samples: None)
+    c = TestClient(main.app)
+    r = c.post("/api/intake/start", json={"text": "Route support tickets to the right team"}).json()
+    assert r["task_id"] == "support_tickets"
+    assert "Tavily web search" in r["message"] and "Banking77" in r["message"] and r["message"].endswith("OK to train on it?")
+    assert r["data_step"]["search"]["left_out"] and r["data_step"]["dataset"]["license"] == "CC-BY-4.0"
+    assert 1 <= r["ask"].count("?") <= 7                                      # DECISION D5
+    reply, want = SCRIPTED["support_tickets"]
+    r = c.post("/api/intake/card", json={"task_id": "support_tickets", "reply": reply}).json()
+    assert {k: r["card"][k] for k in want} == want and r["answers"]["needs_reason"] is False
+    assert r["ack"].startswith("Got it: 500k a month") and r["plan_changes"][0]["question"] == "data"
+    r = c.post("/api/intake/card", json={"task_id": "support_tickets", "answers": r["answers"]}).json()
+    assert r["ack"] is None and r["card"]["latency_budget_ms"] == 500           # editing the card keeps the reply's answers
+
+
+def test_search_summary_counts_reasons():
+    rej = [{"reason": 'license "cc-by-nc-4.0" isn\'t on the allowlist'}] * 2 + [{"reason": "inputs or labels don't match the task"}]
+    s = product.search_summary({"hub_queries": ["a", "b"], "web_query": "q", "candidates": 3}, rej, 0)
+    assert s == ("I searched Hugging Face for “a” and “b” plus a Tavily web search: 3 candidate datasets, none fit: "
+                 "2 have licenses we can't use (non-commercial or unknown) and 1 has inputs or labels that don't match.")
+    assert "none of the results" in product.search_summary({"hub_queries": ["x"], "candidates": 0}, [], 0)
+
+
 def _build_v1(target=0.5):
     from backend.orchestrator import Options, Orchestrator
     card = TaskCard(task_id="fixture", task_name="Fixture Categorizer", description="Sort purchase records.",

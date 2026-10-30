@@ -1,0 +1,68 @@
+{
+ "task_id": "support_tickets",
+ "request": "Route our customer support tickets to the right team",
+ "searched_at": "2026-10-30",
+ "hub_queries": [
+  "customer support tickets",
+  "ticket classification",
+  "helpdesk routing"
+ ],
+ "web_query": "labeled dataset customer support ticket classification routing",
+ "web_dataset_ids": [
+  "Tobi-Bueck/customer-support-tickets",
+  "cngchis/Support-Ticket-Router-12K-Cleaned"
+ ],
+ "candidates_inspected": 8,
+ "fits": [],
+ "left_out": [
+  {
+   "name": "Tobi-Bueck/customer-support-tickets",
+   "url": "https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets",
+   "license": "cc-by-nc-4.0",
+   "reason": "license \"cc-by-nc-4.0\" isn't on the allowlist"
+  },
+  {
+   "name": "Prady06/customer-support-tickets",
+   "url": "https://huggingface.co/datasets/Prady06/customer-support-tickets",
+   "license": "cc-by-nc-4.0",
+   "reason": "license \"cc-by-nc-4.0\" isn't on the allowlist"
+  },
+  {
+   "name": "gorkemsevinc/customer_support_tickets",
+   "url": "https://huggingface.co/datasets/gorkemsevinc/customer_support_tickets",
+   "license": "unknown",
+   "reason": "license \"unknown\" isn't on the allowlist"
+  },
+  {
+   "name": "vasu1111/customer-support-tickets",
+   "url": "https://huggingface.co/datasets/vasu1111/customer-support-tickets",
+   "license": "cc-by-nc-4.0",
+   "reason": "license \"cc-by-nc-4.0\" isn't on the allowlist"
+  },
+  {
+   "name": "Noise144/ticket_classification_IT_EN",
+   "url": "https://huggingface.co/datasets/Noise144/ticket_classification_IT_EN",
+   "license": "unknown",
+   "reason": "license \"unknown\" isn't on the allowlist"
+  },
+  {
+   "name": "enzo-joseph/customer-support-tickets",
+   "url": "https://huggingface.co/datasets/enzo-joseph/customer-support-tickets",
+   "license": "unknown",
+   "reason": "license \"unknown\" isn't on the allowlist"
+  },
+  {
+   "name": "w1z4rd3k/it-support-l1-ticket-classification",
+   "url": "https://huggingface.co/datasets/w1z4rd3k/it-support-l1-ticket-classification",
+   "license": "cc-by-nc-4.0",
+   "reason": "license \"cc-by-nc-4.0\" isn't on the allowlist"
+  },
+  {
+   "name": "cngchis/Support-Ticket-Router-12K-Cleaned",
+   "url": "https://huggingface.co/datasets/cngchis/Support-Ticket-Router-12K-Cleaned",
+   "license": "apache-2.0",
+   "reason": "inputs or labels don't match the task"
+  }
+ ],
+ "note": "Recorded by scripts/record_data_search.py. 'fits' are datasets Nemotron Ultra judged to match the task's labels; the demo trains on the vetted dataset in config/datasets.yaml."
+}

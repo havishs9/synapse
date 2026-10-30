@@ -5,7 +5,8 @@ import { Sidebar } from "./components/Sidebar";
 import { EXAMPLES, MainChat } from "./components/MainChat";
 import { TrainingView } from "./components/TrainingView";
 import { SpecialistPanel } from "./components/SpecialistPanel";
-import { QuestionsMessage, TaskCardMessage } from "./components/TaskCard";
+import { AskMessage, DataStepMessage, TaskCardMessage } from "./components/TaskCard";
+import { Markdown } from "./components/Markdown";
 import { QuickSwitcher } from "./components/QuickSwitcher";
 import { SignIn } from "./components/SignIn";
 import { useIntake } from "./lib/useIntake";
@@ -84,7 +85,9 @@ function Workspace({ email, onSignOut }: { email?: string | null; onSignOut?: ()
   const patchLast = (fn: (m: Msg) => Msg) => update((ms) => ms.map((m, i) => (i === ms.length - 1 ? fn(m) : m)));
   const patch = (id: string, fn: (m: Msg) => Msg) => update((ms) => ms.map((m) => (m.id === id ? fn(m) : m)));
 
-  const intake = useIntake({ push, patch });
+  const remove = (id: string) => update((ms) => ms.filter((m) => m.id !== id));
+
+  const intake = useIntake({ push, patch, remove });
 
   const askModel = async (history: Msg[]) => {
     setStreaming(true);
@@ -107,6 +110,8 @@ function Workspace({ email, onSignOut }: { email?: string | null; onSignOut?: ()
       attachment = { name: file.name, rows: body.split("\n").filter((l) => l.trim()).length };
     }
     push({ role: "user", content: text, attachment }, text.slice(0, 48));
+    const waiting = !file && intake.pending(messages);
+    if (waiting && await intake.reply(waiting, text)) return;
     if (await intake.handle(text, file)) return;
     askModel([...messages, { id: "", role: "user", content: text }]);
   };
@@ -125,8 +130,15 @@ function Workspace({ email, onSignOut }: { email?: string | null; onSignOut?: ()
   const showBuild = (msg: Msg) => msg.started && openPane({ kind: "build", runId: msg.started, replay: !!msg.replay, taskId: msg.card?.task_id, title: msg.card?.task_name });
 
   const renderSpecial = (m: Msg) => {
-    if (m.kind === "questions") return <QuestionsMessage msg={m} intake={intake} />;
-    if (m.kind === "taskcard") return <TaskCardMessage msg={m} onBuild={startBuild} onShowBuild={showBuild} intake={intake} />;
+    if (m.kind === "data") return <DataStepMessage msg={m} onSay={(t) => send(t)} />;
+    if (m.kind === "ask") return <AskMessage msg={m} />;
+    if (m.kind === "taskcard") return (
+      <>
+        {m.content && <div className="mb-3"><Markdown text={m.content} /></div>}
+        <TaskCardMessage msg={m} onBuild={startBuild} onShowBuild={showBuild} intake={intake} />
+      </>
+    );
+    if (m.kind === "questions") return <Markdown text={m.content} />;     // chats saved before intake became a conversation
     return null;
   };
 
