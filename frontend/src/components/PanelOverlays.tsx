@@ -50,7 +50,7 @@ export function CompareDialog({ spec, sid, initial, onClose }: { spec: any; sid:
               note={n.cached ? "Cached answer: Nemotron didn't respond just now; this is its earlier answer to the same prompt" : undefined}
               costNote={n.cost_method} />
             <Side title={s.name} accent={spec.color} r={s}
-              note={s.answered_by ? `Answered by ${stageName(s.answered_by)} (${s.answered_by})${s.escalated ? " after the cheaper stage escalated" : ""}` : undefined}
+              note={s.answered_by ? `Answered by ${stageName(s.answered_by)} (${s.answered_by})${s.escalated ? " after the cheaper stage escalated" : ""}${s.escalation_unavailable ? "; the escalation stage didn't answer in time" : ""}` : undefined}
               costNote={s.cost_method} />
           </div>
           <p className="mt-3 text-sm text-ink-2">

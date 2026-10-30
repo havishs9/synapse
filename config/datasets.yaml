@@ -63,3 +63,40 @@ sourcing:
                                   # classes under 60 rows before splitting)
   synthetic_per_label: 60         # examples generated per label when no dataset fits
   synthetic_batch: 30             # examples per generation call
+  # Public APIs with a recorded license (checked 2026-10-30, docs/VERIFICATION.md). Their items carry no labels for
+  # the user's task: the teacher (role teacher_labeling_role) labels them from the task card at build time.
+  user_agent: "Synapse/0.1 (https://github.com/havishs9/synapse)"
+  teacher_labeling_role: ladder_K_primary   # Nemotron Nano: bulk labeling (config/models.yaml)
+  teacher_batch: 25               # items per labeling call
+  api_items_fetched: 600          # items read from an API at build time
+  api_sample_items: 6             # items shown in the chat as a preview
+  apis:
+    tvmaze:
+      name: TVmaze API
+      url: https://api.tvmaze.com
+      page: https://www.tvmaze.com/api
+      license: cc-by-sa-4.0       # "Use of the TVmaze API is licensed by CC BY-SA" (tvmaze.com/api); credit TVmaze
+      citation: "TVmaze (https://www.tvmaze.com), CC BY-SA 4.0"
+      covers: "TV shows of every kind, including anime and cartoons: title, type, language, genres and a summary"
+      max_pages: 40               # /shows pages of 250 ids; rate limit is at least 20 calls per 10 s per IP
+      genres: [Action, Adult, Adventure, Anime, Children, Comedy, Crime, DIY, Drama, Espionage, Family, Fantasy,
+               Food, History, Horror, Legal, Medical, Music, Mystery, Nature, Romance, Science-Fiction, Sports,
+               Supernatural, Thriller, Travel, War, Western]
+    wikidata:
+      name: Wikidata
+      url: https://query.wikidata.org/sparql
+      page: https://www.wikidata.org/wiki/Wikidata:Licensing
+      license: cc0-1.0            # structured data is CC0 (wikidata.org/wiki/Wikidata:Licensing)
+      citation: "Wikidata (https://www.wikidata.org), CC0 1.0"
+      covers: "catalogs of well-known works: title, short description and genres, most-linked items first"
+      classes:                    # Wikidata class ids, labels checked on query.wikidata.org
+        anime_series: {qid: Q63952888, label: anime television series}
+        manga_series: {qid: Q21198342, label: manga series}
+        tv_series: {qid: Q5398426, label: television series}
+        film: {qid: Q11424, label: film}
+        video_game: {qid: Q7889, label: video game}
+        novel: {qid: Q8261, label: novel}
+        comic: {qid: Q1004, label: comic}
+        board_game: {qid: Q131436, label: board game}
+        musical_group: {qid: Q215380, label: musical group}
+        musical_work: {qid: Q2188189, label: musical work}

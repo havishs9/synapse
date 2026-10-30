@@ -122,6 +122,15 @@ function DataChoice({ options, rejected, value, disabled, onChange, name }: {
                   )}
                   {o.found_by && <p className="mt-1 text-xs text-ink-3">Found by {o.found_by}</p>}
                 </>}
+                {o.kind === "api" && <>
+                  <p className="mt-1 text-xs text-ink-3">Real items with no labels for your task: {o.teacher} labels them from the task card, so scores measure agreement with it.</p>
+                  {o.format_match?.score != null && <p className="mt-0.5 text-xs text-ink-3">Format match with your samples: {o.format_match.score.toFixed(2)}. {o.format_match.explanation}</p>}
+                  {!!o.samples?.length && (
+                    <ul className="mono mt-1.5 space-y-0.5 text-xs text-ink-2">
+                      {o.samples.map((x, i) => <li key={i} className="truncate">{x.text}</li>)}
+                    </ul>
+                  )}
+                </>}
               </div>
             </div>
           </label>
@@ -179,6 +188,7 @@ export function TaskCardMessage({ msg, onBuild, onShowBuild, intake }: {
               : <a className="underline-offset-2 hover:underline" href={card.data_source.url} target="_blank" rel="noreferrer">{card.data_source.name}</a>}
             <span className="ml-2 chip">{card.data_source.kind === "synthetic" ? "generated" : card.data_source.license}</span>
             {card.data_source.kind === "synthetic" && <div className="mt-0.5 text-xs text-ink-3">Scores, the sealed test included, are measured on synthetic data</div>}
+            {card.data_source.kind === "api" && <div className="mt-0.5 text-xs text-ink-3">Real items labeled by the teacher model; scores measure agreement with it</div>}
           </dd>
         </>}
         <dt className="text-ink-3">Metric</dt>

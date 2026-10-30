@@ -18,6 +18,7 @@ import datetime as dt
 import random
 import re
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 
@@ -94,7 +95,7 @@ DRAFT_SCHEMA = {
     "type": "json_schema", "json_schema": {"name": "task_draft", "strict": True, "schema": {
         "type": "object", "additionalProperties": False,
         "required": ["feasible", "why_not", "reframed_from", "task_name", "description", "output_type", "labels",
-                     "positive_label", "search_queries", "web_query", "input_hint"],
+                     "positive_label", "search_queries", "web_query", "input_hint", "preference_question"],
         "properties": {
             "feasible": {"type": "boolean"},
             "why_not": {"type": "string"},
@@ -109,31 +110,44 @@ DRAFT_SCHEMA = {
             "search_queries": {"type": "array", "items": {"type": "string"}},
             "web_query": {"type": "string"},
             "input_hint": {"type": "string"},
+            "preference_question": {"type": "string"},
         }}}}
 
 
-def draft_task(text: str, samples: list[str], llm) -> dict:
-    """Nemotron Ultra turns a request into a text-classification task draft plus search queries."""
+INSIST = ("\nThe user explicitly asked for a model, so feasible must be true: frame the request as the closest "
+          "classification of one text into fixed labels (for a recommender: classify one item as recommend / skip "
+          "for this user).")
+
+
+def draft_task(text: str, samples: list[str], llm, insist: bool = False) -> dict:
+    """Nemotron Ultra turns a request into a text-classification task draft plus search queries. `insist` re-drafts
+    a request it called infeasible, framed as the closest classification."""
     prompt = (
         "You are the intake step of Synapse, which builds small, cheap specialist models for repetitive "
         "text-classification tasks (one short text in, one label out). The user wrote:\n"
         f'"""{text[:2000]}"""\n'
         + ("Sample inputs they pasted:\n" + "\n".join(f"- {s[:200]}" for s in samples[:10]) + "\n" if samples else "")
         + "\nDraft the task. If the request is already a classification of a text input into a fixed set of "
-        "labels, draft it and set reframed_from=\"\". If it is something else (recommending, ranking, predicting a "
-        "number, generating or extracting text, answering questions), do not refuse: draft the closest text "
-        "classification task that would still serve the user's goal, and in reframed_from say in one plain sentence "
-        "what a small classifier can't do directly and how this task helps instead (e.g. for 'recommend movies for "
-        "my tastes': 'A small specialist can't rank a whole catalogue, but it can read a movie's description and "
-        "say whether it fits your tastes'). Set feasible=false (and say why in why_not) only if no classification "
-        "task reasonably serves the goal (e.g. 'write me a poem', 'what's the weather'). task_name: 2 to 4 words in Title Case ending in a role noun "
+        "labels, draft it and set reframed_from=\"\". Most other requests can be framed as classifying one text: "
+        "recommendation, filtering or \"based on my taste\" requests classify one item (e.g. a title with its synopsis "
+        "and genres) as recommend / skip, or into the user's preference categories; use the user's stated tastes in "
+        "the label definitions. Then in reframed_from say in one plain sentence what a small classifier can't do "
+        "directly and how this task helps instead (e.g. for 'recommend movies for my tastes': 'A small specialist "
+        "can't rank a whole catalogue, but it can read a movie's description and say whether it fits your tastes'). "
+        "Never set feasible=false for lack of data, a catalog or labels: Synapse searches for a dataset and generates "
+        "synthetic data when none fits. Set feasible=false (and say why in why_not) only if no text classification "
+        "can serve the request (e.g. generating long free text or images, 'what's the weather'). task_name: 2 to 4 words in Title Case ending in a role noun "
         "(e.g. 'Spam Detector', 'Review Sentiment Classifier'). description: one sentence. labels: 2 to 20 short "
         "snake_case names with a one-sentence definition each; for a yes/no task use output_type=binary with "
         "exactly 2 labels and set positive_label to the one to detect (else positive_label=\"\"). "
         "search_queries: 3 to 5 short keyword queries (1 to 3 words) that would appear in the NAME of a matching "
-        "labeled dataset on the Hugging Face Hub (e.g. 'sms spam', 'sentiment', 'toxic comments'). web_query: one "
-        "web search query for a labeled dataset for this task. input_hint: what one input looks like, a few words.")
-    d = chat_json(llm, prompt, purpose="intake_task_draft", max_tokens=1200, response_format=DRAFT_SCHEMA)
+        "labeled dataset on the Hugging Face Hub (e.g. 'sms spam', 'sentiment', 'toxic comments'); include one query that is just the domain (e.g. 'anime', 'myanimelist'), since catalogs with genre or rating columns can be mapped onto the labels. web_query: one "
+        "web search query for a labeled dataset for this task. input_hint: what one input looks like, a few words. "
+        "preference_question: when the labels depend on this user's personal taste or rules (e.g. a recommender), one "
+        "friendly question asking what they like and dislike, with an example answer; else \"\"."
+        + (INSIST if insist else ""))
+    d = chat_json(llm, prompt, purpose="intake_task_draft" + ("_insist" if insist else ""), max_tokens=1200,
+                  response_format=DRAFT_SCHEMA)
     labels, seen = [], set()
     for lab in d.get("labels") or []:
         name = re.sub(r"[^a-z0-9_]+", "_", str(lab.get("name", "")).strip().lower()).strip("_")[:40]
@@ -226,7 +240,7 @@ def _is_text_classification(d: dict) -> bool:
 
 def _pick_columns(features: dict, rows: list[dict]) -> tuple[str | None, str | None, list[str] | None]:
     """Text column, label column, and the label names when the label is a ClassLabel (ints in the rows)."""
-    features = {k: f for k, f in features.items() if isinstance(f, dict)}   # list/Sequence columns aren't text or labels
+    features = {k: f for k, f in features.items() if isinstance(f, dict)}    # lists are Sequence columns: skip
     strings = [k for k, f in features.items() if f.get("_type") == "Value" and f.get("dtype") in ("string", "large_string")]
     label_col, names = None, None
     classlabels = [k for k, f in features.items() if f.get("_type") == "ClassLabel"]
@@ -250,7 +264,17 @@ def _pick_columns(features: dict, rows: list[dict]) -> tuple[str | None, str | N
 
 
 def inspect(d: dict) -> dict:
-    """Read a candidate's license, columns and first rows through the dataset viewer API."""
+    """Read a candidate's license, columns and first rows through the dataset viewer API. A candidate the
+    viewer describes in an unexpected shape is reported as unusable instead of failing the whole search."""
+    try:
+        return _inspect(d)
+    except Exception as exc:
+        return {"id": f"hf:{d['id']}", "kind": "hf", "name": d["id"], "url": f"{cfg()['hf_dataset_page']}/{d['id']}",
+                "license": license_of(d), "license_ok": False, "usable": False,
+                "reason": f"couldn't read its columns ({type(exc).__name__})"}
+
+
+def _inspect(d: dict) -> dict:
     did = d["id"]
     lic = license_of(d)
     out = {"id": f"hf:{did}", "kind": "hf", "name": did, "url": f"{cfg()['hf_dataset_page']}/{did}",
@@ -351,6 +375,223 @@ def synthetic_option(card: TaskCard) -> dict:
                    "test included, is then measured on synthetic data, and the report says so."}
 
 
+# ---- public APIs ----------------------------------------------------------------------------
+# Vetted APIs with a recorded license (`sourcing.apis` in config/datasets.yaml). Their items are real inputs with
+# no labels for the user's task, so the teacher labels them at build time and the report says so.
+TAG = re.compile(r"<[^>]+>")
+
+
+def _api_get(url: str, params: dict | None = None, timeout: float = 30, accept: str = "application/json") -> Any:
+    """GET with our User-Agent (both APIs ask for one); never sends the Hugging Face token to another host."""
+    for attempt in range(2):
+        r = httpx.get(url, params=params, timeout=timeout, follow_redirects=True,
+                      headers={"User-Agent": cfg()["user_agent"], "Accept": accept})
+        if r.status_code == 429 and not attempt:          # both APIs ask clients to back off on 429
+            time.sleep(min(float(r.headers.get("Retry-After") or 3), 10))
+            continue
+        r.raise_for_status()
+        return r.json()
+
+
+def _tvmaze_text(show: dict) -> str:
+    summary = re.sub(r"\s+", " ", TAG.sub(" ", show.get("summary") or "")).strip()
+    meta = ", ".join(x for x in (show.get("type"), show.get("language")) if x)
+    genres = ", ".join(show.get("genres") or [])
+    return (f"{show.get('name', '').strip()}" + (f" ({meta})" if meta else "") + (f". Genres: {genres}" if genres else "")
+            + (f". {summary}" if summary else ""))[:700]
+
+
+def fetch_tvmaze(spec: dict, filt: dict, n: int, max_pages: int | None = None) -> list[dict]:
+    """Shows from TVmaze's /shows index (250 ids a page), filtered by genre and language, paced under its rate
+    limit (at least 20 calls per 10 s per IP)."""
+    genre, lang = filt.get("genre") or "", (filt.get("language") or "").lower()
+    out: list[dict] = []
+    for page in range(max_pages or spec["max_pages"]):
+        try:
+            shows = _api_get(f"{spec['url']}/shows", {"page": page})
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 404:          # past the last page
+                break
+            raise
+        for sh in shows:
+            if genre and genre not in (sh.get("genres") or []):
+                continue
+            if lang and (sh.get("language") or "").lower() != lang:
+                continue
+            if sh.get("name") and (sh.get("summary") or sh.get("genres")):
+                out.append({"id": f"tvmaze-{sh['id']}", "text": _tvmaze_text(sh), "url": sh.get("url")})
+        if len(out) >= n:
+            break
+        time.sleep(0.5)
+    return out[:n]
+
+
+def _wikidata_query(qid: str, n: int, ordered: bool) -> str:
+    # Most-linked items first (a popularity proxy) at build time; the preview skips the sort to stay fast.
+    inner = (f"SELECT ?item ?sl WHERE {{ ?item wdt:P31 wd:{qid} ; wikibase:sitelinks ?sl . FILTER(?sl >= 3) }}"
+             + (" ORDER BY DESC(?sl)" if ordered else "") + f" LIMIT {int(n)}")
+    return (f"SELECT ?item ?itemLabel ?desc (GROUP_CONCAT(DISTINCT ?gl; separator=\", \") AS ?genres) WHERE {{\n"
+            f"  {{ {inner} }}\n"
+            "  OPTIONAL { ?item schema:description ?desc FILTER(lang(?desc) = \"en\") }\n"
+            "  OPTIONAL { ?item wdt:P136 ?g . ?g rdfs:label ?gl FILTER(lang(?gl) = \"en\") }\n"
+            "  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\". }\n"
+            "} GROUP BY ?item ?itemLabel ?desc")
+
+
+def fetch_wikidata(spec: dict, filt: dict, n: int, ordered: bool = True) -> list[dict]:
+    cls = spec["classes"][filt["class"]]
+    res = _api_get(spec["url"], {"query": _wikidata_query(cls["qid"], n, ordered)}, timeout=70,
+                   accept="application/sparql-results+json")
+    out = []
+    for b in res["results"]["bindings"]:
+        label = b.get("itemLabel", {}).get("value", "")
+        if not label or re.fullmatch(r"Q\d+", label):        # no English label
+            continue
+        desc, genres = b.get("desc", {}).get("value", ""), b.get("genres", {}).get("value", "")
+        out.append({"id": "wd-" + b["item"]["value"].rsplit("/", 1)[-1], "url": b["item"]["value"],
+                    "text": (label + (f": {desc}" if desc else "") + (f". Genres: {genres}" if genres else ""))[:700]})
+    return out
+
+
+def fetch_api(src: dict, n: int, preview: bool = False) -> list[dict]:
+    spec = cfg()["apis"][src["source"]]
+    if src["source"] == "tvmaze":
+        return fetch_tvmaze(spec, src.get("filter") or {}, n, max_pages=4 if preview else None)
+    if src["source"] == "wikidata":
+        return fetch_wikidata(spec, src.get("filter") or {}, n, ordered=not preview)
+    raise SourcingError(f"Unknown API {src['source']}.")
+
+
+def _api_filter_ok(source: str, filt: dict) -> bool:
+    spec = cfg()["apis"].get(source)
+    if not spec or not isinstance(filt, dict):
+        return False
+    if source == "wikidata":
+        return filt.get("class") in spec["classes"]
+    return (filt.get("genre") or "") in ("", *spec["genres"]) and len(str(filt.get("language") or "")) <= 30
+
+
+def _api_schema() -> dict:
+    apis = cfg()["apis"]
+    return {"type": "json_schema", "json_schema": {"name": "api_choice", "strict": True, "schema": {
+        "type": "object", "additionalProperties": False, "required": ["picks"],
+        "properties": {"picks": {"type": "array", "items": {
+            "type": "object", "additionalProperties": False,
+            "required": ["source", "wikidata_class", "tvmaze_genre", "tvmaze_language", "fit", "why"],
+            "properties": {
+                "source": {"type": "string", "enum": list(apis)},
+                "wikidata_class": {"type": "string", "enum": [*apis["wikidata"]["classes"], ""]},
+                "tvmaze_genre": {"type": "string", "enum": [*apis["tvmaze"]["genres"], ""]},
+                "tvmaze_language": {"type": "string"},
+                "fit": {"type": "number"},
+                "why": {"type": "string"},
+            }}}}}}}
+
+
+def choose_apis(card: TaskCard, llm) -> list[dict]:
+    """Nemotron Ultra picks which vetted APIs can supply real inputs for the task, and how to filter them."""
+    apis = cfg()["apis"]
+    listing = "\n".join(f"- {k}: {v['name']}, {v['covers']}" for k, v in apis.items())
+    classes = ", ".join(f"{k} ({v['label']})" for k, v in apis["wikidata"]["classes"].items())
+    prompt = (
+        f"Task: {card.task_name}. {card.description}\nLabels: {', '.join(lab.name for lab in card.labels)}\n\n"
+        f"Public APIs that return real items (no labels; a teacher model labels them for the task):\n{listing}\n"
+        f"Wikidata classes: {classes}.\nTVmaze genres: {', '.join(apis['tvmaze']['genres'])}.\n\n"
+        "Pick the APIs (up to 2) whose items are the kind of input this task classifies, e.g. anime or TV shows for "
+        "a show recommender. None if no API returns that kind of item. For wikidata set wikidata_class; for tvmaze "
+        "optionally set tvmaze_genre (e.g. Anime) and tvmaze_language (e.g. Japanese, or \"\" for all); leave the "
+        "other source's fields \"\". fit from 0 to 1, and one sentence why.")
+    res = chat_json(llm, prompt, purpose="intake_api_choice", max_tokens=600, response_format=_api_schema())
+    out, seen = [], set()
+    for p in res.get("picks", []):
+        src = p.get("source")
+        filt = ({"class": p.get("wikidata_class")} if src == "wikidata" else
+                {"genre": p.get("tvmaze_genre") or "", "language": (p.get("tvmaze_language") or "").strip()})
+        key = (src, tuple(sorted(filt.items())))
+        if src not in apis or key in seen or not _api_filter_ok(src, filt) or float(p.get("fit", 0)) < cfg()["min_fit"]:
+            continue
+        seen.add(key)
+        out.append({"source": src, "filter": filt, "fit": round(min(max(float(p["fit"]), 0), 1), 2),
+                    "why": str(p.get("why", ""))[:300]})
+    return sorted(out, key=lambda o: -o["fit"])[:2]
+
+
+def _api_name(source: str, filt: dict) -> str:
+    spec = cfg()["apis"][source]
+    if source == "wikidata":
+        return f"{spec['name']}: {spec['classes'][filt['class']]['label']}"
+    what = " ".join(x for x in (filt.get("language"), filt.get("genre")) if x)
+    return f"{spec['name']}: {what + ' ' if what else ''}shows"
+
+
+def teacher_name() -> str:
+    return config.models()[cfg()["teacher_labeling_role"]]["display_name"]
+
+
+def api_options(card: TaskCard, llm) -> tuple[list[dict], list[dict]]:
+    """Data options from the vetted APIs, each with a live preview of real items. Returns (options, rejected)."""
+    from backend.agents.data_agent import format_match
+    try:
+        picks = choose_apis(card, llm)
+    except Exception:
+        return [], []
+    opts, rejected = [], []
+    for p in picks:
+        spec = cfg()["apis"][p["source"]]
+        name = _api_name(p["source"], p["filter"])
+        try:
+            items = fetch_api(p, cfg()["api_sample_items"], preview=True)
+        except Exception as exc:
+            rejected.append({"name": name, "url": spec["page"], "license": spec["license"],
+                             "reason": f"the API didn't answer ({type(exc).__name__})"})
+            continue
+        if not items:
+            rejected.append({"name": name, "url": spec["page"], "license": spec["license"],
+                             "reason": "no items match the filter"})
+            continue
+        opts.append({"id": f"api:{p['source']}:{'-'.join(v for v in p['filter'].values() if v) or 'all'}",
+                     "kind": "api", "source": p["source"], "filter": p["filter"], "name": name, "url": spec["page"],
+                     "license": spec["license"], "license_ok": license_ok(spec["license"]), "usable": True,
+                     "fit": p["fit"], "why": p["why"], "labels": [lab.name for lab in card.labels], "gap_labels": [],
+                     "rows": cfg()["api_items_fetched"], "teacher": teacher_name(), "found_by": "public API registry",
+                     "samples": [{"text": it["text"][:300], "label": ""} for it in items[:3]],
+                     "format_match": format_match(card.sample_inputs, [{"text": it["text"]} for it in items])})
+    return [o for o in opts if o["license_ok"]], rejected
+
+
+TEACHER_SCHEMA_NAME = "teacher_labels"
+
+
+def teacher_label(card: TaskCard, items: list[dict], llm, emit: Emit) -> list[dict]:
+    """The teacher labels API items from the task card (spec 03 §1.2: bulk labeling with Nano, every call cached)."""
+    role, size = cfg()["teacher_labeling_role"], cfg()["teacher_batch"]
+    labels = [lab.name for lab in card.labels]
+    defs = "\n".join(f"- {lab.name}: {lab.definition}" for lab in card.labels)
+    schema = {"type": "json_schema", "json_schema": {"name": TEACHER_SCHEMA_NAME, "strict": True, "schema": {
+        "type": "object", "additionalProperties": False, "required": ["labels"],
+        "properties": {"labels": {"type": "array", "items": {
+            "type": "object", "additionalProperties": False, "required": ["i", "label"],
+            "properties": {"i": {"type": "integer"}, "label": {"type": "string", "enum": labels}}}}}}}}
+    batches = [items[i:i + size] for i in range(0, len(items), size)]
+
+    def one(b: int) -> list[dict]:
+        batch = batches[b]
+        prompt = (f"Task: {card.task_name}. {card.description}\nLabels:\n{defs}\n\nLabel every item below with "
+                  "exactly one label. Return JSON {\"labels\": [{\"i\": <item number>, \"label\": \"...\"}]}.\n\n"
+                  + "\n".join(f"{i}. {it['text'][:500]}" for i, it in enumerate(batch)))
+        try:
+            res = llm.chat(role, [{"role": "user", "content": prompt}], agent="Data", purpose=f"teacher_label_{b}",
+                           max_tokens=60 * len(batch) + 200, thinking=False, response_format=schema)
+            got = {int(x["i"]): x["label"] for x in res.json().get("labels", []) if x.get("label") in labels}
+        except Exception as exc:          # a failed batch is reported, not fatal
+            emit("Data", "data", f"Teacher labeling batch {b + 1} failed: {type(exc).__name__}")
+            return []
+        return [{"id": it["id"], "text": it["text"], "label": got[i]} for i, it in enumerate(batch) if i in got]
+
+    with ThreadPoolExecutor(4) as ex:
+        return [r for rows in ex.map(one, range(len(batches))) for r in rows]
+
+
 def find_datasets(card: TaskCard, draft: dict, llm) -> dict:
     """Search, inspect and rank datasets for a drafted task. Returns {options, rejected, searched}."""
     from backend.agents.data_agent import format_match
@@ -389,15 +630,25 @@ def find_datasets(card: TaskCard, draft: dict, llm) -> dict:
     rejected += [{"name": c["name"], "url": c["url"], "license": c["license"],
                   "reason": "inputs or labels don't match the task"}
                  for c in usable if c["name"] not in {p["name"] for p in picks}]
-    return {"options": picks + [synthetic_option(card)], "rejected": rejected,
+    apis, api_rejected = api_options(card, llm)
+    return {"options": picks + apis + [synthetic_option(card)], "rejected": rejected + api_rejected,
             "searched": {"hub_queries": draft.get("search_queries") or [], "web_query": draft.get("web_query") if web_ids else None,
-                         "candidates": len(pool)}}
+                         "candidates": len(pool), "apis": [o["name"] for o in apis]}}
 
 
 def data_source_from(option: dict) -> dict:
     """What the task card stores about the chosen option (only what the build needs to load it again)."""
     if option.get("kind") == "synthetic":
         return {"kind": "synthetic", "name": "Synthetic data from Nemotron"}
+    if option.get("kind") == "api":
+        source, filt = str(option.get("source", "")), option.get("filter") or {}
+        if not _api_filter_ok(source, filt):
+            raise SourcingError("Unknown data option.")
+        spec = cfg()["apis"][source]
+        if not license_ok(spec["license"]):
+            raise SourcingError(f"License \"{spec['license']}\" isn't on the allowlist.")
+        return {"kind": "api", "source": source, "filter": filt, "name": _api_name(source, filt), "url": spec["page"],
+                "license": spec["license"]}
     if option.get("kind") != "hf" or not DATASET_ID.fullmatch(str(option.get("name", ""))):
         raise SourcingError("Unknown data option.")
     if not license_ok(str(option.get("license", ""))):
@@ -498,6 +749,8 @@ def load_rows(card: TaskCard, llm, emit: Emit) -> tuple[list[dict], list[dict], 
                     "license_ok": True, "rows_used": len(rows), "is_synthetic": True, "citation": []}
         return rows, [], {"raw_rows": len(rows), "synthetic_only": True}, [src_info]
 
+    if src.get("kind") == "api":
+        return _load_api_rows(card, src, llm, emit)
     if src.get("kind") != "hf" or not DATASET_ID.fullmatch(str(src.get("name", ""))):
         raise SourcingError("Unknown data source on the task card.")
     lic = license_of(hub_info(src["name"]))
@@ -508,25 +761,67 @@ def load_rows(card: TaskCard, llm, emit: Emit) -> tuple[list[dict], list[dict], 
     lmap = src.get("label_map") or {}
     rows = [{"id": r["id"], "text": r["text"], "label": lmap[r["source_label"]]}
             for r in raw if r["text"].strip() and lmap.get(r["source_label"]) in labels]
-    counts = {lab: sum(r["label"] == lab for r in rows) for lab in labels}
-    gaps = [lab for lab, n in counts.items() if n < c["min_rows_per_label"]]
     emit("Data", "data", f"Kept {len(rows):,} of {len(raw):,} rows after mapping the dataset's labels onto the task's")
+    rows, gap_rows, gaps = _fill_gaps(card, rows, llm, emit)
+    sources = [{"name": src["name"], "url": src.get("url") or f"{c['hf_dataset_page']}/{src['name']}", "license": lic,
+                "license_ok": True, "rows_used": len(rows), "is_synthetic": False,
+                "citation": [f"{src['name']}, Hugging Face Hub, {src.get('url', '')}"]}]
+    info = {"raw_rows": len(raw), "kept_after_label_map": len(rows), "label_map": lmap, "gap_labels": gaps,
+            "config": src.get("config"), "splits_read": src.get("splits"),
+            "processing": [f"read from the Hugging Face dataset viewer, sampled across {', '.join(src.get('splits') or [])}",
+                           "mapped the dataset's labels onto the task's labels; unmapped labels dropped"]}
+    return rows, gap_rows, info, sources + _gap_source(gap_rows)
+
+
+def _fill_gaps(card: TaskCard, rows: list[dict], llm, emit: Emit) -> tuple[list[dict], list[dict], list[str]]:
+    """Labels with too few real rows get synthetic examples in the training set only; their few real rows are
+    dropped so a label isn't half real, half synthetic. Returns (real rows, gap rows, gap labels)."""
+    c = cfg()
+    counts = {lab.name: sum(r["label"] == lab.name for r in rows) for lab in card.labels}
+    gaps = [lab for lab, n in counts.items() if n < c["min_rows_per_label"]]
     gap_rows: list[dict] = []
     if gaps and llm is not None:
         emit("Data", "data", f"{len(gaps)} label(s) have under {c['min_rows_per_label']} real rows ({', '.join(gaps)}); "
              "filling them with synthetic examples in the training set only")
         gap_rows = generate_synthetic(card, gaps, c["synthetic_per_label"], llm, emit)
         rows = [r for r in rows if r["label"] not in gaps]
-    sources = [{"name": src["name"], "url": src.get("url") or f"{c['hf_dataset_page']}/{src['name']}", "license": lic,
-                "license_ok": True, "rows_used": len(rows), "is_synthetic": False,
-                "citation": [f"{src['name']}, Hugging Face Hub, {src.get('url', '')}"]}]
-    if gap_rows:
-        sources.append({"name": "synthetic gap fill (Nemotron Ultra)", "url": "generated",
-                        "license": "generated by Nemotron Ultra", "license_ok": True, "rows_used": len(gap_rows),
-                        "is_synthetic": True, "citation": []})
-    info = {"raw_rows": len(raw), "kept_after_label_map": len(rows), "label_map": lmap, "gap_labels": gaps,
-            "config": src.get("config"), "splits_read": src.get("splits")}
-    return rows, gap_rows, info, sources
+    return rows, gap_rows, gaps
+
+
+def _gap_source(gap_rows: list[dict]) -> list[dict]:
+    return [{"name": "synthetic gap fill (Nemotron Ultra)", "url": "generated", "license": "generated by Nemotron Ultra",
+             "license_ok": True, "rows_used": len(gap_rows), "is_synthetic": True, "citation": []}] if gap_rows else []
+
+
+def _load_api_rows(card: TaskCard, src: dict, llm, emit: Emit):
+    """Real items from a vetted API, labeled by the teacher (scores then measure agreement with the teacher)."""
+    c = cfg()
+    if not _api_filter_ok(src.get("source", ""), src.get("filter") or {}):
+        raise SourcingError("Unknown API source on the task card.")
+    spec = c["apis"][src["source"]]
+    if not license_ok(spec["license"]):
+        raise PermissionError(f"{spec['name']}: license \"{spec['license']}\" isn't on the allowlist")
+    if llm is None:
+        raise SourcingError("Teacher labeling needs the LLM client.")
+    emit("Data", "data", f"Reading up to {c['api_items_fetched']} items from {src['name']} (license {spec['license']})")
+    items = fetch_api(src, c["api_items_fetched"])
+    if not items:
+        raise SourcingError(f"{src['name']} returned no items.")
+    teacher = teacher_name()
+    emit("Data", "data", f"{teacher} is labeling {len(items):,} real items from the task card; scores then measure "
+         "agreement with this teacher, and the report says so")
+    rows = teacher_label(card, items, llm, emit)
+    counts = {lab.name: sum(r["label"] == lab.name for r in rows) for lab in card.labels}
+    emit("Data", "data", f"Teacher labels: " + ", ".join(f"{k} {v:,}" for k, v in counts.items()))
+    rows, gap_rows, gaps = _fill_gaps(card, rows, llm, emit)
+    sources = [{"name": src["name"], "url": spec["page"], "license": spec["license"], "license_ok": True,
+                "rows_used": len(rows), "is_synthetic": False, "labeled_by": f"teacher ({teacher})",
+                "citation": [spec["citation"]]}]
+    info = {"raw_rows": len(items), "teacher_labeled": len(rows), "teacher": teacher, "gap_labels": gaps,
+            "api": src["source"], "filter": src.get("filter"),
+            "processing": [f"read {len(items):,} items from {spec['name']} ({spec['url']})",
+                           f"labeled by the teacher ({teacher}) from the task card; scores measure agreement with it"]}
+    return rows, gap_rows, info, sources + _gap_source(gap_rows)
 
 
 def shuffle_split_synthetic(rows: list[dict], held_out_per_label: int, seed: int) -> tuple[list[dict], list[dict]]:

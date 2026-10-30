@@ -77,6 +77,7 @@ class SourceInfo(Schema):
     license_ok: bool
     rows_used: int
     is_synthetic: bool = False
+    labeled_by: str | None = None         # set when a teacher model labeled real, unlabeled items (public APIs)
     citation: list[str] = Field(default_factory=list)
 
 

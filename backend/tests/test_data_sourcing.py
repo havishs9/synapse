@@ -33,6 +33,16 @@ def test_pick_columns():
              "category": {"_type": "Value", "dtype": "string"}}
     rows = [{"body": "long message text here", "id": "a1", "category": c} for c in ("x", "y", "x")]
     assert ds._pick_columns(feats, rows) == ("body", "category", None)
+    feats["genres"] = [{"_type": "Value", "dtype": "string"}]          # a Sequence column comes back as a list
+    assert ds._pick_columns(feats, rows) == ("body", "category", None)
+
+
+def test_unreadable_candidate_does_not_fail_the_search(monkeypatch):
+    def boom(url, params=None, timeout=20):
+        raise ValueError("unexpected viewer response")
+    monkeypatch.setattr(ds, "_get", boom)
+    out = ds.inspect({"id": "someone/anime", "cardData": {"license": "mit"}})
+    assert out["usable"] is False and "ValueError" in out["reason"]
 
 
 def test_data_option_is_checked():
@@ -112,6 +122,76 @@ def test_build_on_synthetic_data_only(fixture_env, monkeypatch):
     assert "all synthetic" in (d / "report_card.md").read_text()
 
 
+def test_api_option_is_checked():
+    ok = ds.data_source_from({"kind": "api", "source": "wikidata", "filter": {"class": "anime_series"}})
+    assert ok["license"] == "cc0-1.0" and ok["name"] == "Wikidata: anime television series"
+    for bad in ({"source": "wikidata", "filter": {"class": "Q42"}}, {"source": "openlibrary", "filter": {}},
+                {"source": "tvmaze", "filter": {"genre": "NotAGenre"}}):
+        with pytest.raises(ds.SourcingError):
+            ds.data_source_from({"kind": "api", **bad})
+
+
+def test_teacher_labels_api_items():
+    class Res:
+        def __init__(self, text):
+            self.text = text
+
+        def json(self):
+            items = [line for line in self.text.split("\n") if line[:1].isdigit()]
+            return {"labels": [{"i": int(x.split(".")[0]), "label": "spam" if any(w in x for w in ("prize", "cash", "win", "free"))
+                                else "ham"} for x in items] + [{"i": 0, "label": "not_a_label"}]}
+
+    class LLM:
+        def chat(self, role, messages, **kw):
+            assert role == ds.cfg()["teacher_labeling_role"] and kw["response_format"]["type"] == "json_schema"
+            return Res(messages[0]["content"])
+
+    items = [{"id": f"x{i}", "text": t} for i, t in enumerate(SPAM + HAM)]
+    rows = ds.teacher_label(_custom_card(["spam", "ham"], binary=True), items, LLM(), lambda *a, **k: None)
+    assert len(rows) == len(items) and {r["label"] for r in rows} == {"spam", "ham"}
+    assert next(r for r in rows if r["text"] == SPAM[0])["label"] == "spam"
+
+
+def test_build_on_api_items(fixture_env, monkeypatch):
+    rng = random.Random(3)
+    items = [{"id": f"tv-{i}", "text": f"{rng.choice(SPAM if i % 2 else HAM)} #{i}"} for i in range(400)]
+    monkeypatch.setattr(ds, "fetch_api", lambda src, n, preview=False: items[:n])
+    monkeypatch.setattr(ds, "teacher_label", lambda card, its, llm, emit: [
+        {**it, "label": "spam" if any(w in it["text"] for w in ("prize", "cash", "win", "free", "click", "offer")) else "ham"}
+        for it in its])
+    card = ds.apply_option(_custom_card(["spam", "ham"], binary=True),
+                           {"kind": "api", "source": "tvmaze", "filter": {"genre": "", "language": ""}})
+    d = _build(card)
+    manifest = json.loads((d / "dataset_manifest.json").read_text())
+    src = manifest["sources"][0]
+    assert src["license"] == "cc-by-sa-4.0" and src["labeled_by"].startswith("teacher") and not src["is_synthetic"]
+    assert "agreement" in (d / "report_card.md").read_text()
+
+
+def test_infeasible_draft_is_redrafted_for_an_explicit_request(tmp_env, monkeypatch):
+    import backend.main as main
+    monkeypatch.setattr(product, "_llm_intake", lambda text, samples: {"build_request": True, "task_id": "none",
+                                                                       "intro": "", "questions": []})
+    monkeypatch.setattr(product, "_guard", lambda: None)
+    good = {"feasible": True, "why_not": "", "task_name": "TV Show Recommender", "description": "Recommend shows.",
+            "output_type": "binary", "labels": [{"name": "recommend", "definition": "fits"}, {"name": "skip", "definition": "no"}],
+            "positive_label": "recommend", "search_queries": ["tv"], "web_query": "", "input_hint": "a show",
+            "preference_question": "Which shows do you love or avoid?"}
+    calls = []
+    monkeypatch.setattr(ds, "draft_task", lambda text, samples, llm, insist=False: calls.append(insist) or (
+        good if insist else {**good, "feasible": False, "why_not": "a recommender is retrieval"}))
+    monkeypatch.setattr(ds, "find_datasets", lambda card, d, llm: {
+        "options": [ds.synthetic_option(card)], "rejected": [], "searched": {"candidates": 0, "web_query": None}})
+    r = TestClient(main.app).post("/api/intake/start", json={"text": "Make a model that recommends TV shows I'd like"}).json()
+    assert calls == [False, True] and r["custom"]
+    # The preference question leads the conversational questions; the reply becomes the task-description note.
+    assert r["ask"].split("\n- ")[1].startswith(good["preference_question"]) and r["reply_note"] is True
+    out = TestClient(main.app).post("/api/intake/card", json={
+        "task_id": r["task_id"], "card": r["card"], "data_option": r["data_options"][0], "reply_note": True,
+        "reply": "I love slow-burn mysteries, skip horror. About 10k a month."}).json()
+    assert "slow-burn mysteries" in out["card"]["description"] and out["card"]["monthly_volume"] == 10_000
+
+
 def test_custom_intake(tmp_env, monkeypatch):
     import backend.main as main
     monkeypatch.setattr(product, "_llm_intake", lambda text, samples: {"task_id": "none", "intro": "", "questions": []})
@@ -139,6 +219,26 @@ def test_custom_intake(tmp_env, monkeypatch):
     bad = {**body, "data_option": {**hf, "license": "cc-by-nc-4.0"}}
     assert c.post("/api/intake/card", json=bad).status_code == 400
     assert c.post("/api/intake/card", json={**body, "card": {**r["card"], "task_id": "procurement2"}}).status_code == 400
+
+
+def test_explicit_model_request_is_not_sent_to_chat(tmp_env, monkeypatch):
+    """Nemotron sometimes reads "create a model for X" as a question; an explicit request still goes to intake,
+    and a task with no fitting dataset is offered synthetic data."""
+    import backend.main as main
+    monkeypatch.setattr(product, "_llm_intake", lambda text, samples: {"build_request": False, "task_id": "none",
+                                                                       "intro": "", "questions": []})
+    monkeypatch.setattr(product, "_guard", lambda: None)
+    draft = {"feasible": True, "why_not": "", "task_name": "Anime Recommender", "description": "Recommend anime.",
+             "output_type": "binary", "labels": [{"name": "recommend", "definition": "fits my taste"},
+                                                 {"name": "skip", "definition": "doesn't"}],
+             "positive_label": "recommend", "search_queries": ["anime"], "web_query": "", "input_hint": "a title"}
+    monkeypatch.setattr(ds, "draft_task", lambda text, samples, llm: draft)
+    monkeypatch.setattr(ds, "find_datasets", lambda card, d, llm: {
+        "options": [ds.synthetic_option(card)], "rejected": [], "searched": {"candidates": 5, "web_query": None}})
+    c = TestClient(main.app)
+    r = c.post("/api/intake/start", json={"text": "Can you create a model for recommending me anime based on my taste"}).json()
+    assert r["custom"] and r["data_choice"] == "synthetic" and r["message"].startswith("I'll build an **Anime Recommender**")
+    assert c.post("/api/intake/start", json={"text": "What is a specialist?"}).json() == {"chat": True}
 
 
 @pytest.fixture

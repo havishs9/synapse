@@ -14,6 +14,7 @@ const ORDINAL: Record<string, number> = { first: 0, "1st": 0, second: 1, "2nd": 
 type Deps = {
   push: (m: Omit<Msg, "id">) => string;
   patch: (id: string, fn: (m: Msg) => Msg) => void;
+  remove: (id: string) => void;
 };
 
 /** The data option a reply names for a custom task ("synthetic", "the second one", a dataset name), if any. */
@@ -21,15 +22,16 @@ function named(options: DataOption[], text: string): DataOption | undefined {
   const t = text.toLowerCase();
   if (/synthetic|generate/.test(t)) return options.find((o) => o.kind === "synthetic");
   const ord = Object.keys(ORDINAL).find((w) => new RegExp(`\\b${w}\\b`).test(t));
-  if (ord) return options.filter((o) => o.kind === "hf")[ORDINAL[ord]];
-  return options.find((o) => o.kind === "hf" && (t.includes(o.name.toLowerCase()) || t.includes(o.name.split("/").pop()!.toLowerCase())));
+  const found = options.filter((o) => o.kind !== "synthetic");      // datasets and public-API sources
+  if (ord) return found[ORDINAL[ord]];
+  return found.find((o) => (t.includes(o.name.toLowerCase()) || t.includes(o.name.split("/").pop()!.toLowerCase())));
 }
 
 /** Intake as a conversation (spec 01 §2.2). The request gets a data message: what the dataset search found and the
  * training data to approve. Approval brings one message with the clarifying questions (at most 7, DECISION D5),
  * answered in a normal chat reply. The reply becomes an editable task card whose plan-change lines show what
  * each answer does to the build. */
-export function useIntake({ push, patch }: Deps) {
+export function useIntake({ push, patch, remove }: Deps) {
   const [busy, setBusy] = useState(false);
 
   const sampleRows = async (file?: File) => {
@@ -56,12 +58,16 @@ export function useIntake({ push, patch }: Deps) {
       try {
         const samples = await sampleRows(file);
         const r = await postJSON("/api/intake/start", { text, samples });
+        if (r.chat) {                     // Nemotron read it as a question, not a build request: answer in plain chat
+          remove(id);
+          return false;
+        }
         if (!r.task_id) {
           replace({ role: "assistant", kind: "text", content: r.message });
           return true;
         }
         replace({ role: "assistant", kind: "data", content: r.message, taskId: r.task_id, categories: r.categories,
-                  samples, replay: r.replay, ask: r.ask, dataStep: r.data_step, draftCard: r.card,
+                  samples, replay: r.replay, ask: r.ask, replyNote: r.reply_note, dataStep: r.data_step, draftCard: r.card,
                   dataOptions: r.data_options, dataChoice: r.data_choice, dataRejected: r.data_rejected });
         return true;
       } catch (e: any) {
@@ -88,14 +94,14 @@ export function useIntake({ push, patch }: Deps) {
         const chosen = option ?? options.find((o) => o.id === msg.dataChoice) ?? options[0];
         patch(msg.id, (m) => ({ ...m, answered: true, dataChoice: chosen?.id ?? m.dataChoice }));
         push({ role: "assistant", kind: "ask", content: msg.ask ?? "", taskId: msg.taskId, draftCard: msg.draftCard,
-               dataOption: chosen, samples: msg.samples, replay: msg.replay });
+               dataOption: chosen, samples: msg.samples, replay: msg.replay, replyNote: msg.replyNote });
         return true;
       }
       if (text.trim().endsWith("?")) return false;      // a question about the questions: answer it in chat
       setBusy(true);
       try {
-        const r = await postJSON("/api/intake/card", { task_id: msg.taskId, reply: text, samples: msg.samples ?? [],
-                                                       card: msg.draftCard, data_option: msg.dataOption });
+        const r = await postJSON("/api/intake/card", { task_id: msg.taskId, reply: text, reply_note: !!msg.replyNote,
+                                                       samples: msg.samples ?? [], card: msg.draftCard, data_option: msg.dataOption });
         patch(msg.id, (m) => ({ ...m, answered: true }));
         push({ role: "assistant", kind: "taskcard", content: r.ack ?? "", card: r.card, planChanges: r.plan_changes,
                taskId: msg.taskId, answers: r.answers, texts: {}, samples: msg.samples, replay: r.replay,

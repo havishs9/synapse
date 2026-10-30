@@ -413,3 +413,52 @@ demo task; results in `artifacts/demo/data_search/`. Nemotron spend $0.0074, 2 T
 So the demo trains on the vetted datasets in `config/datasets.yaml`, and intake says that instead of claiming the
 search found them. Found and fixed on the way: a dataset whose layout couldn't be read had no `url`/`license`, so
 building the left-out list raised `KeyError` and the whole search failed.
+
+## Specialist examples and custom intake (Havish, 2026-10-30)
+
+Checked on the public endpoint (`synapse-api`) and locally in replay mode:
+
+- **Support Ticket Router, cloud escalation.** Messages the TF-IDF stage isn't confident about go to Qwen3-Embedding-8B
+  (B-02). Measured on the endpoint: 2.4 s, 22.5 s and 30.0 s for three uncached messages; locally 3.3 to 5.8 s. 30.0 s
+  matches the build client's backoff (2+4+8+16 s), so predictions were waiting out retries. Fix: the serving client
+  times out after `PREDICT_LLM_TIMEOUT_S` (default 15 s) and retries once; if the escalation stage still fails, the
+  first stage's answer is returned with `escalation_unavailable: true` and the panel says so (checked by pointing
+  `NEBIUS_BASE_URL` at a closed port: 200 in 2 s instead of an error).
+- **Log Anomaly Detector, Compare.** Returned 503 "The task card for v1 isn't on this server": live v1 was built in
+  run `p2-logs-c`, which isn't in the demo snapshot (only `p2b-logs-d`). Both runs have the same task card (diffed)
+  and the same split counts (deterministic sealed split). Compare now falls back to another version's run of the same
+  specialist for the task card and the Nemotron baseline cost, and the projection's method text names that run.
+  Per-stage costs are taken only from the live version's own run. Improve for logs still needs `p2-logs-c`'s files.
+- **Custom intake: "create a model for recommending me anime".** Nemotron Ultra returned `build_request: false`, so
+  the request went to plain chat, which refused for lack of a catalog. Fixes: explicit "create/build/train a ...
+  model" requests always go to intake; the draft prompt frames recommendation tasks as recommend/skip classification
+  and never rejects a task for lack of data. A Hub dataset with a list-typed column crashed the search with a 500;
+  inspection now skips such columns and reports an unreadable candidate as rejected. Result: 5 candidates searched,
+  all rejected (licenses `unknown`/`cc`, or no label column), synthetic data offered.
+
+## Public APIs as a data source (Havish, 2026-10-30)
+
+Licenses read on the official pages on 2026-10-30:
+
+- **TVmaze API** (https://www.tvmaze.com/api): "Use of the TVmaze API is licensed by CC BY-SA ... as long as TVmaze is
+  properly credited as source and your usage complies with the ShareAlike provision." No key. Rate limit "at least 20
+  calls every 10 seconds per IP"; 429 above it. Our fetcher waits 0.5 s between pages and backs off once on 429.
+- **Wikidata** (https://www.wikidata.org/wiki/Wikidata:Licensing): structured data is CC0. Query service: 60 s query
+  limit, a descriptive User-Agent is required (we send `sourcing.user_agent`). All 10 class ids in
+  `sourcing.apis.wikidata.classes` checked against their English labels on query.wikidata.org. A most-linked-first
+  query for 600 films took 20 s; the chat preview skips the sort.
+- **Open Library**: not added. Its licensing page names no license ("does not assert any new copyright ... There may
+  be existing rights issues on some contributions"), and its API guidelines ask clients not to bulk download.
+
+Measured locally (live Nemotron, live APIs):
+
+- "Make a model that recommends TV shows I would like" was refused before ("a retrieval/generation task"). It now gets
+  one re-draft that must frame it as classification (recommend / skip). Intake offered TVmaze (fit 1.0) and Wikidata
+  television series (0.9) with live previews, plus synthetic data, and asked which shows the user loves or avoids.
+- Anime request with a stated taste: Wikidata anime television series gave 599 items, teacher-labeled by
+  Nemotron-3-Nano-30B-A3B in 35 s for $0.0038 (156 recommend / 443 skip). TVmaze (Anime genre, Japanese) gave 458
+  items in 73 s for $0.0051 (71 / 387). The Data agent then split them normally (sealed test 87 rows at the natural
+  ratio; "recommend" oversampled in training only). The teacher isn't fully consistent (Hellsing: skip, Hellsing
+  Ultimate: recommend), which is why the report labels these scores as agreement with the teacher.
+- Not yet checked: a full build on the AI Job worker (outbound access to api.tvmaze.com and query.wikidata.org from
+  the worker).

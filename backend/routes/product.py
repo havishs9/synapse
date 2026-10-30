@@ -179,16 +179,22 @@ def demo_data_message(card: TaskCard, step: dict) -> str:
     what = f"{d['rows']:,} labeled {unit}" if d.get("rows") else f"labeled {unit}"
     labels = ("normal or anomalous" if card.output_type == "binary" else f"{d['labels']} categories")
     found = s["summary"] + " So I'd use a dataset from our vetted list instead: " if s else "From our vetted list: "
-    return (f"I'll build a **{card.task_name}**. First, the training data. {found}**{d['name']}**, {what} "
+    return (f"I'll build {_a_bold(card.task_name)}. First, the training data. {found}**{d['name']}**, {what} "
             f"({labels}), {d['license']}. {d.get('about', '')}".rstrip() + "\n\nOK to train on it?")
 
 
-def ask_message(card: TaskCard) -> str:
+def _a_bold(name: str) -> str:
+    return f"{'an' if name[:1].lower() in 'aeiou' else 'a'} **{name}**"
+
+
+def ask_message(card: TaskCard, preference: str = "") -> str:
     """One message, at most 7 questions (DECISION D5), written as a conversation. The categories were settled in
-    the data step; whatever the reply doesn't cover keeps its default and stays editable on the task card."""
+    the data step; whatever the reply doesn't cover keeps its default and stays editable on the task card. A
+    personal task (a recommender) asks first what the user likes: the reply becomes the task-description note
+    the teacher and synthetic data follow."""
     binary = card.output_type == "binary"
     unit = "log windows" if card.input_type == "log_window" else "records"
-    qs = [f"Roughly how many {unit} a month?",
+    qs = ([preference] if preference else []) + [f"Roughly how many {unit} a month?",
           ("Which is worse for you: missing a real anomaly, or a false alarm?" if binary else
            "Do all the categories matter equally, or are some costlier to get wrong?"),
           f"Just the {'verdict' if binary else 'category'}, or with a short reason?",
@@ -199,11 +205,20 @@ def ask_message(card: TaskCard) -> str:
               f"${config.credit_budget_usd():.2f} of model calls), and you can change all of it on the task card.")
 
 
+# "Create / build / train a model that…": a build request even when Nemotron reads it as a question.
+EXPLICIT_BUILD = re.compile(r"\b(create|make|build|train|set up)\b.{0,40}\b(model|classifier|specialist|detector|"
+                            r"recommender|predictor)s?\b", re.I)
+
+
 def match_task_fallback(text: str) -> str | None:
     t = text.lower()
     scores = {k: sum(bool(re.search(rf"\b{w}", t)) for w in ws) for k, ws in KEYWORDS.items()}
     best = max(scores, key=scores.get)
     return best if scores[best] >= 2 else None      # one generic word ("message") isn't enough to pick a dataset
+
+
+def _a(noun: str) -> str:
+    return f"{'an' if noun[:1] in 'aeiou' else 'a'} {noun}"
 
 
 def _fmt_int(n: int) -> str:
@@ -254,8 +269,9 @@ def questions_for(card: TaskCard) -> list[dict]:
 INTAKE_SCHEMA = {
     "type": "json_schema", "json_schema": {"name": "intake", "strict": True, "schema": {
         "type": "object", "additionalProperties": False,
-        "required": ["task_id", "why", "intro", "questions"],
+        "required": ["build_request", "task_id", "why", "intro", "questions"],
         "properties": {
+            "build_request": {"type": "boolean"},
             "task_id": {"type": "string", "enum": [*DEMO_TASKS, "none"]},
             "why": {"type": "string"},
             "intro": {"type": "string"},
@@ -271,7 +287,11 @@ def _llm_intake(text: str, samples: list[str]) -> dict | None:
         "You are the intake step of Synapse, which builds small specialist models for repetitive classification "
         f"tasks. It can build from these vetted datasets today:\n{tasks}\n\nThe user wrote:\n\"\"\"{text[:2000]}\"\"\"\n"
         + (f"Sample rows they pasted:\n" + "\n".join(f"- {s[:200]}" for s in samples[:10]) + "\n" if samples else "")
-        + "\nPick the task_id only when the request is really about that data (same domain and labels); otherwise "
+        + "\nSet build_request to true only when the user asks to build, train or set up a model for a task of "
+        "their own; a question or conversation about Synapse or anything else is false (it goes to the main chat). "
+        "Asking for a model counts even when the task sounds hard or the user has no data yet (e.g. \"make a model "
+        "that recommends me anime\"): Synapse finds a dataset or generates synthetic data. "
+        "Pick the task_id only when the request is really about that data (same domain and labels); otherwise "
         "\"none\", and Synapse searches for a dataset for the user's own task. Write a one-sentence intro that says "
         "which task you'll build and that a few answers set the quality bar. Then rewrite each of these questions "
         "in plain, friendly words for this user's task, keeping its id and meaning (one sentence each):\n"
@@ -298,6 +318,8 @@ def intake_start(body: IntakeStartIn, user: User | None = Depends(current_user))
         out = _llm_intake(body.text, body.samples)
     except HTTPException:
         out = None
+    if out and out.get("build_request") is False and not body.samples and not EXPLICIT_BUILD.search(body.text):
+        return {"chat": True}         # a question, not a build request: the frontend answers it as normal chat
     task_id = (out or {}).get("task_id")
     if task_id not in DEMO_TASKS:
         task_id = None if out else match_task_fallback(body.text)
@@ -341,6 +363,8 @@ def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
     try:
         _guard()
         draft = data_sourcing.draft_task(body.text, samples, llm())
+        if not draft.get("feasible") and EXPLICIT_BUILD.search(body.text):
+            draft = data_sourcing.draft_task(body.text, samples, llm(), insist=True)
     except HTTPException as exc:
         return {"task_id": None, "source": "fallback", "questions": [], "message": f"{exc.detail} I can still build "
                 "the three demo tasks: " + "; ".join(TASK_BLURB.values()) + "."}
@@ -358,25 +382,31 @@ def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
     found = data_sourcing.find_datasets(card, draft, llm())
     options = found["options"]
     datasets = [o for o in options if o["kind"] == "hf"]
+    apis = [o for o in options if o["kind"] == "api"]
     lead = (draft.get("reframed_from") or "").strip()
     lead = (lead.rstrip(".") + ". ") if lead else ""
     if lead:
         lead += f"If that works for you, here's the plan for the {card.task_name}. "
     summary = search_summary(found["searched"], found["rejected"], len(datasets))
     labels = ", ".join(lab.name for lab in card.labels)
-    if datasets:
-        msg = (f"I'll build a **{card.task_name}** that sorts each input into: {labels}. First, the training data. "
-               f"{summary} Which should I train on? (Synthetic data from Nemotron is the fallback.)")
+    head = f"I'll build {_a_bold(card.task_name)} that sorts each input into: {labels}. First, the training data. {summary}"
+    if apis and not datasets:
+        msg = (f"{head} But {' and '.join(o['name'] for o in apis)} {'have' if len(apis) > 1 else 'has'} real items "
+               f"of this kind under an open license: {data_sourcing.teacher_name()} would label them for your task "
+               "(the report says so). Which should I train on? (Synthetic data from Nemotron is the fallback.)")
+    elif datasets:
+        msg = f"{head} Which should I train on? (Synthetic data from Nemotron is the fallback.)"
     else:
-        msg = (f"I'll build a **{card.task_name}** that sorts each input into: {labels}. First, the training data. "
-               f"{summary} So I'd generate synthetic training data with Nemotron instead; every score, the sealed "
+        msg = (f"{head} So I'd generate synthetic training data with Nemotron instead; every score, the sealed "
                "test included, would then be on synthetic data, and the report says so.\n\nOK to go with that?")
     qs = _reworded(questions_for(card), out)
+    pref = str(draft.get("preference_question") or "").strip()[:300]
     return {"task_id": card.task_id, "custom": True, "task_name": card.task_name, "source": "llm", "questions": qs,
             "categories": [lab.name for lab in card.labels], "card": card.model_dump(), "data_options": options,
             "data_choice": options[0]["id"], "data_rejected": found["rejected"][:10], "data_searched": found["searched"],
             "data_step": {"search": {**found["searched"], "summary": summary, "left_out": found["rejected"][:10]}},
-            "message": lead + msg, "ask": ask_message(card), "reframed_from": draft.get("reframed_from") or None,
+            "message": lead + msg, "ask": ask_message(card, pref), "reply_note": bool(pref),
+            "reframed_from": draft.get("reframed_from") or None,
             "samples_hint": "Paste 10 to 20 sample rows of your real data (labels not needed): the build checks how "
                             "well the dataset matches them, and synthetic examples copy their style.",
             "replay": False}
@@ -532,7 +562,8 @@ def apply_answers(card: TaskCard, answers: dict[str, Any], notes: dict[str, str]
     if notes.get("labels"):
         u["description"] = f"{card.description} User note: {notes['labels'][:500]}"
         change("labels", notes["labels"], "Your note is added to the task description the planner and teacher read; "
-               "categories still come from the dataset's label mapping")
+               + ("labels stay as defined" if card.task_id.startswith("custom_") else
+                  "categories still come from the dataset's label mapping"))
     elif binary:
         change("labels", "Use them", f"Positive case: {card.positive_definition}")
     else:
@@ -638,6 +669,7 @@ class IntakeCardIn(BaseModel):
     answers: dict[str, Any] = Field(default_factory=dict)      # question id → chosen option value
     texts: dict[str, str] = Field(default_factory=dict)        # question id → free-text answer
     reply: str | None = Field(default=None, max_length=4000)  # one free-text reply to the intake questions
+    reply_note: bool = False                                   # the reply also answers a preference question
     samples: list[str] = Field(default_factory=list, max_length=50)
 
 
@@ -671,6 +703,8 @@ def intake_card(body: IntakeCardIn, user: User | None = Depends(current_user)):
     if body.reply and body.reply.strip():
         said = parse_reply(body.reply, base)
         answers.update(said)
+        if body.reply_note and not notes:
+            notes["labels"] = body.reply.strip()
         ack = reply_ack(said, base)
     card, changes = apply_answers(base, answers, notes)
     if body.task_id in VETTED:
@@ -684,6 +718,9 @@ def intake_card(body: IntakeCardIn, user: User | None = Depends(current_user)):
         changes.insert(0, {"question": "data", "answer": src["name"], "change": (
             "Training, validation and the sealed test set are all synthetic; the report says so next to every score"
             if src["kind"] == "synthetic" else
+            f"Trains on real items from {src['name']} ({src['license']}), labeled by the teacher "
+            f"({data_sourcing.teacher_name()}) from this card; scores measure agreement with the teacher"
+            if src["kind"] == "api" else
             f"Trains on {src['name']} ({src['license']}); license checked again when the build starts"
             + ("; labels it lacks get synthetic training examples" if body.data_option.get("gap_labels") else ""))})
         card = card.model_copy(update={"plan_changes": [c["change"] for c in changes]})
@@ -723,6 +760,21 @@ def _run_files(run_id: str) -> tuple[TaskCard | None, dict, dict]:
     rc = json.loads((d / "report_card.json").read_text()) if (d / "report_card.json").exists() else {}
     rep = json.loads((d / "eval_report.json").read_text()) if (d / "eval_report.json").exists() else {}
     return card, rc, rep
+
+
+def _task_files(v, live) -> tuple[TaskCard | None, dict, dict, str]:
+    """Task card, report card and eval report for the live version, plus the run they came from. When the live
+    version's run isn't on this server (the demo snapshot ships one run per specialist), another version of the
+    same specialist supplies them: same task card, same deterministic sealed split, same Nemotron baseline."""
+    card, rc, rep = _run_files(live.run_id)
+    if card is not None:
+        return card, rc, rep, live.run_id
+    for rec in sorted(v.versions, key=lambda r: -r.version):
+        if rec.run_id != live.run_id:
+            card, rc, rep = _run_files(rec.run_id)
+            if card is not None and card.task_id == v.task_id:
+                return card, rc, rep, rec.run_id
+    return None, {}, {}, live.run_id
 
 
 # ---- compare -----------------------------------------------------------------------------
@@ -781,9 +833,10 @@ def compare(sid: str, body: CompareIn, user: User | None = Depends(current_user)
     _guard()
     v = _spec(sid, user)
     live = _live(v)
-    card, rc, rep = _run_files(live.run_id)
+    card, rc, rep, files_run = _task_files(v, live)
     if card is None:
         raise HTTPException(503, f"The task card for v{live.version} isn't on this server.")
+    sibling = files_run != live.run_id
     bundle = _meta(sid, live.version)
     labels = bundle["labels"]
     try:
@@ -792,7 +845,8 @@ def compare(sid: str, body: CompareIn, user: User | None = Depends(current_user)
     except InputError as exc:
         raise HTTPException(422, str(exc))
     with ThreadPoolExecutor(max_workers=2) as ex:      # both calls at the same time
-        f_spec = ex.submit(_specialist_call, sid, live.version, body.input, _stage_costs(rc, rep), bundle)
+        # Per-stage costs only from the live version's own run: candidate ids are reused across runs.
+        f_spec = ex.submit(_specialist_call, sid, live.version, body.input, {} if sibling else _stage_costs(rc, rep), bundle)
         f_ultra = ex.submit(_ultra, card, labels, body.input)
         try:
             spec_out = f_spec.result()
@@ -813,7 +867,9 @@ def compare(sid: str, body: CompareIn, user: User | None = Depends(current_user)
             "nemotron_per_1m_usd": base_1m, "specialist_per_1m_usd": spec_1m,
             "method": (f"cost per 1M predictions measured in the build (Nemotron Ultra on {rc.get('baseline', {}).get('n', 'the')} "
                        "sealed records; the specialist with its measured cascade split) × monthly volume × 12 ÷ 1M. "
-                       "Marginal cost: the shared Serverless endpoint's hourly cost is spread over all specialists."),
+                       "Marginal cost: the shared Serverless endpoint's hourly cost is spread over all specialists."
+                       + (f" The Nemotron baseline comes from run {files_run} (same task and sealed test set), because "
+                          f"v{live.version}'s own run {live.run_id} isn't on this server." if sibling else "")),
         }
     return {"specialist": {"name": f"{v.display_name} v{live.version}", **spec_out}, "nemotron": ultra_out,
             "projection": projection, "agree": ultra_out.get("label") == spec_out.get("label")}
