@@ -151,3 +151,27 @@ def test_worker_runs_a_queued_build_end_to_end(pg_queue, fixture_env, monkeypatc
     events = q.events_after(run_id, 0, limit=10000)
     lines = (fixture_env / "runs" / run_id / "events.jsonl").read_text().splitlines()
     assert len(events) == len(lines) and events[-1][1]["kind"] == "done"
+
+
+def test_quota_full_requeues_and_backs_off(monkeypatch):
+    from backend.builds import dispatcher
+    monkeypatch.setenv("TRAINING_BACKEND", "jobs")
+    monkeypatch.setenv("WORKER_TOTAL_BUDGET_USD", "6")
+    monkeypatch.setattr(dispatcher.queue, "worker_hours", lambda prefix="job:": 0.0)
+    monkeypatch.setattr(dispatcher.queue, "reap_stale", lambda: [])
+    claims, requeued = [{"run_id": "r1"}, {"run_id": "r2"}], []
+    monkeypatch.setattr(dispatcher.queue, "claim", lambda kind, run_id_like="%": claims.pop(0) if claims else None)
+    monkeypatch.setattr(dispatcher.queue, "requeue", lambda run_id, msg: requeued.append((run_id, msg)))
+
+    class Out:
+        returncode, stdout = 24, ""
+        stderr = ("Error: rpc error: code = ResourceExhausted desc = Quota limit exceeded.\n"
+                  "    compute.instance.count (limit 2, requested 3): Exceeded limit\n--env NEBIUS_API_KEY=secret\n")
+    monkeypatch.setattr(dispatcher.subprocess, "run", lambda *a, **k: Out())
+    monkeypatch.setattr(dispatcher, "_quota_until", 0.0)
+    dispatcher.tick()
+    assert requeued == [("r1", "Waiting for a free machine (Nebius compute quota is full)")]
+    assert claims == [{"run_id": "r2"}]                    # stopped claiming after the quota error
+    dispatcher.tick()                                      # within the back-off: nothing claimed
+    assert claims == [{"run_id": "r2"}]
+    assert "secret" not in dispatcher._error_summary(Out.stderr) and "compute.instance.count" in dispatcher._error_summary(Out.stderr)
