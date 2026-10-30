@@ -118,13 +118,17 @@ def draft_task(text: str, samples: list[str], llm) -> dict:
         "text-classification tasks (one short text in, one label out). The user wrote:\n"
         f'"""{text[:2000]}"""\n'
         + ("Sample inputs they pasted:\n" + "\n".join(f"- {s[:200]}" for s in samples[:10]) + "\n" if samples else "")
-        + "\nDraft the task. Set feasible=false (and say why in why_not) only if it isn't a classification of a "
-        "text input into a fixed set of labels. task_name: 2 to 4 words in Title Case ending in a role noun "
+        + "\nDraft the task. Most requests can be framed as classifying one text: recommendation, filtering or "
+        "\"based on my taste\" requests classify one item (e.g. a title with its synopsis and genres) as "
+        "recommend / skip, or into the user's preference categories; use the user's stated tastes in the label "
+        "definitions. Never set feasible=false for lack of data, a catalog or labels: Synapse searches for a "
+        "dataset and generates synthetic data when none fits. Set feasible=false (and say why in why_not) only if "
+        "no text classification can serve the request (e.g. generating long free text or images). task_name: 2 to 4 words in Title Case ending in a role noun "
         "(e.g. 'Spam Detector', 'Review Sentiment Classifier'). description: one sentence. labels: 2 to 20 short "
         "snake_case names with a one-sentence definition each; for a yes/no task use output_type=binary with "
         "exactly 2 labels and set positive_label to the one to detect (else positive_label=\"\"). "
         "search_queries: 3 to 5 short keyword queries (1 to 3 words) that would appear in the NAME of a matching "
-        "labeled dataset on the Hugging Face Hub (e.g. 'sms spam', 'sentiment', 'toxic comments'). web_query: one "
+        "labeled dataset on the Hugging Face Hub (e.g. 'sms spam', 'sentiment', 'toxic comments'); include one query that is just the domain (e.g. 'anime', 'myanimelist'), since catalogs with genre or rating columns can be mapped onto the labels. web_query: one "
         "web search query for a labeled dataset for this task. input_hint: what one input looks like, a few words.")
     d = chat_json(llm, prompt, purpose="intake_task_draft", max_tokens=1200, response_format=DRAFT_SCHEMA)
     labels, seen = [], set()
@@ -219,6 +223,7 @@ def _is_text_classification(d: dict) -> bool:
 
 def _pick_columns(features: dict, rows: list[dict]) -> tuple[str | None, str | None, list[str] | None]:
     """Text column, label column, and the label names when the label is a ClassLabel (ints in the rows)."""
+    features = {k: f for k, f in features.items() if isinstance(f, dict)}    # lists are Sequence columns: skip
     strings = [k for k, f in features.items() if f.get("_type") == "Value" and f.get("dtype") in ("string", "large_string")]
     label_col, names = None, None
     classlabels = [k for k, f in features.items() if f.get("_type") == "ClassLabel"]
@@ -242,7 +247,17 @@ def _pick_columns(features: dict, rows: list[dict]) -> tuple[str | None, str | N
 
 
 def inspect(d: dict) -> dict:
-    """Read a candidate's license, columns and first rows through the dataset viewer API."""
+    """Read a candidate's license, columns and first rows through the dataset viewer API. A candidate the
+    viewer describes in an unexpected shape is reported as unusable instead of failing the whole search."""
+    try:
+        return _inspect(d)
+    except Exception as exc:
+        return {"id": f"hf:{d['id']}", "kind": "hf", "name": d["id"], "url": f"{cfg()['hf_dataset_page']}/{d['id']}",
+                "license": license_of(d), "license_ok": False, "usable": False,
+                "reason": f"couldn't read its columns ({type(exc).__name__})"}
+
+
+def _inspect(d: dict) -> dict:
     did = d["id"]
     lic = license_of(d)
     out = {"id": f"hf:{did}", "kind": "hf", "name": did, "url": f"{cfg()['hf_dataset_page']}/{did}",

@@ -105,11 +105,20 @@ TASK_BLURB = {
 }
 
 
+# "Create / build / train a model that…": a build request even when Nemotron reads it as a question.
+EXPLICIT_BUILD = re.compile(r"\b(create|make|build|train|set up)\b.{0,40}\b(model|classifier|specialist|detector|"
+                            r"recommender|predictor)s?\b", re.I)
+
+
 def match_task_fallback(text: str) -> str | None:
     t = text.lower()
     scores = {k: sum(bool(re.search(rf"\b{w}", t)) for w in ws) for k, ws in KEYWORDS.items()}
     best = max(scores, key=scores.get)
     return best if scores[best] else None
+
+
+def _a(noun: str) -> str:
+    return f"{'an' if noun[:1] in 'aeiou' else 'a'} {noun}"
 
 
 def _fmt_int(n: int) -> str:
@@ -180,6 +189,8 @@ def _llm_intake(text: str, samples: list[str]) -> dict | None:
         + (f"Sample rows they pasted:\n" + "\n".join(f"- {s[:200]}" for s in samples[:10]) + "\n" if samples else "")
         + "\nSet build_request to true only when the user asks to build, train or set up a model for a task of "
         "their own; a question or conversation about Synapse or anything else is false (it goes to the main chat). "
+        "Asking for a model counts even when the task sounds hard or the user has no data yet (e.g. \"make a model "
+        "that recommends me anime\"): Synapse finds a dataset or generates synthetic data. "
         "Pick the task_id only when the request is really about that data (same domain and labels); otherwise "
         "\"none\", and Synapse searches for a dataset for the user's own task. Write a one-sentence intro that says "
         "which task you'll build and that a few answers set the quality bar. Then rewrite each of these questions "
@@ -207,7 +218,7 @@ def intake_start(body: IntakeStartIn, user: User | None = Depends(current_user))
         out = _llm_intake(body.text, body.samples)
     except HTTPException:
         out = None
-    if out and out.get("build_request") is False and not body.samples:
+    if out and out.get("build_request") is False and not body.samples and not EXPLICIT_BUILD.search(body.text):
         return {"chat": True}         # a question, not a build request: the frontend answers it as normal chat
     task_id = (out or {}).get("task_id")
     if task_id not in DEMO_TASKS:
@@ -271,11 +282,11 @@ def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
     datasets = [o for o in options if o["kind"] == "hf"]
     where = "Hugging Face" + (" and the web" if found["searched"].get("web_query") else "")
     if datasets:
-        msg = (f"I'll build a {card.task_name.lower()}. I searched {where} and found {len(datasets)} labeled "
+        msg = (f"I'll build {_a(card.task_name.lower())}. I searched {where} and found {len(datasets)} labeled "
                f"dataset{'s' if len(datasets) > 1 else ''} with an allowed license that fit{'s' if len(datasets) == 1 else ''}; "
                "pick the training data below (or synthetic data), then a few answers set the quality bar.")
     else:
-        msg = (f"I'll build a {card.task_name.lower()}. I searched {where} ({found['searched']['candidates']} candidates) "
+        msg = (f"I'll build {_a(card.task_name.lower())}. I searched {where} ({found['searched']['candidates']} candidates) "
                "but found no labeled dataset with an allowed license that fits, so I'll generate synthetic training "
                "data with Nemotron. A few answers set the quality bar.")
     qs = _reworded(questions_for(card), out)
@@ -519,6 +530,21 @@ def _run_files(run_id: str) -> tuple[TaskCard | None, dict, dict]:
     return card, rc, rep
 
 
+def _task_files(v, live) -> tuple[TaskCard | None, dict, dict, str]:
+    """Task card, report card and eval report for the live version, plus the run they came from. When the live
+    version's run isn't on this server (the demo snapshot ships one run per specialist), another version of the
+    same specialist supplies them: same task card, same deterministic sealed split, same Nemotron baseline."""
+    card, rc, rep = _run_files(live.run_id)
+    if card is not None:
+        return card, rc, rep, live.run_id
+    for rec in sorted(v.versions, key=lambda r: -r.version):
+        if rec.run_id != live.run_id:
+            card, rc, rep = _run_files(rec.run_id)
+            if card is not None and card.task_id == v.task_id:
+                return card, rc, rep, rec.run_id
+    return None, {}, {}, live.run_id
+
+
 # ---- compare -----------------------------------------------------------------------------
 class CompareIn(BaseModel):
     input: str = Field(max_length=200_000)
@@ -575,9 +601,10 @@ def compare(sid: str, body: CompareIn, user: User | None = Depends(current_user)
     _guard()
     v = _spec(sid, user)
     live = _live(v)
-    card, rc, rep = _run_files(live.run_id)
+    card, rc, rep, files_run = _task_files(v, live)
     if card is None:
         raise HTTPException(503, f"The task card for v{live.version} isn't on this server.")
+    sibling = files_run != live.run_id
     bundle = _meta(sid, live.version)
     labels = bundle["labels"]
     try:
@@ -586,7 +613,8 @@ def compare(sid: str, body: CompareIn, user: User | None = Depends(current_user)
     except InputError as exc:
         raise HTTPException(422, str(exc))
     with ThreadPoolExecutor(max_workers=2) as ex:      # both calls at the same time
-        f_spec = ex.submit(_specialist_call, sid, live.version, body.input, _stage_costs(rc, rep), bundle)
+        # Per-stage costs only from the live version's own run: candidate ids are reused across runs.
+        f_spec = ex.submit(_specialist_call, sid, live.version, body.input, {} if sibling else _stage_costs(rc, rep), bundle)
         f_ultra = ex.submit(_ultra, card, labels, body.input)
         try:
             spec_out = f_spec.result()
@@ -607,7 +635,9 @@ def compare(sid: str, body: CompareIn, user: User | None = Depends(current_user)
             "nemotron_per_1m_usd": base_1m, "specialist_per_1m_usd": spec_1m,
             "method": (f"cost per 1M predictions measured in the build (Nemotron Ultra on {rc.get('baseline', {}).get('n', 'the')} "
                        "sealed records; the specialist with its measured cascade split) × monthly volume × 12 ÷ 1M. "
-                       "Marginal cost: the shared Serverless endpoint's hourly cost is spread over all specialists."),
+                       "Marginal cost: the shared Serverless endpoint's hourly cost is spread over all specialists."
+                       + (f" The Nemotron baseline comes from run {files_run} (same task and sealed test set), because "
+                          f"v{live.version}'s own run {live.run_id} isn't on this server." if sibling else "")),
         }
     return {"specialist": {"name": f"{v.display_name} v{live.version}", **spec_out}, "nemotron": ultra_out,
             "projection": projection, "agree": ultra_out.get("label") == spec_out.get("label")}

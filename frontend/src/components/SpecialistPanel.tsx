@@ -116,6 +116,8 @@ export function SpecialistPanel({ sid, onChanged, onClose, onImproveStarted }: {
             {result.answered_by && <p className="mt-1 text-xs text-ink-3">
               Answered by {stageName(result.answered_by)} ({result.answered_by}){result.escalated ? ": the cheaper stage wasn't confident, so it escalated" : ""}.</p>}
             {!result.answered_by && result.escalated && <p className="mt-1 text-xs text-ink-3">Escalated to the prompted LLM because the fast model wasn't confident.</p>}
+            {result.escalation_unavailable && <p className="mt-1 text-xs text-ink-3">
+              The fast model wasn't confident, but the next stage (a cloud call) didn't answer in time, so this is the fast model's answer. Run it again to retry.</p>}
           </div>
         )}
         {batch && (
@@ -140,7 +142,7 @@ export function SpecialistPanel({ sid, onChanged, onClose, onImproveStarted }: {
           onImproveStarted={(runId, replay) => onImproveStarted(runId, replay, spec.display_name)} />
       </div>
       {overlay === "report" && <ReportDrawer spec={spec} onClose={() => setOverlay(null)} />}
-      {overlay === "compare" && <CompareDialog spec={spec} sid={sid} initial={input || meta?.example_input || ""} onClose={() => setOverlay(null)} />}
+      {overlay === "compare" && <CompareDialog spec={spec} sid={sid} initial={input || meta?.example_input || (isLog ? LOG_TEMPLATE : "")} onClose={() => setOverlay(null)} />}
       {overlay === "use" && <UseDialog spec={spec} sid={sid} onClose={() => setOverlay(null)} onChanged={load} />}
     </div>
   );

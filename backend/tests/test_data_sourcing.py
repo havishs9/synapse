@@ -33,6 +33,16 @@ def test_pick_columns():
              "category": {"_type": "Value", "dtype": "string"}}
     rows = [{"body": "long message text here", "id": "a1", "category": c} for c in ("x", "y", "x")]
     assert ds._pick_columns(feats, rows) == ("body", "category", None)
+    feats["genres"] = [{"_type": "Value", "dtype": "string"}]          # a Sequence column comes back as a list
+    assert ds._pick_columns(feats, rows) == ("body", "category", None)
+
+
+def test_unreadable_candidate_does_not_fail_the_search(monkeypatch):
+    def boom(url, params=None, timeout=20):
+        raise ValueError("unexpected viewer response")
+    monkeypatch.setattr(ds, "_get", boom)
+    out = ds.inspect({"id": "someone/anime", "cardData": {"license": "mit"}})
+    assert out["usable"] is False and "ValueError" in out["reason"]
 
 
 def test_data_option_is_checked():
@@ -139,6 +149,26 @@ def test_custom_intake(tmp_env, monkeypatch):
     bad = {**body, "data_option": {**hf, "license": "cc-by-nc-4.0"}}
     assert c.post("/api/intake/card", json=bad).status_code == 400
     assert c.post("/api/intake/card", json={**body, "card": {**r["card"], "task_id": "procurement2"}}).status_code == 400
+
+
+def test_explicit_model_request_is_not_sent_to_chat(tmp_env, monkeypatch):
+    """Nemotron sometimes reads "create a model for X" as a question; an explicit request still goes to intake,
+    and a task with no fitting dataset is offered synthetic data."""
+    import backend.main as main
+    monkeypatch.setattr(product, "_llm_intake", lambda text, samples: {"build_request": False, "task_id": "none",
+                                                                       "intro": "", "questions": []})
+    monkeypatch.setattr(product, "_guard", lambda: None)
+    draft = {"feasible": True, "why_not": "", "task_name": "Anime Recommender", "description": "Recommend anime.",
+             "output_type": "binary", "labels": [{"name": "recommend", "definition": "fits my taste"},
+                                                 {"name": "skip", "definition": "doesn't"}],
+             "positive_label": "recommend", "search_queries": ["anime"], "web_query": "", "input_hint": "a title"}
+    monkeypatch.setattr(ds, "draft_task", lambda text, samples, llm: draft)
+    monkeypatch.setattr(ds, "find_datasets", lambda card, d, llm: {
+        "options": [ds.synthetic_option(card)], "rejected": [], "searched": {"candidates": 5, "web_query": None}})
+    c = TestClient(main.app)
+    r = c.post("/api/intake/start", json={"text": "Can you create a model for recommending me anime based on my taste"}).json()
+    assert r["custom"] and r["data_choice"] == "synthetic" and r["message"].startswith("I'll build an anime")
+    assert c.post("/api/intake/start", json={"text": "What is a specialist?"}).json() == {"chat": True}
 
 
 @pytest.fixture

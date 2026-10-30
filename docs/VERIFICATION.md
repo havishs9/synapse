@@ -365,3 +365,25 @@ Checked against `nebius` CLI 0.12.296 (`nebius ai endpoint create --help`) on th
 - `--auth none` is the default (set explicitly); `--dry-run` validates without creating (`DRY_RUN=1 make deploy`).
 - `--env-secret` reads values from MysteryBox, and `--volume s3://BUCKET:/path` mounts Object Storage. Neither is used yet; secrets go in as `--env` values, which project members can read in the endpoint spec.
 - Platform, preset and disk are read from `config/pricing.yaml` (`cpu-d3`, `2vcpu-8gb`, 40 GiB), so cost-per-1M figures use the hourly rate of the endpoint that is actually deployed. Session 1's script used `4vcpu-16gb` while every recorded cost used `2vcpu-8gb`. The pricing formula now counts the 40 GiB disk, not the 20 GiB minimum (+$0.0019/h); runs before session 2 used 20 GiB.
+
+## Specialist examples and custom intake (Havish, 2026-10-30)
+
+Checked on the public endpoint (`synapse-api`) and locally in replay mode:
+
+- **Support Ticket Router, cloud escalation.** Messages the TF-IDF stage isn't confident about go to Qwen3-Embedding-8B
+  (B-02). Measured on the endpoint: 2.4 s, 22.5 s and 30.0 s for three uncached messages; locally 3.3 to 5.8 s. 30.0 s
+  matches the build client's backoff (2+4+8+16 s), so predictions were waiting out retries. Fix: the serving client
+  times out after `PREDICT_LLM_TIMEOUT_S` (default 15 s) and retries once; if the escalation stage still fails, the
+  first stage's answer is returned with `escalation_unavailable: true` and the panel says so (checked by pointing
+  `NEBIUS_BASE_URL` at a closed port: 200 in 2 s instead of an error).
+- **Log Anomaly Detector, Compare.** Returned 503 "The task card for v1 isn't on this server": live v1 was built in
+  run `p2-logs-c`, which isn't in the demo snapshot (only `p2b-logs-d`). Both runs have the same task card (diffed)
+  and the same split counts (deterministic sealed split). Compare now falls back to another version's run of the same
+  specialist for the task card and the Nemotron baseline cost, and the projection's method text names that run.
+  Per-stage costs are taken only from the live version's own run. Improve for logs still needs `p2-logs-c`'s files.
+- **Custom intake: "create a model for recommending me anime".** Nemotron Ultra returned `build_request: false`, so
+  the request went to plain chat, which refused for lack of a catalog. Fixes: explicit "create/build/train a ...
+  model" requests always go to intake; the draft prompt frames recommendation tasks as recommend/skip classification
+  and never rejects a task for lack of data. A Hub dataset with a list-typed column crashed the search with a 500;
+  inspection now skips such columns and reports an unreadable candidate as rejected. Result: 5 candidates searched,
+  all rejected (licenses `unknown`/`cc`, or no label column), synthetic data offered.

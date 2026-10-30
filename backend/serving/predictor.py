@@ -93,8 +93,16 @@ class Predictor:
         with_reason = self.meta.get("needs_reason", False) if with_reason is None else with_reason
         t0 = time.perf_counter()
         cascade = isinstance(self.model, CascadeH)
-        P = self._calibrate(self.model.predict_proba(texts))
-        stage = self.model.last_stage if cascade else None
+        unavailable = False
+        try:
+            P = self._calibrate(self.model.predict_proba(texts))
+            stage = self.model.last_stage if cascade else None
+        except Exception:
+            if not cascade:
+                raise
+            # The escalation stage (a cloud call) failed: answer from the first stage and say so.
+            P = self._calibrate(self.model.base_proba(texts))
+            stage, unavailable = np.zeros(len(texts), int), True
         ms = (time.perf_counter() - t0) * 1000 / max(len(texts), 1)
         out = []
         for i, (t, p) in enumerate(zip(texts, P)):
@@ -103,6 +111,8 @@ class Predictor:
                     "escalated": bool(cascade and stage[i] > 0)}
             if cascade:
                 item["answered_by"] = self.model.names[int(stage[i])]
+                if unavailable and self.model.escalated(p):
+                    item["escalation_unavailable"] = True
             if self.meta.get("positive"):
                 item["score"] = round(float(p[self.labels.index(self.meta["positive"])]), 4)
             if with_reason:
