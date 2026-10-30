@@ -12,7 +12,7 @@ Claude Code sessions: read this file, then work only on your own track's items.
 - Replay recordings of all three tasks are committed in `artifacts/demo/runs/` (`p2b-support-c`,
   `p2b-procurement-d`, `p2b-logs-d`; no raw HDFS lines; saved paths made relative), and the specialists in
   `artifacts/demo/specialists/`. `make replay` serves them with no dataset download.
-- The live Nebius endpoint serves the three specialists: https://port8000-b3arav7mmzek3n6.tunnel.applications.eu-west2.nebius.cloud
+- The live Nebius endpoint serves the three specialists: https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud
 
 ## 1. Contracts (agree before coding; change only together)
 
