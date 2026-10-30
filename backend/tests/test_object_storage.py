@@ -47,6 +47,19 @@ def test_version_upload_and_verified_download(store, tmp_env):
     assert registry.ensure_bundle("stored-spec", 1) == local and (local / "model.joblib").read_bytes() == b"model-bytes"
 
 
+def test_bundle_with_subfolder_downloads(store, tmp_env):
+    """Rung G bundles keep the model in model/: the download must create the subfolder."""
+    from backend.versions import registry
+    v = registry.get_or_create(card("Nested Spec"), user_id="u1")
+    src = _bundle(tmp_env)
+    (src / "model").mkdir()
+    (src / "model" / "weights.bin").write_bytes(b"w")
+    registry.add_version(v, "run-1", src, {"primary": 0.9}, True, "first", "G-01")
+    local = registry.bundle_dir("nested-spec", 1)
+    shutil.rmtree(local)
+    assert (registry.ensure_bundle("nested-spec", 1) / "model" / "weights.bin").read_bytes() == b"w"
+
+
 def test_tampered_bundle_is_not_loaded(store, tmp_env):
     from backend.serving.server import create_app
     from backend.storage.objects import StorageError
