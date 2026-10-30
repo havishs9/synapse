@@ -6,8 +6,9 @@ committed file (source in brackets). Centerpieces (DECISION D7): compare mode an
 
 **Before recording:** clear the browser's local storage for the site (fresh sidebar); open the procurement
 specialist once so its model is loaded; check the compare call answers live (if Nemotron is down, the panel says
-"cached", which is fine to show but say it). Check that the Voice Command Parser's **Run** answers on the public URL
-(it's a 0.6B model on the CPU endpoint); if it doesn't, show its Report instead and keep the same words.
+"cached", which is fine to show but say it). Warm up the Voice Command Parser: open it and **Run** one command a few minutes
+before recording (the first call after an endpoint restart takes about 82 s while the 0.6B model loads; later
+calls take 4 to 6 s, so cut the wait in editing). If it doesn't answer, show its Report instead and keep the same words.
 
 **Typed lines.** Intake is a conversation: you click the example, then type two replies. Type them exactly as
 below (or paste them): each matches the settings of the recorded build it replays, so the task card on screen is
