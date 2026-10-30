@@ -307,6 +307,16 @@ machine's home folder); improve runs now drop them.
 | Restart | `nebius ai endpoint restart`: healthy again after 7.8 min, same URL, a key created before the restart still valid (200) |
 | Old endpoint | `synapse` (`aiendpoint-e04txwn4spe6v76nes`) stopped, not billed for compute; delete with `nebius ai endpoint delete aiendpoint-e04txwn4spe6v76nes` |
 
+## Phase 3: public demo URL (Raj, 2026-10-30)
+
+| Item | Result |
+|---|---|
+| Endpoint on the PR #8 image | Before: the endpoint's route list had no intake, compare, corrections or improve routes (image from before #8). After `nebius ai endpoint restart`: those routes are present, so a restart pulls the new image under the same `synapse:main` tag. `/health` ok with 3 specialists; live versions procurement v3, support v2, logs v1 (after `make db-seed`) |
+| Vercel Git deploys | The deploys of #8 and #9 on main had failed (commit status), and the live site was an older deploy without rewrites: `/api/*`, `/v1/*`, `/health` returned Vercel's 404. Cause (inferred; the build logs need a Vercel login): the project's root directory is `frontend/`. Fix: `frontend/vercel.json` (PR #10); the next deploy succeeded |
+| Through https://synapse-red-ten.vercel.app/ | `/health`, `/api/app`, `/api/builds`, `/api/specialists`: 200. Procurement v3 "PURCHASE OF LAPTOP COMPUTERS AND DOCKING STATIONS" → IT (A-05, 8.3 ms model latency, 628 ms server wall). Compare on support v2 "My card still has not arrived, it has been two weeks" → card_arrival from both. SSE replay of the recorded procurement improve run streams through the Vercel proxy (`text/event-stream`, 16 events) |
+| Page load (headless Chromium, 1440 px) | Renders the sidebar with 3 specialists and the recorded builds; no page errors, no failed requests |
+| Sign-in | Off on the public site: the Vercel project has no `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`, and the endpoint runs with `AUTH_REQUIRED=false`, so visitors share the anonymous build allowance (TEAM_PLAN §6) |
+
 ## Spec conflicts and issues found
 
 0. (2026-10-29) `backend/tests/test_builds_api.py::test_cancel_retry_not_yet_and_unknown` fails when `frontend/dist` exists: `POST /api/builds/..%2F..%2Fetc/cancel` normalizes to `/etc/cancel`, which hits the SPA's GET catch-all and returns 405 instead of 404. No path traversal happens; the assertion assumes no built frontend. Left for Raj (his test, shared `main.py`). **Resolved (2026-10-30, Raj):** the build-queue PR (#4) replaced that test with `test_cancel_retry_need_the_queue`, which has no `..%2F` case; `make test` passes (75 passed, 5 Postgres-only skipped) with `frontend/dist` built.

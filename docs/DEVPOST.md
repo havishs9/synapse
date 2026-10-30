@@ -2,7 +2,7 @@
 
 Track: **Coding and Agentic Engineering**
 
-Links: demo URL _(Vercel, add after deploy)_ · repo https://github.com/havishs9/synapse · video _(YouTube, add after upload)_
+Links: demo URL https://synapse-red-ten.vercel.app/ · repo https://github.com/havishs9/synapse · video _(YouTube, add after upload)_
 
 ## Tagline
 

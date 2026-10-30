@@ -61,7 +61,7 @@ Split between Raj (backend platform) and Havish (product, frontend, hosting, dem
 - [x] [Havish] Agent lanes, tournament bracket, budget meter — `TrainingExtras.tsx`
 - [x] [Havish] UI polish pass against file 01 section 2.11, with screenshots — `docs/screenshots/` (light, dark, 390 px mobile); `make screenshots` is the frontend smoke test (spec 05 §4); Phase 1 notes fixed (build button state, cost format, "Same sealed records: specialist vs Nemotron Ultra" label); logs "Try a template example" built from event templates and labeled
 - [x] Replay mode with recorded runs for both showcase tasks committed to the repo — all three tasks in `artifacts/demo/runs/` (2026-10-28), served by `make replay`; saved paths made relative
-- [~] [Havish] Public demo URL (frontend on Vercel, API on the Nebius endpoint) — `vercel.json` and `VITE_API_BASE_URL` support done; still needs Havish's Vercel login/project link and `CORS_ORIGINS` with the Vercel URL on the endpoint (Raj redeploys)
+- [x] [Havish, Raj] Public demo URL (frontend on Vercel, API on the Nebius endpoint) — https://synapse-red-ten.vercel.app/ (2026-10-30). Git deploys of main had failed because the Vercel project's root directory is `frontend/`, where the root `vercel.json` isn't read; `frontend/vercel.json` (PR #10) carries the rewrites. CORS isn't needed: the browser calls the Vercel origin and Vercel proxies `/api`, `/v1`, `/health`. Sign-in is off on the public site (no `VITE_SUPABASE_*` in the Vercel project), and `AUTH_REQUIRED=false`
 - [x] [Havish] Complete README and `docs/FEEDBACK.md` — README has placeholders for the demo URL and video link
 - [x] [Havish] `docs/DEVPOST.md` and `docs/VIDEO_SCRIPT.md`
 - [ ] [Havish] Record the 3-minute video (human)
@@ -74,7 +74,7 @@ Split between Raj (backend platform) and Havish (product, frontend, hosting, dem
   - [x] v1 → v2 through the gate: deploy (two recorded runs), reject and rollback (tests)
   - [x] Per-specialist versioned routes and keys, cross-specialist 403 (Phase 2, VERIFICATION §4)
   - [x] Replay reproduces the three builds and two improve runs
-  - [ ] Public demo URL (Vercel link + `CORS_ORIGINS`)
+  - [x] Public demo URL: works (Raj, 2026-10-30; VERIFICATION "Phase 3: public demo URL")
   - [x] UI per spec 01 §2.11 (screenshots); builds list added to the sidebar per TEAM_PLAN §3.3
   - [~] README, VERIFICATION, FEEDBACK done; demo URL and video link still placeholders
   - [~] Tests: 64 pass; `test_builds_api.py::test_cancel_retry_not_yet_and_unknown` fails when `frontend/dist` exists (VERIFICATION, issue 0)
