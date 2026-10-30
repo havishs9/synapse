@@ -5,7 +5,7 @@ against NVIDIA Nemotron Ultra, then ships the cheapest specialist that passes yo
 
 ![Compare mode: Nemotron Ultra and the procurement specialist on the same record, with measured latency, cost and a yearly projection](docs/screenshots/compare-light.png)
 
-- **Live demo:** _Vercel URL goes here once deployed_ (API: the Nebius Serverless endpoint below)
+- **Live demo:** https://synapse-red-ten.vercel.app/ (API: the Nebius Serverless endpoint below)
 - **Video (3 min):** _YouTube link goes here_
 - Built for the Nebius x NVIDIA Global AI Hackathon, Coding and Agentic Engineering track. MIT licensed.
 
@@ -153,7 +153,7 @@ Live builds on your machine: `make demo-data` (downloads and prepares the datase
 | `frontend/.env.local`: `VITE_API_BASE_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_AUTH_ENABLED` | the hosted frontend |
 
 Full list with comments: `.env.example`. Deploy the endpoint with `make deploy` (`deploy/serverless/`); the
-frontend deploys to Vercel from `vercel.json`.
+frontend deploys to Vercel from `frontend/vercel.json` (the project's root directory is `frontend/`; the root `vercel.json` is the same config for a repo-root project).
 
 ## Limitations
 
