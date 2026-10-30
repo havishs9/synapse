@@ -12,7 +12,9 @@ Claude Code sessions: read this file, then work only on your own track's items.
 - Replay recordings of all three tasks are committed in `artifacts/demo/runs/` (`p2b-support-c`,
   `p2b-procurement-d`, `p2b-logs-d`; no raw HDFS lines; saved paths made relative), and the specialists in
   `artifacts/demo/specialists/`. `make replay` serves them with no dataset download.
-- The live Nebius endpoint serves the three specialists: https://port8000-b3arav7mmzek3n6.tunnel.applications.eu-west2.nebius.cloud
+- The live Nebius endpoint (`synapse-api`, since 2026-10-29) serves the three specialists and the API: https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud
+  (`VITE_API_BASE_URL`; Havish has it). It runs in live mode: `POST /api/builds` queues a real build on an AI Job,
+  so demo flows should send `"replay": true`.
 
 ## 1. Contracts (agree before coding; change only together)
 
@@ -91,7 +93,7 @@ Order matters; each step is usable on its own.
    Object Storage volume). Worker heartbeats; a stale heartbeat marks the build failed. Cancel between rounds;
    retry button. Events written to `build_events`; the stream reads from there. VERIFY and record: job pricing,
    job start time, service-account permissions.
-4. **Pre-built image** (**built 2026-10-29**: `Dockerfile`, `.github/workflows/image.yml` pushes `synapse:main` and
+4. **Pre-built image** (**done 2026-10-29**, endpoint `synapse-api` redeployed from it: `Dockerfile`, `.github/workflows/image.yml` pushes `synapse:main` and
    `synapse:<sha>`; one-time step for Raj: `bash scripts/setup_registry_ci.sh`; then the endpoint is recreated with
    `make deploy`, which gives it a **new URL**) in Nebius Container Registry for the endpoint and the workers (startup is ~10 min today,
    mostly `pip install`). Fix `_reload_remote` (imports a missing `backend.serving.sync`). The running endpoint was created with `RUNS_DIR=./runs`; `deploy.sh` now sets `./artifacts/demo/runs`, so replay on the endpoint needs this redeploy.
@@ -104,7 +106,7 @@ Order matters; each step is usable on its own.
    same dedupe / sealed split; unlabeled uploads get teacher labels from Nano; live Tavily + Hugging Face search
    with license check and format-match score; synthetic gap-filling reported separately. Havish builds the
    upload and approval UI against the routes Raj defines here (agree on them before step 6 starts).
-7. Update spec file 02 (Supabase and Object Storage replace SQLite; AI Jobs replace Sandboxes) and
+7. (**Done 2026-10-29**: spec file 02 §8.) Update spec file 02 (Supabase and Object Storage replace SQLite; AI Jobs replace Sandboxes) and
    `docs/VERIFICATION.md`.
 
 ## 3. Havish: product, frontend, hosting, demo
@@ -208,6 +210,10 @@ baseline stays at 300 sealed records (accuracy of the comparison first). The $17
 | All users' builds per day | $5.00 | `GLOBAL_DAILY_BUILD_BUDGET_USD` |
 | Public chat, compare, cascade escalations per day | $1.00 | `DEMO_DAILY_BUDGET_USD` |
 | Builds running at once | 2 overall, 1 per user (rate limit is shared) | `MAX_CONCURRENT_BUILDS`, `MAX_CONCURRENT_BUILDS_PER_USER` |
+
+**Compute quota.** The tenant allows 2 compute VMs at once (`compute.instance.count`). The endpoint uses one, so
+builds run one at a time on AI Jobs; a second waits in the queue ("Waiting for a free machine"). Raise the quota in
+the console (Quotas) for parallel builds.
 
 **Nebius AI Cloud ($25).** Rates from `config/pricing.yaml` (`docs/VERIFICATION.md` §3): endpoint 2 vCPU / 8 GB
 $0.0699/h; a 4 vCPU / 16 GB worker $0.1359/h.
