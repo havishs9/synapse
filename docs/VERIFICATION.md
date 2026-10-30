@@ -337,7 +337,8 @@ and adapters not committed). Built by scripts, not by the agent's tournament.
 | Same 300, Qwen3-0.6B without fine-tuning | exact match 0.000, intent 0.000, slot F1 0.040 (doesn't know this assistant's intent names) |
 | Serving | Merged model saved as bfloat16 (1.15 GB bundle, `model/` subfolder), loaded as float32 by `backend/serving/generative.py` on the endpoint. Published to Object Storage + Postgres as `voice-command-parser` v1 |
 | First call on the endpoint | 500: `ensure_bundle` didn't create the bundle's `model/` subfolder (every earlier bundle was flat). Fixed in PR #14 with a test |
-| Laptop CPU, bfloat16, through the server's predictor | 2.3 to 4.8 s per command (3 commands); endpoint latency: below once measured |
+| Laptop CPU, bfloat16, through the server's predictor | 2.3 to 4.8 s per command (3 commands) |
+| On the endpoint through Vercel (after the PR #14 image, 12:03) | Works: alarm_set / play_music / weather_query with correct slots. First call 82 s (downloads and loads the 1.15 GB bundle), then 4.2 to 5.8 s of model time per command (2 vCPU, float32). Procurement and support still 200 |
 
 ## Spec conflicts and issues found
 
