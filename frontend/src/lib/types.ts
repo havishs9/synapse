@@ -7,6 +7,15 @@ export type QuestionOption = { value: any; label: string };
 export type Question = { id: string; text: string; options: QuestionOption[]; default: any };
 export type PlanChange = { question: string; answer: string; change: string };
 
+/** A training-data choice for a custom task (backend/data_sourcing.py): a Hugging Face dataset or synthetic. */
+export type DataOption = {
+  id: string; kind: "hf" | "synthetic"; name: string; url?: string; license: string; rows?: number; why?: string;
+  fit?: number; found_by?: string; labels: string[]; gap_labels: string[]; label_map?: Record<string, string>;
+  text_column?: string; label_column?: string; samples?: { text: string; label: string }[];
+  format_match?: { score: number | null; explanation: string };
+};
+export type RejectedDataset = { name: string; url: string; license: string; reason: string };
+
 export type Msg = {
   id: string; role: "user" | "assistant"; content: string;
   kind?: "text" | "questions" | "taskcard" | "build" | "error";
@@ -15,6 +24,9 @@ export type Msg = {
   taskId?: string; questions?: Question[]; categories?: string[]; samplesHint?: string; samples?: string[];
   answers?: Record<string, any>; texts?: Record<string, string>; planChanges?: PlanChange[];
   answered?: boolean; replay?: boolean; started?: string;
+  // custom task: the drafted card and its data choices
+  draftCard?: any; dataOptions?: DataOption[]; dataChoice?: string; dataRejected?: RejectedDataset[];
+  dataOption?: DataOption;
 };
 
 export type Chat = { id: string; title: string; messages: Msg[]; updated: number };

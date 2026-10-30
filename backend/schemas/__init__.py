@@ -65,6 +65,7 @@ class TaskCard(Schema):
     sample_inputs: list[str] = Field(default_factory=list)
     window_spec: Optional[WindowSpec] = None
     dataset_key: Optional[str] = None          # registry key in config/datasets.yaml when public data is used
+    data_source: Optional[dict[str, Any]] = None   # live-sourced data when there's no registry key (data_sourcing.py)
     plan_changes: list[str] = Field(default_factory=list)   # "plan change" lines shown at intake
 
 

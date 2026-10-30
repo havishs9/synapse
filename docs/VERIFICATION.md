@@ -271,6 +271,20 @@ Snapshot notes: the live logs specialist (v1) came from run `p2-logs-c`, which i
 so and lets you pick v2. The improve report cards had copied the base run's absolute `metrics_path`s (another
 machine's home folder); improve runs now drop them.
 
+## Phase 3: live data sourcing (Havish, 2026-10-29)
+
+| Item | Result |
+|---|---|
+| Hugging Face Hub search (`/api/datasets?search=`) | PASS: matches dataset names only, so Ultra writes 1-3 word name queries. "sms spam" → 8 results with license tags |
+| Dataset viewer API (`/info`, `/first-rows`, `/rows`, max 100 rows a page) | PASS without a token; `codesignal/sms-spam-collection` fully read (5,572 rows) in about 3 s with 8 parallel pages |
+| Tavily search limited to huggingface.co | PASS: 7 dataset ids for "labeled SMS spam classification dataset" |
+| License check | Hub license tag vs the allowlist in `config/datasets.yaml`. Rejected in live runs: `unknown` (ucirvine/sms_spam), `gpl`, `cc-by-nc-nd-4.0`, `cc-by-nc-4.0`, `wtfpl` |
+| Intake, "Create a model that flags spam text messages" | PASS: task Spam Detector (spam/ham, binary); offered codesignal/sms-spam-collection (cc-by-4.0, fit 1.0, spam→spam, ham→ham) and shariul-islam/bengali-sms-smishing-dataset (mit, 0.85); a 0.3-fit OTP dataset is now hidden (`min_fit: 0.5`). About 11 s in all |
+| Data agent on the chosen dataset (no LLM) | PASS: 5,572 rows → 444 duplicates removed → 1,214 train / 404 val / 405 sealed / 106 holdback; manifest records the license, URL and label map |
+| Intake, coffee-app complaints (4 labels) | PASS: no allowed-license dataset fits (NC and unknown licenses, no label column) → synthetic is the only option; 30 Ultra examples for `payment_problems` read as real complaints. Live checks cost about $0.005 |
+| Ultra under `json_schema` | Issue found: Ultra sometimes fills `max_tokens` with whitespace, and the bad reply was cached, so the same request failed every time. Intake and sourcing calls now retry once uncached at temperature 0.4 (`data_sourcing.chat_json`). The keyword fallback matched "log" in "login"; now whole words |
+| Full builds offline (fake LLM) | `test_data_sourcing.py`: a Hub dataset with a synthetic gap-fill label (synthetic rows never in val or the sealed test) and an all-synthetic binary text task (report says every score is on synthetic data). No live custom build has been run yet |
+
 ## Spec conflicts and issues found
 
 0. (2026-10-29) `backend/tests/test_builds_api.py::test_cancel_retry_not_yet_and_unknown` fails when `frontend/dist` exists: `POST /api/builds/..%2F..%2Fetc/cancel` normalizes to `/etc/cancel`, which hits the SPA's GET catch-all and returns 405 instead of 404. No path traversal happens; the assertion assumes no built frontend. Left for Raj (his test, shared `main.py`).

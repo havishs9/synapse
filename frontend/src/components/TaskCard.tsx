@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Msg, Question } from "../lib/types";
+import type { DataOption, Msg, Question } from "../lib/types";
 import type { Intake } from "../lib/useIntake";
 import { fmtInt } from "../lib/api";
 
@@ -11,14 +11,19 @@ export function QuestionsMessage({ msg, intake }: { msg: Msg; intake: Intake }) 
   const [texts, setTexts] = useState<Record<string, string>>(msg.texts ?? {});
   const [samples, setSamples] = useState((msg.samples ?? []).join("\n"));
   const [showCats, setShowCats] = useState(false);
+  const [dataChoice, setDataChoice] = useState(msg.dataChoice);
   const done = !!msg.answered;
   const qs = (msg.questions ?? []).slice(0, 7);
 
   const submit = () => intake.answer(msg, answers, Object.fromEntries(Object.entries(texts).filter(([, v]) => v.trim())),
-                                     samples.split("\n").map((s) => s.trim()).filter(Boolean));
+                                     samples.split("\n").map((s) => s.trim()).filter(Boolean), dataChoice);
   return (
     <div>
       <p className="mb-3">{msg.content}</p>
+      {!!msg.dataOptions?.length && (
+        <DataChoice options={msg.dataOptions} rejected={msg.dataRejected ?? []} value={dataChoice} disabled={done}
+          onChange={setDataChoice} name={`data-${msg.id}`} />
+      )}
       <ol className="space-y-4">
         {qs.map((q: Question, i) => (
           <li key={q.id}>
@@ -59,6 +64,60 @@ export function QuestionsMessage({ msg, intake }: { msg: Msg; intake: Intake }) 
   );
 }
 
+/** Training data for a custom task: datasets found online (license-checked) or synthetic data from Nemotron. */
+function DataChoice({ options, rejected, value, disabled, onChange, name }: {
+  options: DataOption[]; rejected: { name: string; url: string; license: string; reason: string }[];
+  value?: string; disabled: boolean; onChange: (id: string) => void; name: string;
+}) {
+  const [showRejected, setShowRejected] = useState(false);
+  return (
+    <fieldset className="mb-4 min-w-0">
+      <legend className="mb-1.5 text-sm font-medium">Training data</legend>
+      <div className="space-y-2">
+        {options.map((o) => (
+          <label key={o.id} className={`block cursor-pointer rounded border p-3 text-sm transition-colors ${value === o.id ? "border-ink" : "border-border hover:bg-surface-2"}`}>
+            <div className="flex items-start gap-2">
+              <input type="radio" className="mt-1" name={name} checked={value === o.id} disabled={disabled} onChange={() => onChange(o.id)} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline gap-x-2">
+                  {o.url ? <a className="font-medium underline-offset-2 hover:underline" href={o.url} target="_blank" rel="noreferrer">{o.name}</a>
+                         : <span className="font-medium">{o.name}</span>}
+                  <span className="chip">{o.license}</span>
+                  {o.rows != null && <span className="text-xs text-ink-3 tabular-nums">{o.kind === "synthetic" ? "about " : ""}{o.rows.toLocaleString()} rows</span>}
+                </div>
+                {o.why && <p className="mt-1 text-ink-2">{o.why}</p>}
+                {o.kind === "hf" && <>
+                  {!!o.label_map && <p className="mt-1 text-xs text-ink-3">Labels: {Object.entries(o.label_map).map(([a, b]) => a === b ? a : `${a} → ${b}`).join(" · ")}</p>}
+                  {!!o.gap_labels.length && <p className="mt-0.5 text-xs text-ink-3">Not in this dataset, filled with synthetic examples: {o.gap_labels.join(", ")}</p>}
+                  {o.format_match?.score != null && <p className="mt-0.5 text-xs text-ink-3">Format match with your samples: {o.format_match.score.toFixed(2)}. {o.format_match.explanation}</p>}
+                  {!!o.samples?.length && (
+                    <ul className="mono mt-1.5 space-y-0.5 text-xs text-ink-2">
+                      {o.samples.map((x, i) => <li key={i} className="truncate"><span className="text-ink-3">[{x.label}]</span> {x.text}</li>)}
+                    </ul>
+                  )}
+                  {o.found_by && <p className="mt-1 text-xs text-ink-3">Found by {o.found_by}</p>}
+                </>}
+              </div>
+            </div>
+          </label>
+        ))}
+      </div>
+      {!!rejected.length && (
+        <div className="mt-1.5">
+          <button type="button" className="btn-ghost text-xs" onClick={() => setShowRejected((s) => !s)} aria-expanded={showRejected}>
+            {showRejected ? "Hide" : "Show"} {rejected.length} dataset{rejected.length > 1 ? "s" : ""} left out
+          </button>
+          {showRejected && (
+            <ul className="mt-1 space-y-0.5 text-xs text-ink-3">
+              {rejected.map((r) => <li key={r.name}><a className="hover:underline" href={r.url} target="_blank" rel="noreferrer">{r.name}</a>: {r.reason}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
+    </fieldset>
+  );
+}
+
 const METRIC_NAME: Record<string, string> = { macro_f1: "Macro-F1", recall_at_fpr: "Recall at a fixed false-positive rate", pr_auc: "PR-AUC", accuracy: "Accuracy" };
 
 /** The task card as an editable summary with plan-change lines and one primary button. */
@@ -87,7 +146,16 @@ export function TaskCardMessage({ msg, onBuild, onShowBuild, intake }: {
       <p className="mt-1 text-sm text-ink-2">{card.description}</p>
       <dl className="mt-3 grid grid-cols-[minmax(110px,auto)_1fr] items-center gap-x-4 gap-y-2 text-sm">
         <dt className="text-ink-3">{binary ? "Positive case" : "Categories"}</dt>
-        <dd>{binary ? card.positive_definition : `${card.labels.length} from the dataset`}</dd>
+        <dd>{binary ? card.positive_definition : `${card.labels.length}${card.data_source ? "" : " from the dataset"}`}</dd>
+        {card.data_source && <>
+          <dt className="text-ink-3">Training data</dt>
+          <dd>
+            {card.data_source.kind === "synthetic" ? "Synthetic, written by Nemotron Ultra"
+              : <a className="underline-offset-2 hover:underline" href={card.data_source.url} target="_blank" rel="noreferrer">{card.data_source.name}</a>}
+            <span className="ml-2 chip">{card.data_source.kind === "synthetic" ? "generated" : card.data_source.license}</span>
+            {card.data_source.kind === "synthetic" && <div className="mt-0.5 text-xs text-ink-3">Scores, the sealed test included, are measured on synthetic data</div>}
+          </dd>
+        </>}
         <dt className="text-ink-3">Metric</dt>
         <dd>
           <select className="input py-1 text-sm" disabled={locked} value={card.error_preference} aria-label="Which mistake is worse"

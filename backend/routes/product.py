@@ -21,7 +21,7 @@ import numpy as np
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
-from backend import config
+from backend import config, data_sourcing
 from backend.agents import evaluator_agent as ev
 from backend.auth import User, current_user, require_edit, require_view, uid
 from backend.candidates import CascadeH
@@ -95,7 +95,7 @@ def base_card(task_id: str) -> TaskCard:
 
 KEYWORDS = {
     "procurement": ["purchase", "procure", "spend", "contract", "invoice", "vendor", "categor", "buying", "expense"],
-    "hdfs_logs": ["log", "anomal", "hdfs", "server", "incident", "outage", "failure", "syslog"],
+    "hdfs_logs": [r"log(s|ging)?\b", "anomal", "hdfs", "server", "incident", "outage", "failure", "syslog"],
     "support_tickets": ["support", "ticket", "customer", "intent", "route", "routing", "helpdesk", "bank", "message"],
 }
 TASK_BLURB = {
@@ -107,7 +107,7 @@ TASK_BLURB = {
 
 def match_task_fallback(text: str) -> str | None:
     t = text.lower()
-    scores = {k: sum(w in t for w in ws) for k, ws in KEYWORDS.items()}
+    scores = {k: sum(bool(re.search(rf"\b{w}", t)) for w in ws) for k, ws in KEYWORDS.items()}
     best = max(scores, key=scores.get)
     return best if scores[best] else None
 
@@ -127,6 +127,7 @@ def questions_for(card: TaskCard) -> list[dict]:
     budgets = sorted({round(cap / 4, 2), round(cap / 2, 2), cap})
     q = [
         {"id": "labels", "text": (f"Is the positive case \"{pos.name}\": {pos.definition.lower()}?" if binary and pos else
+                                  f"I'll use these {len(card.labels)} categories. Do they fit?" if card.task_id not in DEMO_TASKS else
                                   f"I'll use the {len(card.labels)} categories from the dataset's label mapping. Do they fit?"),
          "options": [{"value": "keep", "label": "Yes, use them"}], "default": "keep"},
         {"id": "error_preference",
@@ -176,14 +177,14 @@ def _llm_intake(text: str, samples: list[str]) -> dict | None:
         "You are the intake step of Synapse, which builds small specialist models for repetitive classification "
         f"tasks. It can build from these vetted datasets today:\n{tasks}\n\nThe user wrote:\n\"\"\"{text[:2000]}\"\"\"\n"
         + (f"Sample rows they pasted:\n" + "\n".join(f"- {s[:200]}" for s in samples[:10]) + "\n" if samples else "")
-        + "\nPick the task_id whose data matches the request, or \"none\". Write a one-sentence intro that says "
+        + "\nPick the task_id only when the request is really about that data (same domain and labels); otherwise "
+        "\"none\", and Synapse searches for a dataset for the user's own task. Write a one-sentence intro that says "
         "which task you'll build and that a few answers set the quality bar. Then rewrite each of these questions "
         "in plain, friendly words for this user's task, keeping its id and meaning (one sentence each):\n"
         + "\n".join(f"- {q['id']}: {q['text']}" for q in questions_for(base_card("procurement"))))
     try:
-        res = llm().chat(MAIN_ROLE, [{"role": "user", "content": prompt}], agent="Planner", purpose="intake_questions",
-                         max_tokens=900, temperature=0.0, thinking=False, response_format=INTAKE_SCHEMA)
-        return res.json()
+        return data_sourcing.chat_json(llm(), prompt, agent="Planner", purpose="intake_questions", max_tokens=900,
+                                       response_format=INTAKE_SCHEMA)
     except Exception:
         return None
 
@@ -209,16 +210,18 @@ def intake_start(body: IntakeStartIn, user: User | None = Depends(current_user))
     if out:
         source = "llm"
     if task_id is None:
-        return {"task_id": None, "source": source, "questions": [],
-                "message": "I can build specialists from three vetted datasets today: "
-                           + "; ".join(TASK_BLURB.values()) + ". Building from your own uploaded data is "
-                           "coming next. Pick one of the examples, or describe one of these tasks."}
+        if config.app_mode() == "replay":
+            return {"task_id": None, "source": source, "questions": [],
+                    "message": "This server replays recorded builds, so it can only build the three demo tasks: "
+                               + "; ".join(TASK_BLURB.values()) + ". On a live server I'd search for a dataset for "
+                               "your task, or generate synthetic data."}
+        if not out:                   # Nemotron unreachable (or the daily demo budget is used up)
+            return {"task_id": None, "source": source, "questions": [],
+                    "message": "Nemotron is unreachable right now, so I can't draft a new task or search for its data. "
+                               "I can still build from the three vetted datasets: " + "; ".join(TASK_BLURB.values()) + "."}
+        return _custom_intake(body, out)
     card = base_card(task_id)
-    qs = questions_for(card)
-    llm_text = {q.get("id"): q.get("text") for q in (out or {}).get("questions", []) if isinstance(q, dict)}
-    for q in qs:
-        if source == "llm" and isinstance(llm_text.get(q["id"]), str) and 8 < len(llm_text[q["id"]]) < 300:
-            q["text"] = llm_text[q["id"]].strip()
+    qs = _reworded(questions_for(card), out if source == "llm" else None)
     intro = (out or {}).get("intro") if source == "llm" else None
     return {"task_id": task_id, "task_name": card.task_name, "source": source, "questions": qs,
             "categories": [l.name for l in card.labels],
@@ -227,6 +230,57 @@ def intake_start(body: IntakeStartIn, user: User | None = Depends(current_user))
             "samples_hint": "Paste 10 to 20 sample rows of your real data (labels not needed): models learn the shape "
                             "of the data they're trained on, so the build checks how well the dataset matches it.",
             "replay": config.app_mode() == "replay"}
+
+
+def _reworded(qs: list[dict], out: dict | None) -> list[dict]:
+    """Questions in Nemotron's wording for this user's task, where it wrote a usable sentence."""
+    llm_text = {q.get("id"): q.get("text") for q in (out or {}).get("questions", []) if isinstance(q, dict)}
+    for q in qs:
+        if isinstance(llm_text.get(q["id"]), str) and 8 < len(llm_text[q["id"]]) < 300:
+            q["text"] = llm_text[q["id"]].strip()
+    return qs
+
+
+def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
+    """A task outside the three demo datasets: Nemotron Ultra drafts the task, then data_sourcing searches the
+    Hugging Face Hub and the web for a labeled dataset with an allowed license; synthetic data is the fallback."""
+    samples = [x.strip() for x in body.samples if x.strip()][:20]
+    try:
+        _guard()
+        draft = data_sourcing.draft_task(body.text, samples, llm())
+    except HTTPException as exc:
+        return {"task_id": None, "source": "fallback", "questions": [], "message": f"{exc.detail} I can still build "
+                "the three demo tasks: " + "; ".join(TASK_BLURB.values()) + "."}
+    except Exception:
+        return {"task_id": None, "source": "fallback", "questions": [],
+                "message": "Nemotron is unreachable right now, so I can't draft a new task. I can still build the "
+                           "three demo tasks: " + "; ".join(TASK_BLURB.values()) + "."}
+    if not draft.get("feasible"):
+        return {"task_id": None, "source": "llm", "questions": [],
+                "message": f"I can't build that as a specialist: {draft.get('why_not') or 'it is not a classification task'}. "
+                           "Synapse builds small models that sort one text into a fixed set of labels, e.g. \"flag spam "
+                           "messages\" or \"sort product reviews by sentiment\"."}
+    card = data_sourcing.card_from_draft(draft, samples)
+    found = data_sourcing.find_datasets(card, draft, llm())
+    options = found["options"]
+    datasets = [o for o in options if o["kind"] == "hf"]
+    where = "Hugging Face" + (" and the web" if found["searched"].get("web_query") else "")
+    if datasets:
+        msg = (f"I'll build a {card.task_name.lower()}. I searched {where} and found {len(datasets)} labeled "
+               f"dataset{'s' if len(datasets) > 1 else ''} with an allowed license that fit{'s' if len(datasets) == 1 else ''}; "
+               "pick the training data below (or synthetic data), then a few answers set the quality bar.")
+    else:
+        msg = (f"I'll build a {card.task_name.lower()}. I searched {where} ({found['searched']['candidates']} candidates) "
+               "but found no labeled dataset with an allowed license that fits, so I'll generate synthetic training "
+               "data with Nemotron. A few answers set the quality bar.")
+    qs = _reworded(questions_for(card), out)
+    return {"task_id": card.task_id, "custom": True, "task_name": card.task_name, "source": "llm", "questions": qs,
+            "categories": [lab.name for lab in card.labels], "card": card.model_dump(), "data_options": options,
+            "data_choice": options[0]["id"], "data_rejected": found["rejected"][:10], "data_searched": found["searched"],
+            "message": msg,
+            "samples_hint": "Paste 10 to 20 sample rows of your real data (labels not needed): the build checks how "
+                            "well the dataset matches them, and synthetic examples copy their style.",
+            "replay": False}
 
 
 _MULT = {"k": 1e3, "thousand": 1e3, "m": 1e6, "mm": 1e6, "million": 1e6, "b": 1e9, "billion": 1e9}
@@ -301,7 +355,7 @@ def apply_answers(card: TaskCard, answers: dict[str, Any], notes: dict[str, str]
     elif binary:
         u.update(optimization_metric="pr_auc", fpr_target=None)
         change("error_preference", "Both equally", "Metric switched to PR-AUC, which weighs misses and false alarms "
-               "together (never plain accuracy on rare anomalies)")
+               "together (never plain accuracy on a rare positive class)")
     elif ep == "recall_first":
         u.update(optimization_metric="macro_f1",
                  thresholds=card.thresholds.model_copy(update={"per_class_floor": 0.30}))
@@ -381,19 +435,48 @@ def apply_answers(card: TaskCard, answers: dict[str, Any], notes: dict[str, str]
 
 class IntakeCardIn(BaseModel):
     task_id: str
+    card: dict | None = None                                   # custom task: the drafted card from /intake/start
+    data_option: dict | None = None                            # custom task: the chosen data option
     answers: dict[str, Any] = Field(default_factory=dict)      # question id → chosen option value
     texts: dict[str, str] = Field(default_factory=dict)        # question id → free-text answer
     samples: list[str] = Field(default_factory=list, max_length=50)
 
 
+def _custom_base(card: dict, option: dict) -> TaskCard:
+    """The drafted card sent back by the client, kept to what intake can produce, with the chosen data on it."""
+    try:
+        c = TaskCard.model_validate(card)
+    except Exception:
+        raise HTTPException(400, "Invalid task card.")
+    if not c.task_id.startswith("custom_") or c.input_type != "text" or c.output_type not in ("binary", "multiclass") \
+            or not 2 <= len(c.labels) <= 20:
+        raise HTTPException(400, "Invalid task card.")
+    try:
+        return data_sourcing.apply_option(c, option)
+    except data_sourcing.SourcingError as exc:
+        raise HTTPException(400, str(exc))
+
+
 @router.post("/intake/card")
 def intake_card(body: IntakeCardIn, user: User | None = Depends(current_user)):
-    if body.task_id not in DEMO_TASKS:
+    if body.task_id in DEMO_TASKS:
+        base = base_card(body.task_id)
+    elif body.card and body.data_option and config.app_mode() != "replay":
+        base = _custom_base(body.card, body.data_option)
+    else:
         raise HTTPException(404, "Unknown task.")
     texts = {k: v.strip() for k, v in body.texts.items() if isinstance(v, str) and v.strip()}
     notes = {"labels": texts.pop("labels")} if "labels" in texts else {}
     answers = {**body.answers, **_parse_text_answers(texts)}
-    card, changes = apply_answers(base_card(body.task_id), answers, notes)
+    card, changes = apply_answers(base, answers, notes)
+    if card.data_source:
+        src = card.data_source
+        changes.insert(0, {"question": "data", "answer": src["name"], "change": (
+            "Training, validation and the sealed test set are all synthetic; the report says so next to every score"
+            if src["kind"] == "synthetic" else
+            f"Trains on {src['name']} ({src['license']}); license checked again when the build starts"
+            + ("; labels it lacks get synthetic training examples" if body.data_option.get("gap_labels") else ""))})
+        card = card.model_copy(update={"plan_changes": [c["change"] for c in changes]})
     samples = [s.strip() for s in body.samples if s.strip()][:20]
     if samples:
         card = card.model_copy(update={"sample_inputs": samples})

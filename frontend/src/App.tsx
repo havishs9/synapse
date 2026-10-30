@@ -76,7 +76,11 @@ function Workspace({ email, onSignOut }: { email?: string | null; onSignOut?: ()
         .sort((a, b) => b.updated - a.updated);
     });
   };
-  const push = (m: Omit<Msg, "id">, title?: string) => update((ms) => [...ms, { ...m, id: uid() }], title);
+  const push = (m: Omit<Msg, "id">, title?: string) => {
+    const id = uid();
+    update((ms) => [...ms, { ...m, id }], title);
+    return id;
+  };
   const patchLast = (fn: (m: Msg) => Msg) => update((ms) => ms.map((m, i) => (i === ms.length - 1 ? fn(m) : m)));
   const patch = (id: string, fn: (m: Msg) => Msg) => update((ms) => ms.map((m) => (m.id === id ? fn(m) : m)));
 

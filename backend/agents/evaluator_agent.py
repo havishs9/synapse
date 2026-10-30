@@ -380,8 +380,13 @@ def real_vs_synthetic(card: TaskCard, run_dir: Path, model: Candidate, labels: l
     if not n_syn:
         return None
     out = {"synthetic_training_rows": n_syn, "real_training_rows": len(train) - n_syn}
-    val = load_split(run_dir / "val.jsonl")
-    out["real_validation"] = score_rows(card, model, val, labels, calibrator)[0]["primary"]
+    val = [r for r in load_split(run_dir / "val.jsonl") if not r.get("synthetic")]
+    if val:
+        out["real_validation"] = score_rows(card, model, val, labels, calibrator)[0]["primary"]
+    else:
+        out["real_validation"] = None
+        out["note"] = ("No real labeled data was available: training, validation and the sealed test set are all "
+                       "synthetic, so every score here is measured on synthetic data.")
     syn_path = run_dir / "synthetic_eval.jsonl"
     if syn_path.exists():
         syn = load_split(syn_path)

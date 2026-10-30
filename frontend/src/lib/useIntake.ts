@@ -8,7 +8,7 @@ const BUILD_INTENT = /\b(sort|categori[sz]e|classif|route|routing|flag|detect|la
 const MODEL_INTENT = /\b(create|make|train|need|want|new)\b.*\b(model|classifier|predictor)s?\b/i;
 
 type Deps = {
-  push: (m: Omit<Msg, "id">) => void;
+  push: (m: Omit<Msg, "id">) => string;
   patch: (id: string, fn: (m: Msg) => Msg) => void;
 };
 
@@ -29,32 +29,39 @@ export function useIntake({ push, patch }: Deps) {
     async handle(text: string, file?: File): Promise<boolean> {
       if (!BUILD_INTENT.test(text) && !MODEL_INTENT.test(text) && !file) return false;
       setBusy(true);
+      // A new task (not one of the demo datasets) searches Hugging Face and the web, which takes a while.
+      const id = push({ role: "assistant", kind: "text", content: "_Reading your request. If it's a new task, I'll search "
+                        + "Hugging Face and the web for a labeled dataset with an allowed license…_" });
+      const replace = (m: Omit<Msg, "id">) => patch(id, () => ({ ...m, id }));
       try {
         const samples = await sampleRows(file);
         const r = await postJSON("/api/intake/start", { text, samples });
         if (!r.task_id) {
-          push({ role: "assistant", kind: "text", content: r.message });
+          replace({ role: "assistant", kind: "text", content: r.message });
           return true;
         }
-        push({ role: "assistant", kind: "questions", content: r.message, taskId: r.task_id, questions: r.questions,
-               categories: r.categories, samplesHint: r.samples_hint, samples, replay: r.replay,
-               answers: Object.fromEntries(r.questions.map((q: any) => [q.id, q.default])) });
+        replace({ role: "assistant", kind: "questions", content: r.message, taskId: r.task_id, questions: r.questions,
+                  categories: r.categories, samplesHint: r.samples_hint, samples, replay: r.replay,
+                  answers: Object.fromEntries(r.questions.map((q: any) => [q.id, q.default])),
+                  draftCard: r.card, dataOptions: r.data_options, dataChoice: r.data_choice, dataRejected: r.data_rejected });
         return true;
       } catch (e: any) {
-        push({ role: "assistant", kind: "error", content: `Couldn't start intake: ${e.message}` });
+        replace({ role: "assistant", kind: "error", content: `Couldn't start intake: ${e.message}` });
         return true;
       } finally {
         setBusy(false);
       }
     },
     /** Answers submitted: build the task card. */
-    async answer(msg: Msg, answers: Record<string, any>, texts: Record<string, string>, samples: string[]) {
+    async answer(msg: Msg, answers: Record<string, any>, texts: Record<string, string>, samples: string[], dataChoice?: string) {
       setBusy(true);
       try {
-        const r = await postJSON("/api/intake/card", { task_id: msg.taskId, answers, texts, samples });
-        patch(msg.id, (m) => ({ ...m, answered: true, answers, texts, samples }));
+        const dataOption = msg.dataOptions?.find((o) => o.id === dataChoice);
+        const r = await postJSON("/api/intake/card", { task_id: msg.taskId, answers, texts, samples,
+                                                       card: msg.draftCard, data_option: dataOption });
+        patch(msg.id, (m) => ({ ...m, answered: true, answers, texts, samples, dataChoice }));
         push({ role: "assistant", kind: "taskcard", content: "", card: r.card, planChanges: r.plan_changes,
-               taskId: msg.taskId, answers, texts, samples, replay: r.replay });
+               taskId: msg.taskId, answers, texts, samples, replay: r.replay, draftCard: msg.draftCard, dataOption });
       } catch (e: any) {
         push({ role: "assistant", kind: "error", content: `Couldn't make the task card: ${e.message}` });
       } finally {
@@ -66,7 +73,8 @@ export function useIntake({ push, patch }: Deps) {
       const answers = { ...(msg.answers ?? {}), [field]: value };
       const texts = { ...(msg.texts ?? {}) };
       delete texts[field];              // the edited value replaces a free-text answer to the same question
-      const r = await postJSON("/api/intake/card", { task_id: msg.taskId, answers, texts, samples: msg.samples ?? [] });
+      const r = await postJSON("/api/intake/card", { task_id: msg.taskId, answers, texts, samples: msg.samples ?? [],
+                                                     card: msg.draftCard, data_option: msg.dataOption });
       patch(msg.id, (m) => ({ ...m, card: r.card, planChanges: r.plan_changes, answers, texts }));
     },
   };
