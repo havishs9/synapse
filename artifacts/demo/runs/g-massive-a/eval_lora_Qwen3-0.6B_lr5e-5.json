@@ -1,0 +1,18 @@
+{
+  "model": "lora_Qwen3-0.6B_lr5e-5",
+  "metrics": {
+    "n": 300,
+    "exact_match": 0.68,
+    "intent_accuracy": 0.8733333333333333,
+    "slot_precision": 0.7952218430034129,
+    "slot_recall": 0.7925170068027211,
+    "slot_f1": 0.7938671209540035,
+    "valid_json": 1.0
+  },
+  "display_name": "Qwen3-0.6B_lr5e-5 + LoRA (Token Factory fine-tune)",
+  "eval_device": "mps",
+  "eval_seconds": 112.39409112930298,
+  "latency_note": "batched evaluation on the laptop; serving latency is measured on the endpoint",
+  "sealed_sample": 300,
+  "created": 1793373466.045811
+}

@@ -1,0 +1,18 @@
+{
+  "model": "base_Qwen3-0.6B",
+  "metrics": {
+    "n": 300,
+    "exact_match": 0.0,
+    "intent_accuracy": 0.0,
+    "slot_precision": 0.03735632183908046,
+    "slot_recall": 0.04421768707482993,
+    "slot_f1": 0.04049844236760125,
+    "valid_json": 0.9933333333333333
+  },
+  "display_name": "Qwen3-0.6B, no fine-tune",
+  "eval_device": "mps",
+  "eval_seconds": 82.56718325614929,
+  "latency_note": "batched evaluation on the laptop; serving latency is measured on the endpoint",
+  "sealed_sample": 300,
+  "created": 1793367980.393148
+}

@@ -64,6 +64,8 @@ Split between Raj (backend platform) and Havish (product, frontend, hosting, dem
 - [x] [Havish, Raj] Public demo URL (frontend on Vercel, API on the Nebius endpoint) — https://synapse-red-ten.vercel.app/ (2026-10-30). Git deploys of main had failed because the Vercel project's root directory is `frontend/`, where the root `vercel.json` isn't read; `frontend/vercel.json` (PR #10) carries the rewrites. CORS isn't needed: the browser calls the Vercel origin and Vercel proxies `/api`, `/v1`, `/health`. Sign-in is off on the public site (no `VITE_SUPABASE_*` in the Vercel project), and `AUTH_REQUIRED=false`
 - [x] [Havish] Complete README and `docs/FEEDBACK.md` — README has placeholders for the demo URL and video link
 - [x] [Havish] `docs/DEVPOST.md` and `docs/VIDEO_SCRIPT.md`
+- [x] [Raj] Rung G (2026-10-30, added by the user on submission day): Qwen3-0.6B LoRA fine-tuned on Token Factory for voice command → intent + slots JSON (MASSIVE en-US); sealed exact match 0.680 vs Nemotron Ultra zero-shot 0.373 on the same 300 commands; served on the CPU endpoint as `voice-command-parser` (VERIFICATION "Rung G"). Built by scripts, not yet a rung the planner picks
+- [x] [Raj] Intake reframes non-classification requests into the closest buildable task instead of refusing (movie recommendations → Movie Taste Matcher); dataset search no longer fails on malformed Hub datasets (PR #13)
 - [ ] [Havish] Record the 3-minute video (human)
 - [~] [Both] Acceptance criteria check (file 05 section 5) — Havish's pass, 2026-10-29:
   - [x] Describe procurement → questions → task card → build with live Pareto: in replay (smoke test); live builds use the unchanged `POST /api/builds` (not re-run through the new UI this session)

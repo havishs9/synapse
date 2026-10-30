@@ -27,17 +27,17 @@ def bundle(name: str) -> None:
     """name: the adapter folder, e.g. Qwen3-0.6B_lr1e-4."""
     base = name.split("_lr")[0]
     import torch
-    from peft import PeftModel
     from transformers import AutoModelForCausalLM, AutoTokenizer
     sys.path.insert(0, str(ROOT / "scripts"))
-    from eval_lora_g import adapter_dir
+    from eval_lora_g import adapter_dir, merge_adapter
     d = run_dir()
     ev = json.loads((d / f"eval_lora_{name}.json").read_text())
     ultra = json.loads((d / "eval_ultra_zero_shot.json").read_text())
     man = json.loads((d / "dataset_manifest.json").read_text())
     bdir = ROOT / "data" / "models" / base
-    model = AutoModelForCausalLM.from_pretrained(bdir, dtype=torch.bfloat16)
-    model = PeftModel.from_pretrained(model, str(adapter_dir(name))).merge_and_unload()
+    model = AutoModelForCausalLM.from_pretrained(bdir, dtype=torch.float32)
+    merge_adapter(model, adapter_dir(name))       # in float32, then saved as bfloat16 (half the size)
+    model = model.to(torch.bfloat16)
     if OUT.exists():
         shutil.rmtree(OUT)
     (OUT / "model").mkdir(parents=True)

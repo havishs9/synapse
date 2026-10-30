@@ -53,6 +53,21 @@ Honest notes on these numbers:
 - The improve gains are small (+0.008, +0.003). The gate only asks "better on the same sealed set and every
   threshold met", so a smaller gain still deploys and any loss is rejected (tested: `backend/tests/test_product.py`).
 
+**Rung G: a fine-tuned small LLM, for output a classifier can't produce.** Voice-assistant commands → JSON with the
+intent and its slot values (Amazon MASSIVE en-US, 60 intents, 55 slot types; run `g-massive-a`). Qwen3-0.6B
+fine-tuned with LoRA on Token Factory (11,436 training commands, 2 epochs, 1,430 steps); the adapter is merged
+and the model is served on our CPU endpoint as the **Voice Command Parser**. Same 300 sealed commands for all three:
+
+| Model | Exact match (intent + every slot) | Intent accuracy | Slot F1 | Valid JSON | Cost per 1M commands |
+|---|---|---|---|---|---|
+| **Qwen3-0.6B + LoRA** (ours) | **0.680** | **0.873** | **0.794** | 1.000 | endpoint CPU time only |
+| Nemotron Ultra, zero-shot (intent and slot names in the prompt) | 0.373 | 0.807 | 0.490 | 1.000 | $591 (list price × measured tokens) |
+| Qwen3-0.6B, no fine-tune | 0.000 | 0.000 | 0.040 | 0.993 | |
+
+Built by `scripts/build_lora_g.py` / `eval_lora_g.py` / `publish_lora_g.py`, outside the agent's tournament. Two
+learning rates were trained; 5e-5 was picked on validation loss (0.0017 vs 0.0023) before the sealed test was run.
+The first attempt (sequence packing on, 18 steps) diverged and is kept in the run folder as `attempt1_*`.
+
 ## How it works
 
 ```mermaid
@@ -109,7 +124,8 @@ per-specialist key that is stored hashed, shown once, and rejected on any other 
 | Specialist hosting | **Nebius Serverless** CPU endpoint (cpu-d3, 2 vCPU / 8 GB) | One shared server for every specialist's routes and keys | Live |
 | Artifact storage | **Nebius Object Storage** | Version bundles and run folders, hash-checked on load | Live in code (bucket `synapse-artifacts-…`) |
 | Training sandboxes | **Token Factory Sandboxes** | Planned for candidate training | **Not used:** our account has no spawn permission; training runs as local parallel processes (the documented fallback) |
-| Dataset search | Tavily | Live dataset search with license checks | **Not wired yet:** builds use the vetted registry (`config/datasets.yaml`) |
+| Dataset search | Hugging Face Hub + Tavily | Live dataset search for tasks outside the vetted registry, license allowlist, Nemotron-ranked fit; synthetic data as the fallback | Live (`backend/data_sourcing.py`) |
+| Rung G fine-tuning | **Token Factory fine-tuning** (LoRA on Qwen3-0.6B) | Trains the Voice Command Parser; we download the checkpoint and serve it on the CPU endpoint, so no dedicated GPU endpoint | Live (run `g-massive-a`) |
 
 Nemotron is never fine-tuned (Token Factory doesn't offer it). It plans, teaches, judges and serves as the
 expensive fallback; the cheap stages are trained models.
@@ -161,8 +177,14 @@ frontend deploys to Vercel from `frontend/vercel.json` (the project's root direc
   judge, baseline and cascade fallback.
 - **Training runs locally, not in Sandboxes** (no spawn permission on our account). Parallelism and the search
   schedule are the same; the isolation isn't.
-- **Builds use vetted datasets only.** Uploading your own data and live dataset search are designed but not
-  wired, so intake maps a request onto one of the three datasets and says so when none fits.
+- **Data sourcing:** requests outside the three vetted datasets get a live Hugging Face / Tavily search (license
+  allowlist) or synthetic data from Nemotron; uploading your own data isn't wired yet. Requests that aren't a
+  fixed-label decision (e.g. movie recommendations) are turned into the closest one (a "does this fit my tastes"
+  classifier) and the reply says so.
+- **Rung G is built by scripts, not chosen by the agent:** the fine-tuned Voice Command Parser came from
+  `scripts/build_lora_g.py`; wiring the LoRA rung into the planner's tournament is future work. Its confidence is
+  the model's own sequence probability, not a calibrated one, and generation on the 2-vCPU endpoint takes seconds,
+  not milliseconds.
 - **Synthetic data:** repair rounds and correction variants are Nemotron-written. They go to the training set only
   and are scored separately when used; the sealed test set is all real records.
 - **Format mismatch:** a specialist learns the dataset's format. The input validator rejects obviously wrong input
@@ -183,6 +205,8 @@ frontend deploys to Vercel from `frontend/vercel.json` (the project's root direc
 | [PSC manual](https://www.acquisition.gov/psc-manual) (acquisition.gov) | procurement category roll-up (`config/psc_categories.yaml`) | U.S. federal government work |
 | [LogHub HDFS_v1](https://github.com/logpai/loghub) | log anomalies | Research use; raw logs are not redistributed here (`make demo-data` downloads them). Cite Zhu et al., *Loghub*, ISSRE 2023, and Xu et al., *Detecting Large-Scale System Problems by Mining Console Logs*, SOSP 2009 |
 | [Banking77](https://huggingface.co/datasets/PolyAI/banking77) (PolyAI) | support routing | CC-BY-4.0. Casanueva et al., *Efficient Intent Detection with Dual Sentence Encoders*, 2020 |
+| [Amazon MASSIVE 1.1](https://github.com/alexa/massive), en-US | voice command parser (rung G) | CC-BY-4.0. FitzGerald et al., *MASSIVE: A 1M-Example Multilingual Natural Language Understanding Dataset with 51 Typologically-Diverse Languages*, 2022 |
+| [Qwen3-0.6B](https://huggingface.co/Qwen/Qwen3-0.6B) | base model of the voice command parser | Apache-2.0 |
 
 The demo specialists in `artifacts/demo/specialists/` are models trained on these datasets and keep their terms.
 

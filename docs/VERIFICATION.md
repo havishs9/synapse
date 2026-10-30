@@ -317,6 +317,28 @@ machine's home folder); improve runs now drop them.
 | Page load (headless Chromium, 1440 px) | Renders the sidebar with 3 specialists and the recorded builds; no page errors, no failed requests |
 | Sign-in | Off on the public site: the Vercel project has no `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`, and the endpoint runs with `AUTH_REQUIRED=false`, so visitors share the anonymous build allowance (TEAM_PLAN §6) |
 
+## Rung G: LoRA fine-tuned small LLM (Raj, 2026-10-30)
+
+Task: voice-assistant command → `{"intent", "slots"}` JSON. Amazon MASSIVE 1.1 en-US (CC-BY-4.0, checked in the
+archive's LICENSE file): MASSIVE's own partitions as train / validation / sealed (11,436 / 2,033 / 2,974 after
+removing 78 training commands that also occur in dev or test or twice); every model scored on the same fixed sample
+of 300 sealed commands (`sample_idx.json`, seed 42). Run folder `artifacts/demo/runs/g-massive-a` (training data
+and adapters not committed). Built by scripts, not by the agent's tournament.
+
+| Item | Result |
+|---|---|
+| Fine-tuning API | `POST /v1/fine_tuning/jobs` with our Token Factory key: works for `Qwen/Qwen3-0.6B` and `Qwen/Qwen3-1.7B` (LoRA r=16, alpha=32). Chat-format JSONL uploaded through `/v1/files` (purpose fine-tune) |
+| Training on the laptop | Not viable: one LoRA step on 16 examples took 53 s on the M2 GPU (8 GB, swapping) |
+| Attempt 1 (packing default on, lr 2e-4, warmup 0.03) | Both jobs submitted 09:41, finished 09:58. **Diverged**: 18 steps, final train loss 6.03 (0.6B) / 6.85 (1.7B); output was noise (0.000 exact match). Kept as `attempt1_*` |
+| Attempt 2 (`packing: false`, lr 1e-4 and 5e-5, warmup 0.05, 2 epochs, batch 16) | Submitted 10:26, both finished by 11:09; 1,430 steps; validation loss 0.0023 (1e-4) and 0.0017 (5e-5). **5e-5 chosen on validation loss before any sealed scoring** |
+| Loading the checkpoint | `PeftModel.from_pretrained` silently left random adapters (tensor names lack the `base_model.model.` prefix; config has `init_lora_weights: false`) → noise. Merged by hand instead (`W += alpha/r · B·A`, 196 pairs, float32), `scripts/eval_lora_g.py merge_adapter` |
+| Sealed sample (300), Qwen3-0.6B + LoRA | exact match **0.680**, intent accuracy 0.873, slot F1 0.794 (P 0.795, R 0.793), valid JSON 1.000 |
+| Same 300, Nemotron Ultra zero-shot (intent and slot names in the prompt, JSON mode) | exact match 0.373, intent accuracy 0.807, slot F1 0.490, valid JSON 1.000; $0.1773 for 300 calls at list price = $591 per 1M; p50 987 ms (API round trip from the laptop) |
+| Same 300, Qwen3-0.6B without fine-tuning | exact match 0.000, intent 0.000, slot F1 0.040 (doesn't know this assistant's intent names) |
+| Serving | Merged model saved as bfloat16 (1.15 GB bundle, `model/` subfolder), loaded as float32 by `backend/serving/generative.py` on the endpoint. Published to Object Storage + Postgres as `voice-command-parser` v1 |
+| First call on the endpoint | 500: `ensure_bundle` didn't create the bundle's `model/` subfolder (every earlier bundle was flat). Fixed in PR #14 with a test |
+| Laptop CPU, bfloat16, through the server's predictor | 2.3 to 4.8 s per command (3 commands); endpoint latency: below once measured |
+
 ## Spec conflicts and issues found
 
 0. (2026-10-29) `backend/tests/test_builds_api.py::test_cancel_retry_not_yet_and_unknown` fails when `frontend/dist` exists: `POST /api/builds/..%2F..%2Fetc/cancel` normalizes to `/etc/cancel`, which hits the SPA's GET catch-all and returns 405 instead of 404. No path traversal happens; the assertion assumes no built frontend. Left for Raj (his test, shared `main.py`). **Resolved (2026-10-30, Raj):** the build-queue PR (#4) replaced that test with `test_cancel_retry_need_the_queue`, which has no `..%2F` case; `make test` passes (75 passed, 5 Postgres-only skipped) with `frontend/dist` built.

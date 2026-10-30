@@ -109,12 +109,10 @@ def local(name: str, with_adapter: bool, device: str = "mps", batch: int = 16) -
     bdir = ROOT / "data" / "models" / base
     tok = AutoTokenizer.from_pretrained(bdir)
     tok.padding_side = "left"
-    model = AutoModelForCausalLM.from_pretrained(bdir, dtype=torch.bfloat16 if device == "mps" else torch.float32)
+    model = AutoModelForCausalLM.from_pretrained(bdir, dtype=torch.float32)
     if with_adapter:
-        from peft import PeftModel
-        model = PeftModel.from_pretrained(model, str(adapter_dir(name)))
-        model = model.merge_and_unload()
-    model.to(device).eval()
+        merge_adapter(model, adapter_dir(name))       # merge in float32, then cast for the device
+    model.to(dtype=torch.bfloat16 if device == "mps" else torch.float32).to(device).eval()
     rows = sealed_sample()
     prompts = [tok.apply_chat_template([{"role": "system", "content": SYSTEM}, {"role": "user", "content": r["utt"]}],
                                        tokenize=False, add_generation_prompt=True, enable_thinking=False) for r in rows]
@@ -129,6 +127,30 @@ def local(name: str, with_adapter: bool, device: str = "mps", batch: int = 16) -
     write(out_name, rows, outs, {"display_name": f"{name}{' + LoRA (Token Factory fine-tune)' if with_adapter else ', no fine-tune'}",
                              "eval_device": device, "eval_seconds": time.time() - t0,
                              "latency_note": "batched evaluation on the laptop; serving latency is measured on the endpoint"})
+
+
+def merge_adapter(model, adir: Path) -> int:
+    """Add a Token Factory LoRA checkpoint into the base weights: W += (alpha / r) * B @ A.
+    Its tensor names ('model.layers.0.mlp.down_proj.lora_A.weight') lack the 'base_model.model.' prefix PEFT
+    expects, and its config sets init_lora_weights=false, so PeftModel.from_pretrained silently left random
+    adapters in place (garbage output). Merging by hand needs no PEFT and is exact."""
+    import torch
+    from safetensors.torch import load_file
+    cfg = json.loads((adir / "adapter_config.json").read_text())
+    assert not cfg.get("use_rslora") and not cfg.get("use_dora"), "only plain LoRA is supported"
+    scale = cfg["lora_alpha"] / cfg["r"]
+    t = load_file(str(adir / "adapter_model.safetensors"))
+    mods = dict(model.named_modules())
+    n = 0
+    for k in [k for k in t if k.endswith(".lora_A.weight")]:
+        name = k[: -len(".lora_A.weight")]
+        lin = mods[name]
+        a, b = t[k].float(), t[name + ".lora_B.weight"].float()
+        with torch.no_grad():
+            lin.weight += (scale * (b @ a)).to(lin.weight.dtype)
+        n += 1
+    assert n == len(t) // 2, f"merged {n} of {len(t) // 2} LoRA pairs"
+    return n
 
 
 def adapter_dir(base: str) -> Path:

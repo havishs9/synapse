@@ -1,0 +1,18 @@
+{
+  "model": "lora_Qwen3-0.6B",
+  "metrics": {
+    "n": 300,
+    "exact_match": 0.0,
+    "intent_accuracy": 0.0,
+    "slot_precision": 0.0,
+    "slot_recall": 0.0,
+    "slot_f1": 0.0,
+    "valid_json": 0.0033333333333333335
+  },
+  "display_name": "Qwen3-0.6B + LoRA (Token Factory fine-tune)",
+  "eval_device": "mps",
+  "eval_seconds": 371.3628261089325,
+  "latency_note": "batched evaluation on the laptop; serving latency is measured on the endpoint",
+  "sealed_sample": 300,
+  "created": 1793369182.85846
+}
