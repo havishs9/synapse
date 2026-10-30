@@ -84,7 +84,9 @@ function Workspace({ email, onSignOut }: { email?: string | null; onSignOut?: ()
   const patchLast = (fn: (m: Msg) => Msg) => update((ms) => ms.map((m, i) => (i === ms.length - 1 ? fn(m) : m)));
   const patch = (id: string, fn: (m: Msg) => Msg) => update((ms) => ms.map((m) => (m.id === id ? fn(m) : m)));
 
-  const intake = useIntake({ push, patch });
+  const remove = (id: string) => update((ms) => ms.filter((m) => m.id !== id));
+
+  const intake = useIntake({ push, patch, remove });
 
   const askModel = async (history: Msg[]) => {
     setStreaming(true);

@@ -10,11 +10,12 @@ const MODEL_INTENT = /\b(create|make|train|need|want|new)\b.*\b(model|classifier
 type Deps = {
   push: (m: Omit<Msg, "id">) => string;
   patch: (id: string, fn: (m: Msg) => Msg) => void;
+  remove: (id: string) => void;
 };
 
 /** Intake (spec 01 §2.2): Nemotron Ultra asks one message with at most 7 questions; the answers become an
  * editable task card whose plan-change lines show what each answer does to the build. */
-export function useIntake({ push, patch }: Deps) {
+export function useIntake({ push, patch, remove }: Deps) {
   const [busy, setBusy] = useState(false);
 
   const sampleRows = async (file?: File) => {
@@ -36,6 +37,10 @@ export function useIntake({ push, patch }: Deps) {
       try {
         const samples = await sampleRows(file);
         const r = await postJSON("/api/intake/start", { text, samples });
+        if (r.chat) {                     // Nemotron read it as a question, not a build request: answer in plain chat
+          remove(id);
+          return false;
+        }
         if (!r.task_id) {
           replace({ role: "assistant", kind: "text", content: r.message });
           return true;

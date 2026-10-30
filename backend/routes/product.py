@@ -160,8 +160,9 @@ def questions_for(card: TaskCard) -> list[dict]:
 INTAKE_SCHEMA = {
     "type": "json_schema", "json_schema": {"name": "intake", "strict": True, "schema": {
         "type": "object", "additionalProperties": False,
-        "required": ["task_id", "why", "intro", "questions"],
+        "required": ["build_request", "task_id", "why", "intro", "questions"],
         "properties": {
+            "build_request": {"type": "boolean"},
             "task_id": {"type": "string", "enum": [*DEMO_TASKS, "none"]},
             "why": {"type": "string"},
             "intro": {"type": "string"},
@@ -177,7 +178,9 @@ def _llm_intake(text: str, samples: list[str]) -> dict | None:
         "You are the intake step of Synapse, which builds small specialist models for repetitive classification "
         f"tasks. It can build from these vetted datasets today:\n{tasks}\n\nThe user wrote:\n\"\"\"{text[:2000]}\"\"\"\n"
         + (f"Sample rows they pasted:\n" + "\n".join(f"- {s[:200]}" for s in samples[:10]) + "\n" if samples else "")
-        + "\nPick the task_id only when the request is really about that data (same domain and labels); otherwise "
+        + "\nSet build_request to true only when the user asks to build, train or set up a model for a task of "
+        "their own; a question or conversation about Synapse or anything else is false (it goes to the main chat). "
+        "Pick the task_id only when the request is really about that data (same domain and labels); otherwise "
         "\"none\", and Synapse searches for a dataset for the user's own task. Write a one-sentence intro that says "
         "which task you'll build and that a few answers set the quality bar. Then rewrite each of these questions "
         "in plain, friendly words for this user's task, keeping its id and meaning (one sentence each):\n"
@@ -204,6 +207,8 @@ def intake_start(body: IntakeStartIn, user: User | None = Depends(current_user))
         out = _llm_intake(body.text, body.samples)
     except HTTPException:
         out = None
+    if out and out.get("build_request") is False and not body.samples:
+        return {"chat": True}         # a question, not a build request: the frontend answers it as normal chat
     task_id = (out or {}).get("task_id")
     if task_id not in DEMO_TASKS:
         task_id = None if out else match_task_fallback(body.text)
