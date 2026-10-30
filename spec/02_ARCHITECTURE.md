@@ -205,3 +205,25 @@ synapse/
     ├── ARCHITECTURE.md          # diagram + agent handoffs
     └── FEEDBACK.md              # detailed feedback on Token Factory, AI Cloud, NVIDIA models
 ~~~
+
+## 8. Phase 3 changes (team decisions, 2026-10-28 and 2026-10-29)
+
+These replace the parts of sections 1, 2 and 7 they name. Details and measurements: `docs/TEAM_PLAN.md` §2,
+`docs/VERIFICATION.md` (Phase 3 sections).
+
+- **Records:** Supabase Postgres replaces SQLite: specialists, versions (with each bundle file's SHA-256), hashed API
+  keys, builds and build events (`supabase/migrations/`, RLS on every table). Local `versions.json` files remain the
+  fallback for tests and offline replay.
+- **Users:** Supabase Auth (Google sign-in, open sign-up). Every run, specialist, version and key has an owner;
+  demo specialists have none and give each user their own key. `AUTH_REQUIRED` switches sign-in on.
+- **Files:** Nebius Object Storage holds version bundles and run folders under `users/<owner>/...` and the registry
+  datasets under `datasets/`. Servers fetch bundles on first use and load them only when their hashes match.
+- **Training:** builds go through a queue (the `builds` table) and run one per Nebius AI Job (CPU VM) from the
+  pre-built image, or in a thread of the API server (`TRAINING_BACKEND=local`). Token Factory Sandboxes are not used
+  for training (spec file 04 §3: CPU only, Beta limits); each worker runs the local launcher.
+- **Deployment:** one image (`Dockerfile`, built by GitHub Actions, pushed to Nebius Container Registry) runs both
+  the API endpoint (Nebius Serverless, which also hosts the shared specialist server and the build dispatcher) and the
+  workers. The frontend is hosted on Vercel.
+- **Environment variables** added to `.env.example`: Supabase (`SUPABASE_*`, `AUTH_REQUIRED`), Object Storage
+  (`OBJECT_STORAGE_*`), queue and workers (`DISPATCHER`, `WORKER_IMAGE`, `NEBIUS_REGISTRY*`, `NEBIUS_SA_CREDENTIALS_FILE`),
+  `CORS_ORIGINS`, and the budgets in `docs/TEAM_PLAN.md` §6. `CREDIT_BUDGET_USD` is now 2.50 per build.
