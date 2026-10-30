@@ -6,6 +6,8 @@ Run standalone: uvicorn backend.serving.server:app --port 8081
 """
 from __future__ import annotations
 
+import json
+
 import hmac
 import threading
 import time
@@ -60,7 +62,11 @@ def predictor(sid: str, version: int) -> Predictor:
         d = registry.ensure_bundle(sid, version)
     except StorageError as exc:
         raise HTTPException(503, f"{sid} v{version} can't be loaded right now ({exc}).")
-    p = Predictor(d, llm=_get_llm())
+    if json.loads((d / "bundle.json").read_text()).get("kind") == "generative":   # rung G: LoRA small LLM
+        from backend.serving.generative import GenerativePredictor
+        p = GenerativePredictor(d)
+    else:
+        p = Predictor(d, llm=_get_llm())
     with _lock:
         _cache[key] = p
         _cache.move_to_end(key)
