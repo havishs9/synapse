@@ -102,7 +102,9 @@ Order matters; each step is usable on its own.
    or all builds ever reach `TOKEN_FACTORY_TOTAL_BUDGET_USD`; callers without sign-in share one allowance. Still to do:
    chat/compare spend in the total, escalations.) Per-user training budget; cascade escalations on public predictions count against the daily
    demo guard.
-6. **Data sourcing backend** (spec file 03 §1.1): uploads saved as the user's own dataset (Object Storage) →
+6. **Data sourcing backend** (spec file 03 §1.1). **Moved to Havish 2026-10-29 (live search and synthetic done,
+   `backend/data_sourcing.py`; small hooks in `data_agent.py`, `orchestrator.py`, `evaluator_agent.py`; new
+   `TaskCard.data_source` field). Uploads still open.** Original scope: uploads saved as the user's own dataset (Object Storage) →
    same dedupe / sealed split; unlabeled uploads get teacher labels from Nano; live Tavily + Hugging Face search
    with license check and format-match score; synthetic gap-filling reported separately. Havish builds the
    upload and approval UI against the routes Raj defines here (agree on them before step 6 starts).
