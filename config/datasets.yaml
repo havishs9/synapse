@@ -32,3 +32,25 @@ datasets:
     license: CC-BY-4.0
     citation: "Casanueva et al. Efficient Intent Detection with Dual Sentence Encoders. 2020. https://arxiv.org/abs/2003.04807"
     license_ok: true
+
+# Live data sourcing for tasks outside the registry (spec 03 §1.1; backend/data_sourcing.py).
+# A dataset is offered only when its Hugging Face license tag is on this allowlist; unknown, "other",
+# non-commercial and no-derivatives licenses are rejected. The license is checked again when the build starts.
+sourcing:
+  hf_api: https://huggingface.co/api/datasets
+  hf_dataset_page: https://huggingface.co/datasets
+  datasets_server: https://datasets-server.huggingface.co
+  tavily_domains: [huggingface.co]
+  license_allowlist: [cc0-1.0, cc-by-2.0, cc-by-3.0, cc-by-4.0, cc-by-sa-3.0, cc-by-sa-4.0, mit, apache-2.0,
+                      bsd, bsd-2-clause, bsd-3-clause, odc-by, odbl, pddl, cdla-permissive-1.0,
+                      cdla-permissive-2.0, cdla-sharing-1.0, unlicense, afl-3.0, ecl-2.0]
+  hf_results_per_query: 8
+  max_candidates_inspected: 8
+  max_options_shown: 3
+  min_fit: 0.5                    # Nemotron's fit score (0 to 1) below which a dataset isn't offered
+  max_rows_fetched: 6000          # rows read from the chosen dataset at build time (sampled across the split)
+  rows_page_size: 100             # datasets-server /rows maximum
+  min_rows_per_label: 60          # fewer real rows: synthetic examples fill the label (the Data agent drops
+                                  # classes under 60 rows before splitting)
+  synthetic_per_label: 60         # examples generated per label when no dataset fits
+  synthetic_batch: 30             # examples per generation call

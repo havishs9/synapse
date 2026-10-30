@@ -26,6 +26,7 @@ from backend import config
 from backend.auth import User, current_user, require_edit, require_view, uid
 from backend.builds import api as builds_api
 from backend.builds import dispatcher, queue as build_queue
+from backend.routes import product
 from backend.demo_tasks import DEMO_TASKS
 from backend.llm_client import LLMClient
 from backend.orchestrator import Options, Orchestrator
@@ -49,6 +50,7 @@ app.add_middleware(CORSMiddleware, allow_origins=config.cors_origins(), allow_me
 app.include_router(spec_server.router)          # fallback serving: /health, /v1/specialists/...
 app.include_router(spec_server.admin)           # /admin/... (SPECIALIST_ADMIN_TOKEN), used by _reload_remote
 app.include_router(builds_api.router)           # GET /api/builds, cancel, retry (TEAM_PLAN §1)
+app.include_router(product.router)              # intake, compare, corrections, improve (TEAM_PLAN §3)
 _builds: dict[str, Orchestrator] = {}
 _chat_llm = LLMClient(budget_usd=float("inf"))
 
@@ -69,7 +71,7 @@ def demo_guard(extra_usd: float = 0.0) -> None:
         _guard.update(day=day, spend=0.0)
     _guard["spend"] += extra_usd
     cap = float(config.env("DEMO_DAILY_BUDGET_USD", "3"))
-    used = _chat_llm.spend.spent_usd + spec_server._get_llm().spend.spent_usd
+    used = _chat_llm.spend.spent_usd + spec_server._get_llm().spend.spent_usd + product.spent_usd()
     if used >= cap:
         raise HTTPException(429, f"The demo's daily LLM budget (${cap:.2f}) is used up. Specialist predictions "
                                  "still work; chat, compare and explanations resume tomorrow.")

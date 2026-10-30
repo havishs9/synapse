@@ -1,0 +1,669 @@
+{
+  "corrections": [
+    {
+      "input": "ALL-IN-ONE MOBILE PHLEBOTOMY CARTS.",
+      "predicted_label": "Transportation and Logistics Services",
+      "corrected_label": "Medical",
+      "timestamp": 1793313657.616071,
+      "source": "holdback"
+    },
+    {
+      "input": "S2P2: UAS SOLICITATION # W911S225U1570",
+      "predicted_label": "Security and Protection",
+      "corrected_label": "Sustainment S&E",
+      "timestamp": 1793313657.616072,
+      "source": "holdback"
+    },
+    {
+      "input": "INSTALLATION COST AND MAINTENANCE",
+      "predicted_label": "Security and Protection",
+      "corrected_label": "IT",
+      "timestamp": 1793313657.616072,
+      "source": "holdback"
+    },
+    {
+      "input": "CATERPILLAR SPARE PARTS IN SUPPORT OF FOREIGN MILITARY SALES CASE IS-B-BLN",
+      "predicted_label": "Electronic & Communication Equipment",
+      "corrected_label": "Sustainment S&E",
+      "timestamp": 1793313657.616073,
+      "source": "holdback"
+    },
+    {
+      "input": "HP 414A, (W2021A) CYAN ORIGINAL LASERJET",
+      "predicted_label": "Office Management",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.616073,
+      "source": "holdback"
+    },
+    {
+      "input": "DELIVERY ORDER FOR MJU 51A/B INFRARED COUNTERMEASURE FLARES",
+      "predicted_label": "Electronic & Communication Equipment",
+      "corrected_label": "Weapons & Ammunition",
+      "timestamp": 1793313657.616073,
+      "source": "holdback"
+    },
+    {
+      "input": "MANUAL CAR JUL 25",
+      "predicted_label": "Office Management",
+      "corrected_label": "Miscellaneous S&E",
+      "timestamp": 1793313657.616074,
+      "source": "holdback"
+    },
+    {
+      "input": "THE PURPOSE OF THIS BPA CALL IS TO SUPPORT THE LODGING NEEDS OF THE 137TH SOW DURING DRILL UTAS FOR FY25.",
+      "predicted_label": "Travel & Lodging",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.616074,
+      "source": "holdback"
+    },
+    {
+      "input": "RADIO SET",
+      "predicted_label": "Electronic & Communication Equipment",
+      "corrected_label": "Security and Protection",
+      "timestamp": 1793313657.616074,
+      "source": "holdback"
+    },
+    {
+      "input": "TASK ORDER FOR THE DESIGN, DEVELOPMENT AND TESTING OF FLASH-PROCESSED STAINLESS STEEL.",
+      "predicted_label": "Research and Development",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.616074,
+      "source": "holdback"
+    },
+    {
+      "input": "CULTURAL SERVICES",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Research and Development",
+      "timestamp": 1793313657.616075,
+      "source": "holdback"
+    },
+    {
+      "input": "RETAINER,GEAR",
+      "predicted_label": "Industrial Products & Services",
+      "corrected_label": "Sustainment S&E",
+      "timestamp": 1793313657.616075,
+      "source": "holdback"
+    },
+    {
+      "input": "MCNARY DAM AND LAKE WALLULA LAW ENFORCEMENT PATROL SERVICES",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Security and Protection",
+      "timestamp": 1793313657.616075,
+      "source": "holdback"
+    },
+    {
+      "input": "HONEYWELL VINDICATOR PHASE 1A, KUNSAN AB, ROK AND USFK SOFA INVITED CONTRACTOR PROGRAM ADDENDUM",
+      "predicted_label": "Facilities & Construction",
+      "corrected_label": "Security and Protection",
+      "timestamp": 1793313657.616075,
+      "source": "holdback"
+    },
+    {
+      "input": "MANUFACTURING AND DEVELOPMENT OF NEXT GENERATION MARINE CORPS COMBAT UTILITY UNIFORM TO INCLUDE PRODUCT IMPROVEMENTS",
+      "predicted_label": "Research and Development",
+      "corrected_label": "Clothing, Textiles & Subsistence S&E",
+      "timestamp": 1793313657.616076,
+      "source": "holdback"
+    },
+    {
+      "input": "MOBILE OFFICE CONTAINER",
+      "predicted_label": "Office Management",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.616076,
+      "source": "holdback"
+    },
+    {
+      "input": "INITIAL OUTFITTING AND TRANSITION SERVICES, INDUSTRIAL HYGIENE DEPARTMENT, BUILDING 320, NAVAL SUPPORT FACILITY INDIAN HEAD, MD.",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Transportation and Logistics Services",
+      "timestamp": 1793313657.616076,
+      "source": "holdback"
+    },
+    {
+      "input": "TASK ORDER CHL PROFESSIONAL SERVICES IDIQ: SOFTWARE DEVELOPMENT SUPPORT: NATSAT-SHORELINE, COASTAL MODEL TEST BED, AND LITTORAL PLANNING TOOL",
+      "predicted_label": "Research and Development",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.616076,
+      "source": "holdback"
+    },
+    {
+      "input": "RENTAL OF (1) EACH FORKLIFT",
+      "predicted_label": "Transportation and Logistics Services",
+      "corrected_label": "Equipment Related Services",
+      "timestamp": 1793313657.616077,
+      "source": "holdback"
+    },
+    {
+      "input": "2-113TH NJARNG YELLOW RIBBON EVENT.",
+      "predicted_label": "Travel & Lodging",
+      "corrected_label": "Clothing, Textiles & Subsistence S&E",
+      "timestamp": 1793313657.616077,
+      "source": "holdback"
+    },
+    {
+      "input": "IMPROVING PART QUALITY FOR MATERIAL EXTRUSION ADDITIVE MANUFACTURING USING IN-SITU PROCESS MONITORING AND DATA ANALYTICS.",
+      "predicted_label": "Research and Development",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.616077,
+      "source": "holdback"
+    },
+    {
+      "input": "2EA, $491.55, W90VN825F5030, FEB 2025",
+      "predicted_label": "Miscellaneous S&E",
+      "corrected_label": "Office Management",
+      "timestamp": 1793313657.616077,
+      "source": "holdback"
+    },
+    {
+      "input": "JTF-GTMO J6 PURCHASE FOR TEN (10) COLOR, MULTI-FUNCTIONAL DEVICES (MFDS) TO SUPPORT DAILY OPERATIONS.",
+      "predicted_label": "IT",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.6160781,
+      "source": "holdback"
+    },
+    {
+      "input": "DAUPHIN ISLAND, ALABAMA DREDGING",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.6160781,
+      "source": "holdback"
+    },
+    {
+      "input": "FMO/ WAREHOUSE MANAGEMENT SERVICES",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Transportation and Logistics Services",
+      "timestamp": 1793313657.6160781,
+      "source": "holdback"
+    },
+    {
+      "input": "BIOMEDICAL INSPECT AND REPAIR BASE YR",
+      "predicted_label": "Equipment Related Services",
+      "corrected_label": "Medical",
+      "timestamp": 1793313657.6160781,
+      "source": "holdback"
+    },
+    {
+      "input": "FIRM FIXED PRICE (FFP) CLINS FOR FUEL TANK.",
+      "predicted_label": "Sustainment S&E",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.616079,
+      "source": "holdback"
+    },
+    {
+      "input": "THE RADIOLOGY DEPARTMENT AT MONCRIEF ARMY HEALTH CLINIC IS REQUESTING SERVICES FOR HEALTH PHYSICS INSPECTIONS.",
+      "predicted_label": "Medical",
+      "corrected_label": "Equipment Related Services",
+      "timestamp": 1793313657.616079,
+      "source": "holdback"
+    },
+    {
+      "input": "3D MONITOR PURCHASE",
+      "predicted_label": "Industrial Products & Services",
+      "corrected_label": "IT",
+      "timestamp": 1793313657.616079,
+      "source": "holdback"
+    },
+    {
+      "input": "330 MEALS POP (30 MAY - 2 JUNE 2025) 110 BREAKFAST MEALS PER DAY (31 MAY - 2 JUNE 2025)110 DINNER MEALS PER DAY (30 MAY - 1 JUNE 2025)",
+      "predicted_label": "Clothing, Textiles & Subsistence S&E",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.616079,
+      "source": "holdback"
+    },
+    {
+      "input": "C_4 PLATED ALLOY HEX DRIVE FLAT HEAD",
+      "predicted_label": "Industrial Products & Services",
+      "corrected_label": "Transportation and Logistics Services",
+      "timestamp": 1793313657.616079,
+      "source": "holdback"
+    },
+    {
+      "input": "TEST AND REPAIR FIRE ALARM SYSTEMS",
+      "predicted_label": "Equipment Related Services",
+      "corrected_label": "Security and Protection",
+      "timestamp": 1793313657.6160798,
+      "source": "holdback"
+    },
+    {
+      "input": "GATHRIGHT DAM WATER SAMPLING LAB SERVICES WITH COURIER.",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.6160798,
+      "source": "holdback"
+    },
+    {
+      "input": "UCA AWARD TO SUPPORT THE SHIELD PROGRAM FOR LPWS REPAIR AND RETURN FOR FLIR.",
+      "predicted_label": "Equipment Related Services",
+      "corrected_label": "Transportation and Logistics Services",
+      "timestamp": 1793313657.6160798,
+      "source": "holdback"
+    },
+    {
+      "input": "CONSEQUENCE MANAGEMENT SUPPORT CENTER (COMSUPCEN) OMNIBUS SERVICES IN LEXINGTON, KY, TASK ORDER IN SUPPORT OF THE NGB CHEMICAL, BIOLOGICAL, RADIOLOGICAL, NUCLEAR, HIGH-YIELD EXPLOSIVES (CBRNE) MISSION.",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Transportation and Logistics Services",
+      "timestamp": 1793313657.6160798,
+      "source": "holdback"
+    },
+    {
+      "input": "SECOND ORDERING YEAR 19 EA.",
+      "predicted_label": "Weapons & Ammunition",
+      "corrected_label": "Electronic & Communication Equipment",
+      "timestamp": 1793313657.6160798,
+      "source": "holdback"
+    },
+    {
+      "input": "CAMP-STYLE VENUE FOR 3-DAY WINTER YOUTH CAMP TO TEACH RESILIENCY STRATEGIES AND GIVE YOUTH A CHANCE TO SPEND TIME WITH OTHERS IN SIMILAR LIFE SITUATIONS. INCLUDES LODGING, MEALS, CAMP STAFF, AND PARKING FOR GOVERNMENT VEHICLES.",
+      "predicted_label": "Travel & Lodging",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.616081,
+      "source": "holdback"
+    },
+    {
+      "input": "DECEMBER IDT MEALS B, L, D",
+      "predicted_label": "Clothing, Textiles & Subsistence S&E",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.616081,
+      "source": "holdback"
+    },
+    {
+      "input": "S2P2: GAS TURBINE POWER SYSTEM SOLICITATION# W911S225U1171",
+      "predicted_label": "Electronic & Communication Equipment",
+      "corrected_label": "Sustainment S&E",
+      "timestamp": 1793313657.616081,
+      "source": "holdback"
+    },
+    {
+      "input": "OGFCP50, 50-CUP PERCOLATING URN, STAINLESS STEEL",
+      "predicted_label": "Industrial Products & Services",
+      "corrected_label": "Office Management",
+      "timestamp": 1793313657.616081,
+      "source": "holdback"
+    },
+    {
+      "input": "INSPECT, REPAIR AND PERFORM MAINTENANCE ON OVERHEAD CRANES, RANGING IN LIFTING CAPACITY FROM 300 POUNDS TO 60 TONS AT LETTERKENNY ARMY DEPOT",
+      "predicted_label": "Equipment Related Services",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.616082,
+      "source": "holdback"
+    },
+    {
+      "input": "CTC-IS PDSS INCLUDES: SOFTWARE MAINTENANCEEXERCISE SUPPORT CYBERSECURITYSYSTEM ENGINEERING AND OBSOLESCENCE MANAGEMENT",
+      "predicted_label": "IT",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.616082,
+      "source": "holdback"
+    },
+    {
+      "input": "THIS IS A CONTINUATION CONTRACT FROM THE ORIGINAL CONTRACT W912LM24F0036. THIS CONTRACT HAS NOT MIGRATED TO THE ARMY CONTRACTING WRITING SYSTEM (ACWS), THEREFORE A CONTINUED CONTRACT IS NEEDED TO EXERCISE OPTION YEAR 1. INCORPORATING OY 2,3,4.",
+      "predicted_label": "Human Capital",
+      "corrected_label": "Office Management",
+      "timestamp": 1793313657.616082,
+      "source": "holdback"
+    },
+    {
+      "input": "THERAPEUTIC GASTROSCOPE, FLEXIBLE VIDEO",
+      "predicted_label": "Electronic & Communication Equipment",
+      "corrected_label": "Medical",
+      "timestamp": 1793313657.616082,
+      "source": "holdback"
+    },
+    {
+      "input": "CCTV SYSTEM UPGRADES, INSTALL & REMOVAL",
+      "predicted_label": "Security and Protection",
+      "corrected_label": "Electronic & Communication Equipment",
+      "timestamp": 1793313657.616082,
+      "source": "holdback"
+    },
+    {
+      "input": "CIO/G6 - S25-0083 PRINTERLOGIC SUBSCRIPTION LICENSES - PURCHASE LICENSE SUBSCRIPTIONS FOR PRINTERLOGIC.",
+      "predicted_label": "IT",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.616083,
+      "source": "holdback"
+    },
+    {
+      "input": "PURCHASE ORDER W912CH-25-P-0015 IS AN UNDER-SAT SUPPLY BUY FOR EQUIPMENT KIT, VEHIC (QTY 34KT).",
+      "predicted_label": "Electronic & Communication Equipment",
+      "corrected_label": "Sustainment S&E",
+      "timestamp": 1793313657.616083,
+      "source": "holdback"
+    },
+    {
+      "input": "10 YEAR NATURAL GAS CONTRACT FOR LD 10, 5 LOCK AND DAM LANE GUTTENBERG IA 52052-0849",
+      "predicted_label": "Industrial Products & Services",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.616083,
+      "source": "holdback"
+    },
+    {
+      "input": "AIRCRAFT RELOCATION AND RESTORATION PROJECT AT OSAN AIR BASE",
+      "predicted_label": "Facilities & Construction",
+      "corrected_label": "Equipment Related Services",
+      "timestamp": 1793313657.616083,
+      "source": "holdback"
+    },
+    {
+      "input": "SYSTEM ORDER",
+      "predicted_label": "Medical",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.6160839,
+      "source": "holdback"
+    },
+    {
+      "input": "OTR RENTAL OF PORTABLE CHEMICAL LATRINES AT USAG BAVARIA POP 01JUN-30SEP25",
+      "predicted_label": "Miscellaneous S&E",
+      "corrected_label": "Transportation and Logistics Services",
+      "timestamp": 1793313657.6160839,
+      "source": "holdback"
+    },
+    {
+      "input": "AUTOMATED FEE MACHINES SUBSCRIPTION SERVICES FOR 12 MACHINES IN GREERS FERRY PROJECT OFFICE AOR. SUBSCRIPTION TO VENTEK'S SERVICES IS 12 MONTHS UNDER THIS CONTRACT.",
+      "predicted_label": "Professional Services",
+      "corrected_label": "IT",
+      "timestamp": 1793313657.6160839,
+      "source": "holdback"
+    },
+    {
+      "input": "CATERING SERVICES IN SIGNAPORE",
+      "predicted_label": "Transportation and Logistics Services",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.6160839,
+      "source": "holdback"
+    },
+    {
+      "input": "W81EWF52452057 -PHANTOM KT-1640 COLOR HIGH-SPEED CAMERAS",
+      "predicted_label": "Security and Protection",
+      "corrected_label": "Miscellaneous S&E",
+      "timestamp": 1793313657.6160839,
+      "source": "holdback"
+    },
+    {
+      "input": "FSC: 3465 NAME: CHUCK, 4 JAW, PART NUMBER: 7-851-1628",
+      "predicted_label": "Weapons & Ammunition",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.616085,
+      "source": "holdback"
+    },
+    {
+      "input": "THIS IS A NON-PERSONAL SERVICES CONTRACT TO PROVIDE ALL ITEMS AND NON-PERSONAL SERVICES NECESSARY TO PROVIDE HOUSING, CLASSROOMS, ATHLETIC FACILITIES, AND MEALS FOR 150 CADETS AND 40 CADRE IN SUPPORT OF THE JROTC EAGLE STEM ACADEMY.",
+      "predicted_label": "Human Capital",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.616085,
+      "source": "holdback"
+    },
+    {
+      "input": "FORT JOHNSON CATHOLIC RELIGIOUS EDUCATION COORDINATOR",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Human Capital",
+      "timestamp": 1793313657.616085,
+      "source": "holdback"
+    },
+    {
+      "input": "PROCUREMENT OF 681 MOUNTED ASSURED POSITIONING NAVIGATION, AND TIMING SYSTEMS (MAPS) GEN II",
+      "predicted_label": "Research and Development",
+      "corrected_label": "Electronic & Communication Equipment",
+      "timestamp": 1793313657.616085,
+      "source": "holdback"
+    },
+    {
+      "input": "RECRUITING AND RETENTION PROMOTIONAL INCENTIVE ITEMS (T-SHIRTS, SWEATSHIRTS, DRINK TUMBLERS, BAGS, LANYARDS)",
+      "predicted_label": "Clothing, Textiles & Subsistence S&E",
+      "corrected_label": "Miscellaneous S&E",
+      "timestamp": 1793313657.616085,
+      "source": "holdback"
+    },
+    {
+      "input": "MARKER TUBE",
+      "predicted_label": "Sustainment S&E",
+      "corrected_label": "Office Management",
+      "timestamp": 1793313657.616086,
+      "source": "holdback"
+    },
+    {
+      "input": "6EA, $3,449.28, W90VN825F5048, APR 2025",
+      "predicted_label": "Miscellaneous S&E",
+      "corrected_label": "Transportation and Logistics Services",
+      "timestamp": 1793313657.616086,
+      "source": "holdback"
+    },
+    {
+      "input": "RAILROAD CROSSING ALARM",
+      "predicted_label": "Facilities & Construction",
+      "corrected_label": "Equipment Related Services",
+      "timestamp": 1793313657.616086,
+      "source": "holdback"
+    },
+    {
+      "input": "2ND QUARTER TASK ORDER - LVNS AND CNAS",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Medical",
+      "timestamp": 1793313657.616086,
+      "source": "holdback"
+    },
+    {
+      "input": "ASTRONICS EQUIPMENT UNDER FMS CASE HR-B-UCF",
+      "predicted_label": "Equipment Related Services",
+      "corrected_label": "IT",
+      "timestamp": 1793313657.616086,
+      "source": "holdback"
+    },
+    {
+      "input": "57 EACH - FIRING PIN",
+      "predicted_label": "Industrial Products & Services",
+      "corrected_label": "Weapons & Ammunition",
+      "timestamp": 1793313657.616087,
+      "source": "holdback"
+    },
+    {
+      "input": "CLIN 0001 LP35 MONITOR WITH ACCESSORIES",
+      "predicted_label": "Office Management",
+      "corrected_label": "Medical",
+      "timestamp": 1793313657.616087,
+      "source": "holdback"
+    },
+    {
+      "input": "OVERHAUL OF THE DATA ACQUISITION UNIT IN SUPPORT OF THE UH-60.",
+      "predicted_label": "Equipment Related Services",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.616087,
+      "source": "holdback"
+    },
+    {
+      "input": "STAIRWELL WATERPROOFING BLDG 5102",
+      "predicted_label": "Office Management",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.616087,
+      "source": "holdback"
+    },
+    {
+      "input": "VALVE ASSY,SHUT OFF",
+      "predicted_label": "Sustainment S&E",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.6160882,
+      "source": "holdback"
+    },
+    {
+      "input": "POWER DISTRO UNIT",
+      "predicted_label": "Electronic & Communication Equipment",
+      "corrected_label": "IT",
+      "timestamp": 1793313657.6160882,
+      "source": "holdback"
+    },
+    {
+      "input": "SETTLEMENT FOR FY20 AND 21 CLAIMS IN ARMED SERVICES BOARD OF CONTRACT APPEALS (ASBCA) NO. 63197. SEE SETTLEMENT AGREEMENT DATED 12 MAR 2025",
+      "predicted_label": "Facilities & Construction",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.6160882,
+      "source": "holdback"
+    },
+    {
+      "input": "SAMPLING AT NEW JERSEY PIERHEAD CHANNEL.",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Equipment Related Services",
+      "timestamp": 1793313657.6160882,
+      "source": "holdback"
+    },
+    {
+      "input": "COMBINATION, OVEN STEAMER, ELECTRIC, DOUBLE STACKED OVEN IAW SALIENT CHARACTERISTICS WITH THE INSTALLATION OF NEW OVENS, DE-INSTALLATION AND REMOVAL OF OLD OVEN.",
+      "predicted_label": "Office Management",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.6160882,
+      "source": "holdback"
+    },
+    {
+      "input": "TASK ORDER-A/E SERVICE: T-7A SUNSHADE ALLIED SUPPORT",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.616089,
+      "source": "holdback"
+    },
+    {
+      "input": "W911RQ22C0003 MAY PAYMENT",
+      "predicted_label": "Sustainment S&E",
+      "corrected_label": "Miscellaneous S&E",
+      "timestamp": 1793313657.616089,
+      "source": "holdback"
+    },
+    {
+      "input": "NUT ASSY,SUPPORT",
+      "predicted_label": "Sustainment S&E",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.616089,
+      "source": "holdback"
+    },
+    {
+      "input": "TO TO REPAIR MOTOR AND REPLACE BRAKE AND PENDANT CONTROLLER FOR 35 TONS ELECTRIC OPERATED OVERHEAD LIFTING DEVICES AT B-8310 IN USAG-HUMPHREYS",
+      "predicted_label": "Facilities & Construction",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.61609,
+      "source": "holdback"
+    },
+    {
+      "input": "T1195 2024319-4 BLDG: 5303TITLE: FLOORBOX INSTALLATION",
+      "predicted_label": "Office Management",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.61609,
+      "source": "holdback"
+    },
+    {
+      "input": "635TH POST DEPLOYMENT YELLOW RIBBON/REINTEGRATION PROGRAM. THIS IS FOR EVENT SPACE, AUDIO VISUAL SUPPORT, AND COFFEE AND WATER SERVICE ONLY FOR MARCH 29,2025 WICHITA KS",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Travel & Lodging",
+      "timestamp": 1793313657.61609,
+      "source": "holdback"
+    },
+    {
+      "input": "JTF-SB LODGING AND CONFERENCE ROOM YUMA, AZ",
+      "predicted_label": "Travel & Lodging",
+      "corrected_label": "Transportation and Logistics Services",
+      "timestamp": 1793313657.6160908,
+      "source": "holdback"
+    },
+    {
+      "input": "AEROSOL FILTRATION EFFICIENCY TESTER 3160 (SPECIALIZED LAB EQUIPMENT) MAINTENANCE CALL.",
+      "predicted_label": "Medical",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.6160908,
+      "source": "holdback"
+    },
+    {
+      "input": "AUKE BAY HARBOR TIDAL DETERMINATION",
+      "predicted_label": "Facilities & Construction",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.6160908,
+      "source": "holdback"
+    },
+    {
+      "input": "SPARE PARTS ORDER",
+      "predicted_label": "Weapons & Ammunition",
+      "corrected_label": "Sustainment S&E",
+      "timestamp": 1793313657.6160908,
+      "source": "holdback"
+    },
+    {
+      "input": "STEEL, ALLOY, 4140, 1.625 DIA, AMS 6349",
+      "predicted_label": "Industrial Products & Services",
+      "corrected_label": "Weapons & Ammunition",
+      "timestamp": 1793313657.6160908,
+      "source": "holdback"
+    },
+    {
+      "input": "PATRIOT ADVANCED CAPABILITY (PAC-3) TECHNICAL ASSISTANCE (TA) / FIELD SERVICE REPRESENTATIVE (FSR) SUPPORT FOR US AND FMS PARTNERS",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Equipment Related Services",
+      "timestamp": 1793313657.616092,
+      "source": "holdback"
+    },
+    {
+      "input": "THE VANGUARD PROFESSIONAL COACHING CERTIFICATION (VPCC) IS A 80-HOUR ICF LEVEL 1 COURSE THAT PREPARES ATTENDEE TO BECOME AN ICF ASSOCIATE CERTIFIED COACH (ACC).",
+      "predicted_label": "Human Capital",
+      "corrected_label": "Professional Services",
+      "timestamp": 1793313657.616092,
+      "source": "holdback"
+    },
+    {
+      "input": "DEFENSE CENTERS FOR PUBLIC HEALTH OPERATIONAL AND MANPOWER SUPPORT SERVICES FOR DEFENSE CENTERS FOR PUBLIC HEALTH - ABERDEEN AND DEFENSE CENTERS FOR PUBLIC HEALTH - FALLS CHURCH.",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Medical",
+      "timestamp": 1793313657.616092,
+      "source": "holdback"
+    },
+    {
+      "input": "C_4 ELBOW,PIPE TO HOSE",
+      "predicted_label": "Industrial Products & Services",
+      "corrected_label": "Transportation and Logistics Services",
+      "timestamp": 1793313657.616092,
+      "source": "holdback"
+    },
+    {
+      "input": "RTS-MED SUPPORT SERVICES",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Human Capital",
+      "timestamp": 1793313657.616092,
+      "source": "holdback"
+    },
+    {
+      "input": "PREVENTATIVE MAINTENANCE SERVICES AND REPAIR TO BRAND NAME INDUSTRIAC X-RAY MACHINE S9X300 AND 3MVX002400 AT LETTERKENNY MUNITIONS CENTER.",
+      "predicted_label": "Industrial Products & Services",
+      "corrected_label": "Equipment Related Services",
+      "timestamp": 1793313657.616093,
+      "source": "holdback"
+    },
+    {
+      "input": "MISSION SUPPORT EQUIPMENT (MSE) FOR THE LEGACY UUV (UNMANNED UNDERWATER VEHICLE) AND THE SMALL UNMANNED UNDERWATER VEHICLE (SUUV).",
+      "predicted_label": "Research and Development",
+      "corrected_label": "Aircraft, Ships/Submarines & Land Vehicles",
+      "timestamp": 1793313657.616093,
+      "source": "holdback"
+    },
+    {
+      "input": "RUBBER, RAW",
+      "predicted_label": "Sustainment S&E",
+      "corrected_label": "Industrial Products & Services",
+      "timestamp": 1793313657.616093,
+      "source": "holdback"
+    },
+    {
+      "input": "TO PROCURE OFFICE EQUIPMENT.",
+      "predicted_label": "Security and Protection",
+      "corrected_label": "IT",
+      "timestamp": 1793313657.616093,
+      "source": "holdback"
+    },
+    {
+      "input": "EPA 2024 HARS MONITORING SURVEY",
+      "predicted_label": "Professional Services",
+      "corrected_label": "Equipment Related Services",
+      "timestamp": 1793313657.616093,
+      "source": "holdback"
+    },
+    {
+      "input": "FTG258 POWER REDUNDANCY FOR MISSILE FIELD 3",
+      "predicted_label": "Electronic & Communication Equipment",
+      "corrected_label": "Facilities & Construction",
+      "timestamp": 1793313657.6160939,
+      "source": "holdback"
+    }
+  ]
+}

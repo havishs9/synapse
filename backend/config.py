@@ -46,6 +46,12 @@ def datasets() -> dict:
     return yaml.safe_load((CONFIG_DIR / "datasets.yaml").read_text())["datasets"]
 
 
+@lru_cache
+def sourcing() -> dict:
+    """Live dataset search settings (the `sourcing` section of config/datasets.yaml)."""
+    return yaml.safe_load((CONFIG_DIR / "datasets.yaml").read_text())["sourcing"]
+
+
 def model_id(role: str) -> str:
     return models()[role]["api_id"]
 

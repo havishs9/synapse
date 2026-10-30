@@ -49,3 +49,22 @@ Narration feed (agent label, elapsed time, running spend; click to expand the JS
 ## Motion and accessibility
 
 Functional transitions only (120–180ms). The single pulse on build completion. `prefers-reduced-motion` disables both. Visible focus rings on every control; WCAG AA contrast; keyboard: `Cmd/Ctrl+K` switcher, `Cmd/Ctrl+Enter` send, `Esc` closes overlays.
+
+## Phase 3 additions (2026-10-29)
+
+- **Intake** is one assistant message: numbered questions (at most 7), each with pill-shaped quick answers (the
+  selected one is ink-filled) and a free-text box, then a sample-rows box. The task card is a bordered card with
+  label/value rows; editable fields are native selects and inputs; plan changes are a two-column list (answer in
+  ink-3, change in ink). One primary button, "Build specialist", which becomes "Build started · Show progress".
+- **Overlays:** Compare and Use are centered dialogs, Report is a drawer; one at a time, `Esc` closes. Compare's two
+  columns carry a 3px top rule: neutral grey for Nemotron, the specialist's color for the specialist (a result
+  marker, per the identity rule). The yearly projection underlines the specialist's figure in its color.
+- **Training view** order: Pareto scatter (hero), budget meter, agent lanes (one row per agent, handoff files as
+  mono chips), rounds bracket (columns, cards with sparklines, eliminated cards at 45% opacity with the reason),
+  narration feed. The feed scrolls itself, never the pane.
+- **Specialist header** wraps under 640px: monogram, name and Close on the first row, the three actions below.
+- **Motion:** the monogram scales in (260 ms) when the panel opens, alongside the winning dot's pulse; both are off
+  under `prefers-reduced-motion`.
+- **Builds** sit in the sidebar under Specialists (TEAM_PLAN §3.3): a status dot, task name, stage/round or result,
+  spend, and Cancel/Retry. Spec 01 §2.11 lists only chats and specialists in the sidebar; builds were added by the
+  team plan and kept to four rows with "Show all".

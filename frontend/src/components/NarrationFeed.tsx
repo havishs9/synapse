@@ -1,26 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import type { RunEvent } from "../lib/types";
-import { fmtUsd } from "../lib/api";
+import { fmtUsd, getText } from "../lib/api";
 
 export function NarrationFeed({ runId, events, t0 }: { runId: string; events: RunEvent[]; t0: number }) {
   const [open, setOpen] = useState<number | null>(null);
   const [file, setFile] = useState<string>("");
-  const end = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
   const lines = events.map((e, i) => ({ e, i })).filter(({ e }) => e.message);
-  useEffect(() => { end.current?.scrollIntoView({ block: "nearest" }); }, [lines.length]);
+  // Scroll the feed itself, never the pane around it (the Pareto scatter above must stay in view).
+  useEffect(() => { if (box.current && open === null) box.current.scrollTop = box.current.scrollHeight; }, [lines.length]);  // eslint-disable-line
 
   const toggle = async (i: number, ref?: string | null) => {
     if (open === i) { setOpen(null); return; }
     setOpen(i); setFile("");
     if (ref) {
-      const r = await fetch(`/api/runs/${runId}/files/${ref}`);
-      const t = await r.text();
+      const t = (await getText(`/api/runs/${runId}/files/${ref}`)) ?? "File not available.";
       try { setFile(JSON.stringify(JSON.parse(t), null, 2).slice(0, 20000)); } catch { setFile(t.slice(0, 20000)); }
     }
   };
 
   return (
-    <div className="max-h-[320px] overflow-y-auto pr-1" aria-live="polite">
+    <div ref={box} className="max-h-[320px] overflow-y-auto pr-1" aria-live="polite">
       {lines.map(({ e, i }) => (
         <div key={i} className="border-b border-border last:border-0">
           <button className="flex w-full items-baseline gap-2 py-1.5 text-left text-sm hover:bg-surface-2" onClick={() => toggle(i, e.data_ref)}
@@ -36,7 +36,6 @@ export function NarrationFeed({ runId, events, t0 }: { runId: string; events: Ru
           )}
         </div>
       ))}
-      <div ref={end} />
     </div>
   );
 }

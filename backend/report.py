@@ -111,7 +111,8 @@ def to_markdown(rc: dict) -> str:
         r = rc["real_vs_synthetic"]
         lines += ["## Real vs synthetic", "", f"- trained on {r['real_training_rows']} real + {r['synthetic_training_rows']} synthetic rows",
                   f"- real validation {pm}: {_fmt(r.get('real_validation'))}",
-                  f"- held-out synthetic: {_fmt(r.get('synthetic_heldout'))} ({r.get('synthetic_metric', '')}, n={r.get('synthetic_heldout_n')})", ""]
+                  f"- held-out synthetic: {_fmt(r.get('synthetic_heldout'))} ({r.get('synthetic_metric', '')}, n={r.get('synthetic_heldout_n')})"]
+        lines += [f"- {r['note']}", ""] if r.get("note") else [""]
     lines += ["## Speed and cost", "",
               f"- latency p50 {_fmt(rc['latency']['p50_ms'], 3)} ms, p99 {_fmt(rc['latency']['p99_ms'], 3)} ms",
               f"- throughput {_fmt(rc.get('throughput_per_s'), 0)} items/s; model size {_fmt(rc.get('model_size_mb'), 2)} MB",

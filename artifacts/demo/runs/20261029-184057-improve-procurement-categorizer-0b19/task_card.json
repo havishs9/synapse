@@ -1,0 +1,110 @@
+{
+  "task_id": "procurement",
+  "task_name": "Procurement Categorizer",
+  "description": "Sort federal purchase records into spending categories from their short description.",
+  "input_type": "text",
+  "output_type": "multiclass",
+  "labels": [
+    {
+      "name": "Aircraft, Ships/Submarines & Land Vehicles",
+      "definition": "Includes: Aircraft; Land Combat Vehicles; Ships & Submarines"
+    },
+    {
+      "name": "Clothing, Textiles & Subsistence S&E",
+      "definition": "Includes: Subsistence; Textiles, Clothing & Equipage"
+    },
+    {
+      "name": "Electronic & Communication Equipment",
+      "definition": "Includes: Communication Equipment; Detection & Coherent Radiation Eq; Electrical & Electronics Equipment; Night Vision Eq"
+    },
+    {
+      "name": "Electronic & Communication Services",
+      "definition": "Includes: Equipment Leases; Equipment Maintenance"
+    },
+    {
+      "name": "Equipment Related Services",
+      "definition": "Includes: Equipment Modification; Installation of Equipment; Maintenance, Repair and Overhaul; Purchases & Leases; Quality Control; Salvage Services; Technical Representative Services"
+    },
+    {
+      "name": "Facilities & Construction",
+      "definition": "Includes: Construction Related Materials; Construction Related Services; Facilities Purchase & Lease; Facility Related Materials; Facility Related Services"
+    },
+    {
+      "name": "Human Capital",
+      "definition": "Includes: Human Resources Services; Specialized educational services; Vocational Training"
+    },
+    {
+      "name": "IT",
+      "definition": "Includes: Capability As a Service; IT Consulting; IT Professional Service (Labor); Product"
+    },
+    {
+      "name": "Industrial Products & Services",
+      "definition": "Includes: Basic Materials; Fire/Rescue/Safety/Environmental Protection Equipment; Hardware & Tools; Industrial Products Install / Maintenance / Repair; Machinery & Components; Oils, Lubricants, and Waxes; Test & Measurement Supplies"
+    },
+    {
+      "name": "Medical",
+      "definition": "Includes: Drugs and Pharmaceutical Products; Healthcare Services; Medical Equipment and Accessories and Supplies"
+    },
+    {
+      "name": "Miscellaneous S&E",
+      "definition": "Includes: S&E Not Classifed Elsewhere"
+    },
+    {
+      "name": "Office Management",
+      "definition": "Includes: Furniture; Office Management Products; Office Management Services"
+    },
+    {
+      "name": "Professional Services",
+      "definition": "Includes: Business Administration Services; Business administration services; Financial Services; Financial services; Legal Services; Legal services; Management Advisory Services; Marketing and Distribution; Public Relations and Professional Communications Services; Real Estate Services; Social Services; Technical and Engineering Services (non-IT); Trade Policy and Services"
+    },
+    {
+      "name": "Research and Development",
+      "definition": "Includes: Agriculture R&D Services; Community And Regional Development R&D Services; C – National Defense R&D Services; Education, Training, Employment, And Social Services R&D Services; Energy R&D Services; Natural Resources And Environment R&D Services; General Science And Technology R&D Services; Commerce And Housing Credit R&D Services; Income Security R&D Services; International Affairs R&D Services; N – Health R&D Services; Space R&D Services; Transportation R&D Services"
+    },
+    {
+      "name": "Security and Protection",
+      "definition": "Includes: Security Animals & Related Svcs; Security Services; Security Systems"
+    },
+    {
+      "name": "Sustainment S&E",
+      "definition": "Includes: Drones; Engines, Components & Spt Eq; Materials; Supply Parts; Support Ships & Small Craft; Training Aids and Devices"
+    },
+    {
+      "name": "Transportation and Logistics Services",
+      "definition": "Includes: Fuels; Logistics Support Services; Motor Vehicles; Package Delivery & Packaging; Transportation Equipment; Transportation of Things"
+    },
+    {
+      "name": "Travel & Lodging",
+      "definition": "Includes: Lodging; Passenger Travel; Travel Agent & Misc Svcs"
+    },
+    {
+      "name": "Weapons & Ammunition",
+      "definition": "Includes: Ammunition & Explosives; Fire Control; Guided Missiles; Guns; Nuclear Ordnance; Weapons"
+    }
+  ],
+  "positive_definition": null,
+  "error_preference": "balanced",
+  "per_class_error_costs": null,
+  "optimization_metric": "macro_f1",
+  "fpr_target": null,
+  "thresholds": {
+    "primary_min": 0.6,
+    "per_class_floor": null
+  },
+  "needs_reason": true,
+  "monthly_volume": 2000000,
+  "latency_budget_ms": 50.0,
+  "deployment": "cloud_ok",
+  "build_budget_usd": 5.0,
+  "build_budget_minutes": 30.0,
+  "sample_inputs": [
+    "PURCHASE OF LAPTOP COMPUTERS AND DOCKING STATIONS",
+    "JANITORIAL SERVICES FOR FEDERAL BUILDING",
+    "ROOF REPLACEMENT AT BUILDING 12",
+    "OFFICE SUPPLIES - TONER CARTRIDGES",
+    "PHARMACEUTICALS FOR VA MEDICAL CENTER"
+  ],
+  "window_spec": null,
+  "dataset_key": "usaspending_contracts",
+  "plan_changes": []
+}

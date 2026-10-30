@@ -21,7 +21,8 @@ from backend import config  # noqa: E402
 
 KEEP_ALWAYS = {"task_card.json", "dataset_manifest.json", "dataset_stats.json", "candidate_plan.json", "runs.json",
                "eval_report.json", "error_patterns.json", "report_card.json", "report_card.md", "events.jsonl",
-               "run_state.json", "llm_calls.jsonl", "labels.json", "corrections.json", "versions_gate.json"}
+               "run_state.json", "llm_calls.jsonl", "labels.json", "corrections.json", "versions_gate.json",
+               "improve_report.json"}
 DATA_FILES = {"train.jsonl", "val.jsonl", "holdback.jsonl", "synthetic_eval.jsonl"}
 DEST_RUNS = ROOT / "artifacts" / "demo" / "runs"      # committed; replay mode uses RUNS_DIR=./artifacts/demo/runs
 DEST_ART = ROOT / "artifacts" / "demo" / "specialists"

@@ -1,0 +1,130 @@
+{
+  "corrections": [
+    {
+      "input": "Today I was out eating and my card was declined. Why's that?",
+      "predicted_label": "declined_card_payment",
+      "corrected_label": "card_not_working",
+      "timestamp": 1793313639.785728,
+      "source": "holdback"
+    },
+    {
+      "input": "Where do I find PIN for my card?",
+      "predicted_label": "get_physical_card",
+      "corrected_label": "pin_blocked",
+      "timestamp": 1793313639.7857301,
+      "source": "holdback"
+    },
+    {
+      "input": "My cards were stolen",
+      "predicted_label": "lost_or_stolen_card",
+      "corrected_label": "lost_or_stolen_phone",
+      "timestamp": 1793313639.7857301,
+      "source": "holdback"
+    },
+    {
+      "input": "Why does it still charge me even though I was unable to withdraw money from the ATM?",
+      "predicted_label": "declined_cash_withdrawal",
+      "corrected_label": "pending_cash_withdrawal",
+      "timestamp": 1793313639.785731,
+      "source": "holdback"
+    },
+    {
+      "input": "My latest transfer seems to be missing.",
+      "predicted_label": "transfer_fee_charged",
+      "corrected_label": "balance_not_updated_after_bank_transfer",
+      "timestamp": 1793313639.785731,
+      "source": "holdback"
+    },
+    {
+      "input": "I cant transfer money into my account",
+      "predicted_label": "transfer_into_account",
+      "corrected_label": "beneficiary_not_allowed",
+      "timestamp": 1793313639.785731,
+      "source": "holdback"
+    },
+    {
+      "input": "My card info was stolen, what do I do?",
+      "predicted_label": "lost_or_stolen_card",
+      "corrected_label": "compromised_card",
+      "timestamp": 1793313639.785732,
+      "source": "holdback"
+    },
+    {
+      "input": "What should I do to get transactions off of my account if I didn't make them?  My card must have been compromised and I need to freeze it asap!",
+      "predicted_label": "compromised_card",
+      "corrected_label": "card_payment_not_recognised",
+      "timestamp": 1793313639.785732,
+      "source": "holdback"
+    },
+    {
+      "input": "There has been a red flag on my top up.",
+      "predicted_label": "top_up_reverted",
+      "corrected_label": "top_up_failed",
+      "timestamp": 1793313639.785732,
+      "source": "holdback"
+    },
+    {
+      "input": "Are there virtual disposable cards?",
+      "predicted_label": "disposable_card_limits",
+      "corrected_label": "get_disposable_virtual_card",
+      "timestamp": 1793313639.7857332,
+      "source": "holdback"
+    },
+    {
+      "input": "My transfer isn't in",
+      "predicted_label": "balance_not_updated_after_bank_transfer",
+      "corrected_label": "transfer_not_received_by_recipient",
+      "timestamp": 1793313639.7857332,
+      "source": "holdback"
+    },
+    {
+      "input": "I lost track of my card",
+      "predicted_label": "card_arrival",
+      "corrected_label": "lost_or_stolen_card",
+      "timestamp": 1793313639.785734,
+      "source": "holdback"
+    },
+    {
+      "input": "How come I got to pay to get my money from the ATM?",
+      "predicted_label": "declined_cash_withdrawal",
+      "corrected_label": "cash_withdrawal_charge",
+      "timestamp": 1793313639.785734,
+      "source": "holdback"
+    },
+    {
+      "input": "Is a physical charge extra",
+      "predicted_label": "extra_charge_on_statement",
+      "corrected_label": "order_physical_card",
+      "timestamp": 1793313639.785734,
+      "source": "holdback"
+    },
+    {
+      "input": "Can you tell me the status of my new card?",
+      "predicted_label": "card_arrival",
+      "corrected_label": "lost_or_stolen_card",
+      "timestamp": 1793313639.785734,
+      "source": "holdback"
+    },
+    {
+      "input": "I have to transfer money over to my mother, and I have tried numerous times and all that keeps happening is error messages.",
+      "predicted_label": "failed_transfer",
+      "corrected_label": "beneficiary_not_allowed",
+      "timestamp": 1793313639.785735,
+      "source": "holdback"
+    },
+    {
+      "input": "Where can I view my PIN?",
+      "predicted_label": "get_physical_card",
+      "corrected_label": "pin_blocked",
+      "timestamp": 1793313639.785735,
+      "source": "holdback"
+    },
+    {
+      "input": "what is this extra charge with my purchase?",
+      "predicted_label": "extra_charge_on_statement",
+      "corrected_label": "card_payment_fee_charged",
+      "timestamp": 1793313639.785735,
+      "source": "holdback"
+    }
+  ]
+}

@@ -246,6 +246,45 @@ Findings while building this:
 | **Token Factory spend without the cache** | **$0.80** for this build: 451 Nemotron Ultra calls $0.78 (the zero-shot baseline on 300 sealed + 150 validation log windows), 160 Lightning calls $0.02. The Phase 2b logs run (`p2b-logs-d`) reported $0.07 only because 451 of its 452 Ultra calls were answered from the laptop's response cache (`data/cache/llm`). Workers start with an empty cache, so per-build costs in TEAM_PLAN §6 ("$0.07 to $0.31") are too low for new builds |
 | Service account on the endpoint | Not tested yet: jobs were launched with the laptop's user profile. The endpoint's dispatcher needs the nebius CLI and a profile from the service account's credentials file (`nebius profile create --service-account-file`); set up with the redeploy (TEAM_PLAN §2.4) |
 
+## Phase 3: product features (Havish, 2026-10-29)
+
+Checked on Havish's machine against a scratch copy of `artifacts/demo` (so test runs didn't touch the committed
+snapshot), then against the committed snapshot in replay mode.
+
+| Item | Result |
+|---|---|
+| Intake questions from Nemotron Ultra (`json_schema`, strict) | PASS: "Sort purchase records into spending categories" → task `procurement`, 7 questions reworded for the task, 1.8 s. "What's the capital of France?" → no task, honest message. Fallback (model unreachable) tested: keyword match + canned questions (`test_product.py`) |
+| Free-text answers | "about 2 million" → 2,000,000 (Ultra, number parsing as fallback); plan-change lines match what `planner_agent.py` does per input type (logs plans never include B, C, I or L, so those are never "removed") |
+| Compare, procurement v2, "PURCHASE OF LAPTOP COMPUTERS AND DOCKING STATIONS" | both IT; specialist 9.4 ms wall (answered by A-07), Ultra 1,063 ms, $0.000882 for that call (measured tokens × list price); projection $19,363 vs $621 a year at 2M/month (= the build's report card) |
+| Compare, support v1, "My card still hasn't arrived, it's been two weeks" | both card_arrival; 3.6 ms vs 658 ms, Ultra call $0.001116 |
+| Compare input validation | log lines sent to the procurement specialist → 422 with the expected format |
+| Held-back records the live version gets wrong | procurement v2: 95 of 529 scored (records the TF-IDF stage answers alone, so no model calls; their labels equal the cascade's); support v1: 18 of 484; logs: none stored (raw HDFS isn't committed), says so |
+| Improve, support v1 → v2 | 18 corrections + 54 Ultra-written variants (training only). A-11 0.877 → 0.876 and A-09 0.896 → 0.898 on validation; A-09 replaced A-11 as the cascade's first stage. Sealed (2,474, the build's set): 0.935 vs 0.933 → deployed. First attempt picked the cascade's own second stage (B-02) as runner-up, giving H(B-02→B-02); fixed (runner-up = best other finalist on the winner's rung) before the recorded run |
+| Improve, procurement v2 → v3 | 95 held-back corrections. A-07 0.617 → 0.624, A-05 0.631 → 0.632 on validation; H(A-05→K-11). Sealed (3,368): 0.655 vs 0.647 → deployed. 1,082 Nano calls in the final exam, $0.08, 12.4 min (Nano's 100 RPM limit) |
+| Chained improve (v2 → v3 when v2 came from an improve) | Failed at first (the improve run folder has no sealed set); fixed with lineage: training data from the live version's run, sealed set and search records from the original build. Tested, including a rejected v3 and rollback |
+| Improve with Object Storage | Run folder and live bundle fetched from the bucket on a server that didn't run the build; improve run uploaded at the end (`test_improve_on_a_server_without_the_files`, local bucket) |
+| Frontend smoke test (`make screenshots`) | PASS: intake, task card, training view, specialist, compare, Use, report, history, replayed improve run, logs specialist; light and dark at 1440 px; mobile at 390 px; no page errors |
+| Vercel | `vercel.json` builds `frontend/` and serves the SPA; not deployed yet (needs the team's Vercel login) |
+
+Snapshot notes: the live logs specialist (v1) came from run `p2-logs-c`, which isn't in `artifacts/demo/runs`
+(only the v2 rerun `p2b-logs-d` is), so v1's report card can't be shown on a replay server; the Report drawer says
+so and lets you pick v2. The improve report cards had copied the base run's absolute `metrics_path`s (another
+machine's home folder); improve runs now drop them.
+
+## Phase 3: live data sourcing (Havish, 2026-10-29)
+
+| Item | Result |
+|---|---|
+| Hugging Face Hub search (`/api/datasets?search=`) | PASS: matches dataset names only, so Ultra writes 1-3 word name queries. "sms spam" → 8 results with license tags |
+| Dataset viewer API (`/info`, `/first-rows`, `/rows`, max 100 rows a page) | PASS without a token; `codesignal/sms-spam-collection` fully read (5,572 rows) in about 3 s with 8 parallel pages |
+| Tavily search limited to huggingface.co | PASS: 7 dataset ids for "labeled SMS spam classification dataset" |
+| License check | Hub license tag vs the allowlist in `config/datasets.yaml`. Rejected in live runs: `unknown` (ucirvine/sms_spam), `gpl`, `cc-by-nc-nd-4.0`, `cc-by-nc-4.0`, `wtfpl` |
+| Intake, "Create a model that flags spam text messages" | PASS: task Spam Detector (spam/ham, binary); offered codesignal/sms-spam-collection (cc-by-4.0, fit 1.0, spam→spam, ham→ham) and shariul-islam/bengali-sms-smishing-dataset (mit, 0.85); a 0.3-fit OTP dataset is now hidden (`min_fit: 0.5`). About 11 s in all |
+| Data agent on the chosen dataset (no LLM) | PASS: 5,572 rows → 444 duplicates removed → 1,214 train / 404 val / 405 sealed / 106 holdback; manifest records the license, URL and label map |
+| Intake, coffee-app complaints (4 labels) | PASS: no allowed-license dataset fits (NC and unknown licenses, no label column) → synthetic is the only option; 30 Ultra examples for `payment_problems` read as real complaints. Live checks cost about $0.005 |
+| Ultra under `json_schema` | Issue found: Ultra sometimes fills `max_tokens` with whitespace, and the bad reply was cached, so the same request failed every time. Intake and sourcing calls now retry once uncached at temperature 0.4 (`data_sourcing.chat_json`). The keyword fallback matched "log" in "login"; now whole words |
+| Full builds offline (fake LLM) | `test_data_sourcing.py`: a Hub dataset with a synthetic gap-fill label (synthetic rows never in val or the sealed test) and an all-synthetic binary text task (report says every score is on synthetic data). No live custom build has been run yet |
+
 ## Phase 3: pre-built image (2026-10-29)
 
 | Item | Result |
@@ -269,6 +308,8 @@ Findings while building this:
 | Old endpoint | `synapse` (`aiendpoint-e04txwn4spe6v76nes`) stopped, not billed for compute; delete with `nebius ai endpoint delete aiendpoint-e04txwn4spe6v76nes` |
 
 ## Spec conflicts and issues found
+
+0. (2026-10-29) `backend/tests/test_builds_api.py::test_cancel_retry_not_yet_and_unknown` fails when `frontend/dist` exists: `POST /api/builds/..%2F..%2Fetc/cancel` normalizes to `/etc/cancel`, which hits the SPA's GET catch-all and returns 405 instead of 404. No path traversal happens; the assertion assumes no built frontend. Left for Raj (his test, shared `main.py`).
 
 1. **`spec/03_ML_PIPELINE.md` is corrupted and incomplete.** Line 59 contains a stray shell heredoc (`EOFcat > spec/03_ML_PIPELINE.md << 'EOF'`), the content is duplicated after it, and the file ends after the candidate ladder. The planner rules, search schedule, sandbox, repair, cascade and evaluation-rule sections that `00_START_HERE.md` promises are missing. These are needed before Phase 2.
 2. **Nano access type.** Spec 04 lists `NVIDIA-Nemotron-3-Nano-30B-A3B` as Dedicated-only and `Nemotron-3-Nano-30B-A3B` as Public. The public API has only one Nano: ID `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`, display name "Nemotron-3-Nano-30B-A3B", serverless per-token pricing, and it served our calls. It is used as rung K primary.

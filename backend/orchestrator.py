@@ -178,7 +178,7 @@ class Orchestrator:
         self.emit("Orchestrator", "intake", f"Building \"{card.task_name}\" (budget ${self.budget:.2f})",
                   data_ref="task_card.json", kind="handoff")
 
-        paths = run_data_agent(card, self.dir, self.emit)
+        paths = run_data_agent(card, self.dir, self.emit, llm=self.llm)
         labels = load_labels(paths.train, paths.val)
         (self.dir / "labels.json").write_text(json.dumps(labels))
 
