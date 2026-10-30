@@ -397,3 +397,19 @@ Checked against `nebius` CLI 0.12.296 (`nebius ai endpoint create --help`) on th
 - `--auth none` is the default (set explicitly); `--dry-run` validates without creating (`DRY_RUN=1 make deploy`).
 - `--env-secret` reads values from MysteryBox, and `--volume s3://BUCKET:/path` mounts Object Storage. Neither is used yet; secrets go in as `--env` values, which project members can read in the endpoint spec.
 - Platform, preset and disk are read from `config/pricing.yaml` (`cpu-d3`, `2vcpu-8gb`, 40 GiB), so cost-per-1M figures use the hourly rate of the endpoint that is actually deployed. Session 1's script used `4vcpu-16gb` while every recorded cost used `2vcpu-8gb`. The pricing formula now counts the 40 GiB disk, not the 20 GiB minimum (+$0.0019/h); runs before session 2 used 20 GiB.
+
+## Dataset search for the demo tasks (2026-10-30)
+
+`scripts/record_data_search.py` ran the live search (Nemotron Ultra drafts the queries, Hugging Face Hub keyword
+search, one Tavily search limited to huggingface.co, license allowlist, dataset viewer, Ultra fit check) once per
+demo task; results in `artifacts/demo/data_search/`. Nemotron spend $0.0074, 2 Tavily searches returned dataset ids.
+
+- Procurement: 7 candidates, none fit (3 licenses not on the allowlist: "other" or "unknown"; 2 unreadable; 2 labels
+  that don't match).
+- Support tickets: 8 candidates, none fit (7 licenses not on the allowlist: `cc-by-nc-4.0` or unknown; 1 labels that
+  don't match).
+- Logs: the Hub queries returned no text-classification datasets; Tavily returned no dataset pages.
+
+So the demo trains on the vetted datasets in `config/datasets.yaml`, and intake says that instead of claiming the
+search found them. Found and fixed on the way: a dataset whose layout couldn't be read had no `url`/`license`, so
+building the left-out list raised `KeyError` and the whole search failed.

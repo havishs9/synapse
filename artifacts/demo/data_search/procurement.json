@@ -1,0 +1,64 @@
+{
+ "task_id": "procurement",
+ "request": "Sort our purchase records into spending categories",
+ "searched_at": "2026-10-30",
+ "hub_queries": [
+  "transaction categorization",
+  "bank statement classification",
+  "spending category dataset",
+  "financial text classification",
+  "merchant category labeling"
+ ],
+ "web_query": "labeled dataset for bank transaction categorization spending categories",
+ "web_dataset_ids": [
+  "gretelai/synthetic_pii_finance_multilingual",
+  "Brianferrell787/financial-news-multisource"
+ ],
+ "candidates_inspected": 7,
+ "fits": [],
+ "left_out": [
+  {
+   "name": "gretelai/synthetic_pii_finance_multilingual",
+   "url": "https://huggingface.co/datasets/gretelai/synthetic_pii_finance_multilingual",
+   "license": "apache-2.0",
+   "reason": "no text column with a label column next to it"
+  },
+  {
+   "name": "Brianferrell787/financial-news-multisource",
+   "url": "https://huggingface.co/datasets/Brianferrell787/financial-news-multisource",
+   "license": "other",
+   "reason": "license \"other\" isn't on the allowlist"
+  },
+  {
+   "name": "mitulshah/transaction-categorization",
+   "url": "https://huggingface.co/datasets/mitulshah/transaction-categorization",
+   "license": "mit",
+   "reason": "the dataset viewer can't read it"
+  },
+  {
+   "name": "nickmuchi/financial-text-combo-classification",
+   "url": "https://huggingface.co/datasets/nickmuchi/financial-text-combo-classification",
+   "license": "unknown",
+   "reason": "license \"unknown\" isn't on the allowlist"
+  },
+  {
+   "name": "heroiclunatic/financial-text-sentiment-classification",
+   "url": "https://huggingface.co/datasets/heroiclunatic/financial-text-sentiment-classification",
+   "license": "unknown",
+   "reason": "license \"unknown\" isn't on the allowlist"
+  },
+  {
+   "name": "Sumeetgpt/indian-transaction-categorization-synthetic",
+   "url": "https://huggingface.co/datasets/Sumeetgpt/indian-transaction-categorization-synthetic",
+   "license": "mit",
+   "reason": "inputs or labels don't match the task"
+  },
+  {
+   "name": "Karthik-Eswar/indian-transaction-categorization-synthetic",
+   "url": "https://huggingface.co/datasets/Karthik-Eswar/indian-transaction-categorization-synthetic",
+   "license": "mit",
+   "reason": "inputs or labels don't match the task"
+  }
+ ],
+ "note": "Recorded by scripts/record_data_search.py. 'fits' are datasets Nemotron Ultra judged to match the task's labels; the demo trains on the vetted dataset in config/datasets.yaml."
+}

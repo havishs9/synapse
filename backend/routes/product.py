@@ -105,6 +105,100 @@ TASK_BLURB = {
 }
 
 
+# ---- conversational intake: data step, then one message of questions answered in the user's own words -------
+DATA_SEARCH_DIR = config.ROOT / "artifacts" / "demo" / "data_search"     # scripts/record_data_search.py
+VETTED = {"procurement": "usaspending_contracts", "hdfs_logs": "loghub_hdfs_v1", "support_tickets": "banking77"}
+
+
+def _recorded_search(task_id: str) -> dict | None:
+    try:
+        return json.loads((DATA_SEARCH_DIR / f"{task_id}.json").read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+
+
+def _quoted(items: list[str]) -> str:
+    q = [f"“{x}”" for x in items]
+    return "" if not q else q[0] if len(q) == 1 else ", ".join(q[:-1]) + " and " + q[-1]
+
+
+def search_summary(searched: dict, rejected: list[dict], fits: int) -> str:
+    """One sentence on what the dataset search tried and why datasets were left out, counted from its results."""
+    qs = searched.get("hub_queries") or []
+    where = f"Hugging Face for {_quoted(qs)}" if len(qs) <= 3 else f"Hugging Face ({len(qs)} keyword searches)"
+    if searched.get("web_query"):
+        where += " plus a Tavily web search"
+    n = searched.get("candidates", 0)
+    if not n:
+        return f"I searched {where}; none of the results were labeled classification datasets."
+    reasons: dict[str, int] = {}
+    for r in rejected:
+        why = r.get("reason", "")
+        key = ("license" if "license" in why else "match" if "match" in why else "read")
+        reasons[key] = reasons.get(key, 0) + 1
+    words = {"license": ("has a license", "have licenses", " we can't use (non-commercial or unknown)"),
+             "match": ("has inputs or labels", "have inputs or labels", " that don't match"),
+             "read": ("couldn't be read", "couldn't be read", "")}
+    parts = [f"{c} {words[k][0] if c == 1 else words[k][1]}{words[k][2]}"
+             for k, c in sorted(reasons.items(), key=lambda kv: -kv[1])]
+    found = f"{fits} fit{'s' if fits == 1 else ''}" if fits else "none fit"
+    why = "" if not parts else ": " + (parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " and " + parts[-1])
+    return f"I searched {where}: {n} candidate datasets, {found}{why}."
+
+
+def demo_data_step(task_id: str, card: TaskCard) -> dict:
+    """The data message for a demo task: the recorded search (what a live search found on its date) and the
+    vetted dataset the demo trains on, with its source, license and size from the recorded run."""
+    from backend.main import recorded_runs
+    reg = config.datasets()[VETTED[task_id]]
+    run = recorded_runs().get(task_id)
+    src: dict = {}
+    if run:
+        try:
+            src = json.loads((config.runs_dir() / run / "dataset_manifest.json").read_text())["sources"][0]
+        except (OSError, json.JSONDecodeError, KeyError, IndexError):
+            src = {}
+    cite = reg.get("citation") or []
+    dataset = {"name": reg.get("display_name", VETTED[task_id]), "url": reg.get("homepage") or reg["source"],
+               "source": reg["source"], "license": reg.get("license_short", reg["license"]),
+               "license_full": reg["license"], "citation": cite if isinstance(cite, list) else [cite],
+               "rows": src.get("rows_used"), "labels": len(card.labels), "about": reg.get("about", "")}
+    rec = _recorded_search(task_id)
+    search = None
+    if rec:
+        searched = {"hub_queries": rec["hub_queries"], "web_query": rec["web_query"] if rec["web_dataset_ids"] else None,
+                    "candidates": rec["candidates_inspected"]}
+        search = {**searched, "searched_at": rec["searched_at"], "left_out": rec["left_out"], "fits": rec["fits"],
+                  "summary": search_summary(searched, rec["left_out"], len(rec["fits"]))}
+    return {"search": search, "dataset": dataset}
+
+
+def demo_data_message(card: TaskCard, step: dict) -> str:
+    d, s = step["dataset"], step["search"]
+    unit = "log windows" if card.input_type == "log_window" else "records"
+    what = f"{d['rows']:,} labeled {unit}" if d.get("rows") else f"labeled {unit}"
+    labels = ("normal or anomalous" if card.output_type == "binary" else f"{d['labels']} categories")
+    found = s["summary"] + " So I'd use a dataset from our vetted list instead: " if s else "From our vetted list: "
+    return (f"I'll build a **{card.task_name}**. First, the training data. {found}**{d['name']}**, {what} "
+            f"({labels}), {d['license']}. {d.get('about', '')}".rstrip() + "\n\nOK to train on it?")
+
+
+def ask_message(card: TaskCard) -> str:
+    """One message, at most 7 questions (DECISION D5), written as a conversation. The categories were settled in
+    the data step; whatever the reply doesn't cover keeps its default and stays editable on the task card."""
+    binary = card.output_type == "binary"
+    unit = "log windows" if card.input_type == "log_window" else "records"
+    qs = [f"Roughly how many {unit} a month?",
+          ("Which is worse for you: missing a real anomaly, or a false alarm?" if binary else
+           "Do all the categories matter equally, or are some costlier to get wrong?"),
+          f"Just the {'verdict' if binary else 'category'}, or with a short reason?",
+          "Can it call a cloud model for the hard cases, or must it run on your own servers? And how fast does "
+          "each answer need to be?"]
+    return ("Great. A few quick things so I can set the bar:\n\n" + "\n".join(f"- {q}" for q in qs)
+            + f"\n\nAnswer in your own words. Anything you skip keeps a sensible default (build budget "
+              f"${config.credit_budget_usd():.2f} of model calls), and you can change all of it on the task card.")
+
+
 def match_task_fallback(text: str) -> str | None:
     t = text.lower()
     scores = {k: sum(bool(re.search(rf"\b{w}", t)) for w in ws) for k, ws in KEYWORDS.items()}
@@ -222,11 +316,10 @@ def intake_start(body: IntakeStartIn, user: User | None = Depends(current_user))
         return _custom_intake(body, out)
     card = base_card(task_id)
     qs = _reworded(questions_for(card), out if source == "llm" else None)
-    intro = (out or {}).get("intro") if source == "llm" else None
+    step = demo_data_step(task_id, card)
     return {"task_id": task_id, "task_name": card.task_name, "source": source, "questions": qs,
-            "categories": [l.name for l in card.labels],
-            "message": intro or f"I'll build a {card.task_name.lower()} from {TASK_BLURB[task_id]}. "
-                                "A few answers set the quality bar and the plan.",
+            "categories": [l.name for l in card.labels], "data_step": step,
+            "message": demo_data_message(card, step), "ask": ask_message(card),
             "samples_hint": "Paste 10 to 20 sample rows of your real data (labels not needed): models learn the shape "
                             "of the data they're trained on, so the build checks how well the dataset matches it.",
             "replay": config.app_mode() == "replay"}
@@ -265,24 +358,25 @@ def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
     found = data_sourcing.find_datasets(card, draft, llm())
     options = found["options"]
     datasets = [o for o in options if o["kind"] == "hf"]
-    where = "Hugging Face" + (" and the web" if found["searched"].get("web_query") else "")
     lead = (draft.get("reframed_from") or "").strip()
     lead = (lead.rstrip(".") + ". ") if lead else ""
     if lead:
         lead += f"If that works for you, here's the plan for the {card.task_name}. "
+    summary = search_summary(found["searched"], found["rejected"], len(datasets))
+    labels = ", ".join(lab.name for lab in card.labels)
     if datasets:
-        msg = (f"I'll build a {card.task_name.lower()}. I searched {where} and found {len(datasets)} labeled "
-               f"dataset{'s' if len(datasets) > 1 else ''} with an allowed license that fit{'s' if len(datasets) == 1 else ''}; "
-               "pick the training data below (or synthetic data), then a few answers set the quality bar.")
+        msg = (f"I'll build a **{card.task_name}** that sorts each input into: {labels}. First, the training data. "
+               f"{summary} Which should I train on? (Synthetic data from Nemotron is the fallback.)")
     else:
-        msg = (f"I'll build a {card.task_name.lower()}. I searched {where} ({found['searched']['candidates']} candidates) "
-               "but found no labeled dataset with an allowed license that fits, so I'll generate synthetic training "
-               "data with Nemotron. A few answers set the quality bar.")
+        msg = (f"I'll build a **{card.task_name}** that sorts each input into: {labels}. First, the training data. "
+               f"{summary} So I'd generate synthetic training data with Nemotron instead; every score, the sealed "
+               "test included, would then be on synthetic data, and the report says so.\n\nOK to go with that?")
     qs = _reworded(questions_for(card), out)
     return {"task_id": card.task_id, "custom": True, "task_name": card.task_name, "source": "llm", "questions": qs,
             "categories": [lab.name for lab in card.labels], "card": card.model_dump(), "data_options": options,
             "data_choice": options[0]["id"], "data_rejected": found["rejected"][:10], "data_searched": found["searched"],
-            "message": lead + msg, "reframed_from": draft.get("reframed_from") or None,
+            "data_step": {"search": {**found["searched"], "summary": summary, "left_out": found["rejected"][:10]}},
+            "message": lead + msg, "ask": ask_message(card), "reframed_from": draft.get("reframed_from") or None,
             "samples_hint": "Paste 10 to 20 sample rows of your real data (labels not needed): the build checks how "
                             "well the dataset matches them, and synthetic examples copy their style.",
             "replay": False}
@@ -324,6 +418,105 @@ def _parse_text_answers(texts: dict[str, str]) -> dict[str, Any]:
             if n is not None:
                 out[k] = n
     return out
+
+
+_NUM = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s*(?:(thousand|million|billion|mm|k|m|b)\b)?")
+_FIELD_WORDS = {"monthly_volume": "monthly volume", "error_preference": "which mistake is worse",
+                "needs_reason": "reasons", "deployment": "deployment", "latency_budget_ms": "latency",
+                "build_budget_usd": "build budget"}
+_ASKED = ("monthly_volume", "error_preference", "needs_reason", "deployment", "latency_budget_ms")   # ask_message
+
+
+def _rules_reply(t: str, binary: bool) -> dict[str, Any]:
+    """Fixed patterns for the common ways of answering, so a scripted demo reply always parses the same way."""
+    t = t.lower().replace("’", "'")
+    out: dict[str, Any] = {}
+    for m in _NUM.finditer(t):
+        n = float(m.group(1).replace(",", "")) * _MULT.get(m.group(2) or "", 1)
+        before, tail = t[max(0, m.start() - 12):m.start()], t[m.end():m.end() + 40]
+        if before.rstrip().endswith("$") or re.match(r"\s*(dollars?|usd)\b", tail):
+            out.setdefault("build_budget_usd", n)
+        elif re.match(r"\s*(ms|milliseconds?)\b", tail):
+            out.setdefault("latency_budget_ms", n)
+        elif re.match(r"\s*(s|secs?|seconds?)\b", tail):
+            out.setdefault("latency_budget_ms", n * 1000)
+        elif m.group(2) or re.search(r"\bmonth", tail[:32]):
+            out.setdefault("monthly_volume", int(n))
+    if "latency_budget_ms" not in out and re.search(r"no (latency |speed |time )?limit|speed doesn't matter", t):
+        out["latency_budget_ms"] = None
+    if binary:
+        if re.search(r"false (alarms?|positives?)[^.;!?]*\bworse|(fewer|less|no|hate|avoid) false (alarms?|positives?)", t):
+            out["error_preference"] = "precision_first"
+        elif re.search(r"\bmiss(ing|ed|es)?\b[^.;!?]*\bworse|can't (afford to )?miss|never miss|catch (every|all)", t):
+            out["error_preference"] = "recall_first"
+        elif re.search(r"\bboth\b|\bequally\b|\beither\b", t):
+            out["error_preference"] = "balanced"
+    else:
+        if re.search(r"costl|more costly|expensive to (miss|get wrong)|matter more|more important|can't afford to miss|critical", t):
+            out["error_preference"] = "recall_first"
+        elif re.search(r"\bequal(ly)?\b|\ball the same\b|\ball matter\b", t):
+            out["error_preference"] = "balanced"
+    if re.search(r"just the (category|verdict|label|answer)|(category|verdict|label) only|no (reasons?|explanations?)|"
+                 r"without (a |any )?(reasons?|explanations?)|don't need (a |any )?(reasons?|explanations?)", t):
+        out["needs_reason"] = False
+    elif re.search(r"\b(reasons?|explanations?|explain|why)\b", t):
+        out["needs_reason"] = True
+    if re.search(r"own servers|on[- ]?prem|offline|no cloud|in[- ]house|(can't|cannot|must not|mustn't) (call|use) (a |the )?cloud", t):
+        out["deployment"] = "offline"
+    elif re.search(r"cloud[^.;!?]{0,25}\b(fine|ok|okay|good|allowed)\b|\b(can|may) call\b|calls? (are|is) (fine|ok)", t):
+        out["deployment"] = "cloud_ok"
+    return out
+
+
+def parse_reply(text: str, card: TaskCard) -> dict[str, Any]:
+    """One free-text reply to the intake questions → task-card answers. Fixed patterns first; Nemotron Ultra fills
+    only the fields they didn't find (and may say nothing; those keep their defaults)."""
+    out = _rules_reply(text, card.output_type == "binary")
+    missing = [k for k in _FIELD_WORDS if k not in out]
+    if all(k in out for k in _ASKED) or len(text.strip()) < 3:     # the budget isn't asked: only "$3" sets it
+        return out
+    prompt = ("A user answered intake questions for a model they want built. Map their reply to these task-card "
+              "fields, using null for anything the reply doesn't say: error_preference (recall_first = missing a case "
+              "or some categories are costlier, precision_first = false alarms are worse, balanced), needs_reason "
+              "(true | false), monthly_volume (integer items per month), latency_budget_ms (number), deployment "
+              f"(offline | cloud_ok), build_budget_usd (number).\nReply: \"\"\"{text[:1500]}\"\"\"\n"
+              'Return JSON with exactly these keys: {"<field>": <value or null>}')
+    try:
+        _guard()
+        res = llm().chat(MAIN_ROLE, [{"role": "user", "content": prompt}], agent="Planner", purpose="intake_reply",
+                         max_tokens=300, thinking=False, response_format={"type": "json_object"})
+        parsed = res.json()
+        out.update({k: parsed[k] for k in missing if parsed.get(k) is not None})
+    except Exception:
+        pass
+    return out
+
+
+def reply_ack(answers: dict[str, Any], card: TaskCard) -> str:
+    """What the reply was understood as, so the user can see it before the task card."""
+    binary = card.output_type == "binary"
+    said = []
+    if "monthly_volume" in answers:
+        said.append(f"{_fmt_int(int(answers['monthly_volume']))} a month")
+    ep = answers.get("error_preference")
+    if ep:
+        said.append({"recall_first": "missing one is worse" if binary else "some categories are costlier to miss",
+                     "precision_first": "false alarms are worse",
+                     "balanced": "both mistakes equally" if binary else "all categories equally"}.get(ep, ep))
+    if "needs_reason" in answers:
+        said.append("with a short reason" if answers["needs_reason"] else f"just the {'verdict' if binary else 'category'}")
+    if "deployment" in answers:
+        said.append("cloud calls allowed" if answers["deployment"] == "cloud_ok" else "your own servers only")
+    if "latency_budget_ms" in answers:
+        lat = answers["latency_budget_ms"]
+        said.append(f"under {lat:g} ms" if isinstance(lat, (int, float)) else "no latency limit")
+    if "build_budget_usd" in answers:
+        said.append(f"${float(answers['build_budget_usd']):.2f} build budget")
+    skipped = [_FIELD_WORDS[k] for k in _FIELD_WORDS if k not in answers]
+    head = f"Got it: {', '.join(said)}." if said else "I couldn't pick out specific answers, so everything keeps its default."
+    rest = f" Defaults for the rest ({', '.join(skipped)})." if said and skipped else ""
+    return (head + rest + " Here's the task card: the lines under it show what each answer changes in the plan. "
+            "Edit anything, then build.")
 
 
 def apply_answers(card: TaskCard, answers: dict[str, Any], notes: dict[str, str]) -> tuple[TaskCard, list[dict]]:
@@ -444,6 +637,7 @@ class IntakeCardIn(BaseModel):
     data_option: dict | None = None                            # custom task: the chosen data option
     answers: dict[str, Any] = Field(default_factory=dict)      # question id → chosen option value
     texts: dict[str, str] = Field(default_factory=dict)        # question id → free-text answer
+    reply: str | None = Field(default=None, max_length=4000)  # one free-text reply to the intake questions
     samples: list[str] = Field(default_factory=list, max_length=50)
 
 
@@ -473,7 +667,18 @@ def intake_card(body: IntakeCardIn, user: User | None = Depends(current_user)):
     texts = {k: v.strip() for k, v in body.texts.items() if isinstance(v, str) and v.strip()}
     notes = {"labels": texts.pop("labels")} if "labels" in texts else {}
     answers = {**body.answers, **_parse_text_answers(texts)}
+    ack = None
+    if body.reply and body.reply.strip():
+        said = parse_reply(body.reply, base)
+        answers.update(said)
+        ack = reply_ack(said, base)
     card, changes = apply_answers(base, answers, notes)
+    if body.task_id in VETTED:
+        reg = config.datasets()[VETTED[body.task_id]]
+        changes.insert(0, {"question": "data", "answer": reg.get("display_name", VETTED[body.task_id]), "change": (
+            f"Trains on {reg.get('display_name', VETTED[body.task_id])} ({reg.get('license_short', reg['license'])}), "
+            "deduplicated, then split into train, validation and a sealed test set that training never sees")})
+        card = card.model_copy(update={"plan_changes": [c["change"] for c in changes]})
     if card.data_source:
         src = card.data_source
         changes.insert(0, {"question": "data", "answer": src["name"], "change": (
@@ -485,7 +690,8 @@ def intake_card(body: IntakeCardIn, user: User | None = Depends(current_user)):
     samples = [s.strip() for s in body.samples if s.strip()][:20]
     if samples:
         card = card.model_copy(update={"sample_inputs": samples})
-    return {"card": card.model_dump(), "plan_changes": changes, "replay": config.app_mode() == "replay"}
+    return {"card": card.model_dump(), "plan_changes": changes, "answers": answers, "ack": ack,
+            "replay": config.app_mode() == "replay"}
 
 
 # ---- specialist helpers ------------------------------------------------------------------

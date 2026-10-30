@@ -383,8 +383,9 @@ def find_datasets(card: TaskCard, draft: dict, llm) -> dict:
     for p in picks:
         p["format_match"] = format_match(card.sample_inputs, p["samples"])
         p["samples"] = p["samples"][:3]
-    rejected = [{"name": c["name"], "url": c["url"], "license": c["license"], "reason": c["reason"]}
-                for c in inspected if not c.get("usable")]
+    page = lambda name: f"{cfg()['hf_dataset_page']}/{name}"
+    rejected = [{"name": c["name"], "url": c.get("url") or page(c["name"]), "license": c.get("license", "unknown"),
+                 "reason": c["reason"]} for c in inspected if not c.get("usable")]
     rejected += [{"name": c["name"], "url": c["url"], "license": c["license"],
                   "reason": "inputs or labels don't match the task"}
                  for c in usable if c["name"] not in {p["name"] for p in picks}]

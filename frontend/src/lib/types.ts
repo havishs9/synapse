@@ -15,10 +15,17 @@ export type DataOption = {
   format_match?: { score: number | null; explanation: string };
 };
 export type RejectedDataset = { name: string; url: string; license: string; reason: string };
+/** The data step of intake (backend/routes/product.py): the dataset search and, for demo tasks, the vetted dataset. */
+export type DataStep = {
+  search?: { hub_queries: string[]; web_query?: string | null; candidates: number; searched_at?: string; summary: string;
+             left_out: RejectedDataset[] } | null;
+  dataset?: { name: string; url: string; source: string; license: string; license_full: string; citation: string[];
+              rows?: number | null; labels: number; about?: string };
+};
 
 export type Msg = {
   id: string; role: "user" | "assistant"; content: string;
-  kind?: "text" | "questions" | "taskcard" | "build" | "error";
+  kind?: "text" | "questions" | "data" | "ask" | "taskcard" | "build" | "error";
   card?: any; runId?: string; attachment?: { name: string; rows: number };
   // intake
   taskId?: string; questions?: Question[]; categories?: string[]; samplesHint?: string; samples?: string[];
@@ -27,6 +34,8 @@ export type Msg = {
   // custom task: the drafted card and its data choices
   draftCard?: any; dataOptions?: DataOption[]; dataChoice?: string; dataRejected?: RejectedDataset[];
   dataOption?: DataOption;
+  // conversational intake: the data step, then one message of questions answered in a chat reply
+  dataStep?: DataStep; ask?: string;
 };
 
 export type Chat = { id: string; title: string; messages: Msg[]; updated: number };

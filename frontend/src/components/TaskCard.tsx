@@ -1,65 +1,90 @@
 import { useState } from "react";
-import type { DataOption, Msg, Question } from "../lib/types";
+import type { DataOption, DataStep, Msg } from "../lib/types";
 import type { Intake } from "../lib/useIntake";
 import { fmtInt } from "../lib/api";
+import { Markdown } from "./Markdown";
 
-const same = (a: any, b: any) => JSON.stringify(a) === JSON.stringify(b);
+/** Quick replies under an intake message. Each one is sent as the user's own chat message, so the conversation
+ * reads the same whether they click or type. */
+function QuickReplies({ replies, onSay, disabled }: { replies: string[]; onSay: (text: string) => void; disabled?: boolean }) {
+  return (
+    <div className="mt-3 flex flex-wrap gap-1.5">
+      {replies.map((r) => (
+        <button key={r} className="rounded-full border border-border px-3 py-1 text-sm text-ink-2 transition-colors hover:bg-surface-2"
+          disabled={disabled} onClick={() => onSay(r)}>{r}</button>
+      ))}
+    </div>
+  );
+}
 
-/** One message with at most 7 clarifying questions (spec 01 §2.2). Each has quick answers and a free-text box. */
-export function QuestionsMessage({ msg, intake }: { msg: Msg; intake: Intake }) {
-  const [answers, setAnswers] = useState<Record<string, any>>(msg.answers ?? {});
-  const [texts, setTexts] = useState<Record<string, string>>(msg.texts ?? {});
-  const [samples, setSamples] = useState((msg.samples ?? []).join("\n"));
-  const [showCats, setShowCats] = useState(false);
-  const [dataChoice, setDataChoice] = useState(msg.dataChoice);
+/** What the dataset search tried: queries, the Tavily web search, and each dataset left out with its reason. */
+function SearchDetails({ search }: { search: NonNullable<DataStep["search"]> }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-2">
+      <button type="button" className="btn-ghost text-xs" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        {open ? "Hide" : "Show"} the search{search.left_out.length ? ` and the ${search.left_out.length} datasets left out` : ""}
+      </button>
+      {open && (
+        <div className="mt-1 space-y-1 text-xs text-ink-3">
+          <p>Hugging Face Hub search: {search.hub_queries.map((q) => `“${q}”`).join(", ")}</p>
+          {search.web_query && <p>Tavily web search (huggingface.co): “{search.web_query}”</p>}
+          {!!search.left_out.length && (
+            <ul className="space-y-0.5">
+              {search.left_out.map((r) => (
+                <li key={r.name}><a className="hover:underline" href={r.url} target="_blank" rel="noreferrer">{r.name}</a>
+                  {r.license && r.license !== "unknown" && <span className="ml-1">({r.license})</span>}: {r.reason}</li>
+              ))}
+            </ul>
+          )}
+          {search.searched_at && <p>Searched {search.searched_at}; recorded, so the demo doesn't depend on live results</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Intake step 1: where the training data comes from, for the user to approve before any questions. */
+export function DataStepMessage({ msg, onSay }: { msg: Msg; onSay: (text: string) => void }) {
+  const step = msg.dataStep ?? {};
+  const d = step.dataset;
+  const [choice, setChoice] = useState(msg.dataChoice);
+  const options = msg.dataOptions ?? [];
+  const chosen = options.find((o) => o.id === choice);
   const done = !!msg.answered;
-  const qs = (msg.questions ?? []).slice(0, 7);
-
-  const submit = () => intake.answer(msg, answers, Object.fromEntries(Object.entries(texts).filter(([, v]) => v.trim())),
-                                     samples.split("\n").map((s) => s.trim()).filter(Boolean), dataChoice);
   return (
     <div>
-      <p className="mb-3">{msg.content}</p>
-      {!!msg.dataOptions?.length && (
-        <DataChoice options={msg.dataOptions} rejected={msg.dataRejected ?? []} value={dataChoice} disabled={done}
-          onChange={setDataChoice} name={`data-${msg.id}`} />
+      <Markdown text={msg.content} />
+      {d && (
+        <div className="card mt-3 p-3 text-sm">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <a className="font-medium underline-offset-2 hover:underline" href={d.url} target="_blank" rel="noreferrer">{d.name}</a>
+            <span className="chip" title={d.license_full}>{d.license}</span>
+            {d.rows != null && <span className="text-xs text-ink-3 tabular-nums">{d.rows.toLocaleString()} labeled rows</span>}
+          </div>
+          {!!msg.categories?.length && <p className="mt-1 text-xs text-ink-3">{msg.categories.length > 2 ? `${msg.categories.length} categories: ` : "Labels: "}{msg.categories.slice(0, 8).join(" · ")}{msg.categories.length > 8 ? " …" : ""}</p>}
+          {d.citation.filter(Boolean).map((c) => <p key={c} className="mt-1 text-xs text-ink-3">Cite: {c}</p>)}
+        </div>
       )}
-      <ol className="space-y-4">
-        {qs.map((q: Question, i) => (
-          <li key={q.id}>
-            <div className="mb-1.5 flex gap-2"><span className="text-ink-3 tabular-nums">{i + 1}.</span><span>{q.text}</span></div>
-            {q.id === "labels" && !!msg.categories?.length && (
-              <div className="mb-1.5 pl-5">
-                <button className="btn-ghost text-xs" onClick={() => setShowCats((s) => !s)} aria-expanded={showCats}>
-                  {showCats ? "Hide" : "Show"} the {msg.categories.length} categories
-                </button>
-                {showCats && <p className="mt-1 text-sm text-ink-2">{msg.categories.join(" · ")}</p>}
-              </div>
-            )}
-            <div className="flex flex-wrap items-center gap-1.5 pl-5" role="radiogroup" aria-label={q.text}>
-              {q.options.map((o) => {
-                const on = !texts[q.id]?.trim() && same(answers[q.id], o.value);
-                return (
-                  <button key={String(o.value)} role="radio" aria-checked={on} disabled={done}
-                    className={`rounded-full border px-3 py-1 text-sm transition-colors ${on ? "border-ink bg-ink text-surface" : "border-border text-ink-2 hover:bg-surface-2"}`}
-                    onClick={() => { setAnswers((a) => ({ ...a, [q.id]: o.value })); setTexts((t) => ({ ...t, [q.id]: "" })); }}>
-                    {o.label}
-                  </button>
-                );
-              })}
-              <input className="input min-w-[140px] flex-1 py-1 text-sm" placeholder="Or say it in your words" disabled={done}
-                aria-label={`${q.text} (free text)`} value={texts[q.id] ?? ""} onChange={(e) => setTexts((t) => ({ ...t, [q.id]: e.target.value }))} />
-            </div>
-          </li>
-        ))}
-      </ol>
-      <div className="mt-4">
-        <label className="mb-1 block text-sm font-medium" htmlFor={`samples-${msg.id}`}>Sample rows</label>
-        <p className="mb-1.5 text-xs text-ink-3">{msg.samplesHint}</p>
-        <textarea id={`samples-${msg.id}`} className="input mono min-h-[72px] text-sm" rows={3} disabled={done}
-          placeholder="One record per line" value={samples} onChange={(e) => setSamples(e.target.value)} />
-      </div>
-      {!done && <button className="btn-primary mt-3" onClick={submit} disabled={intake.busy}>{intake.busy ? "Making the task card…" : "Make task card"}</button>}
+      {!!options.length && (
+        <div className="mt-3">
+          <DataChoice options={options} rejected={[]} value={choice} disabled={done} onChange={setChoice} name={`data-${msg.id}`} />
+        </div>
+      )}
+      {step.search && <SearchDetails search={step.search} />}
+      {!done && <QuickReplies onSay={onSay} replies={options.length
+        ? [chosen ? (chosen.kind === "synthetic" ? "Use synthetic data" : `Use ${chosen.name}`) : "Yes, use it"]
+        : ["Yes, use it", "No, something else"]} />}
+    </div>
+  );
+}
+
+/** Intake step 2: the clarifying questions as one conversational message; the answer is a normal chat reply. */
+export function AskMessage({ msg }: { msg: Msg }) {
+  return (
+    <div>
+      <Markdown text={msg.content} />
+      {!msg.answered && <p className="mt-2 text-xs text-ink-3">Reply in the message box below.</p>}
     </div>
   );
 }

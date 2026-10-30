@@ -1,0 +1,16 @@
+{
+ "task_id": "hdfs_logs",
+ "request": "Flag anomalies in our system logs",
+ "searched_at": "2026-10-30",
+ "hub_queries": [
+  "log anomaly detection",
+  "system log classification",
+  "error log dataset"
+ ],
+ "web_query": "labeled system log anomaly detection dataset huggingface",
+ "web_dataset_ids": [],
+ "candidates_inspected": 0,
+ "fits": [],
+ "left_out": [],
+ "note": "Recorded by scripts/record_data_search.py. 'fits' are datasets Nemotron Ultra judged to match the task's labels; the demo trains on the vetted dataset in config/datasets.yaml."
+}
