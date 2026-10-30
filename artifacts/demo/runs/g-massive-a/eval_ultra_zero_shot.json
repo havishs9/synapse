@@ -1,0 +1,19 @@
+{
+  "model": "ultra_zero_shot",
+  "metrics": {
+    "n": 300,
+    "exact_match": 0.37333333333333335,
+    "intent_accuracy": 0.8066666666666666,
+    "slot_precision": 0.5341365461847389,
+    "slot_recall": 0.4523809523809524,
+    "slot_f1": 0.4898710865561694,
+    "valid_json": 1.0
+  },
+  "display_name": "Nemotron Ultra, zero-shot (intent and slot names in the prompt)",
+  "list_cost_usd": 0.177311,
+  "cost_per_1m_usd": 591.0366666666666,
+  "p50_ms": 986.5685210097581,
+  "latency_note": "API round trip from the laptop",
+  "sealed_sample": 300,
+  "created": 1793367829.052211
+}

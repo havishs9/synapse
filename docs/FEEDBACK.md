@@ -36,6 +36,20 @@ are in `docs/VERIFICATION.md`.
 - **The catalog lists two Nano entries** (one marked Dedicated-only) while the API serves one ID under the public
   display name. We weren't sure which we were billed for until we checked the verbose models list.
 
+**Fine-tuning (rung G, 2026-10-30)**
+
+- **Worked well:** a LoRA job on Qwen3-0.6B (11k short examples) went from upload to finished in about 17 minutes
+  with no GPU setup on our side, and the checkpoint is downloadable through the files API, so we could serve the
+  model on our own CPU endpoint instead of a dedicated GPU endpoint.
+- **Sequence packing is on by default and nothing warns about it.** With short examples (about 31 tokens each),
+  packing turned 11,436 examples into 18 optimizer steps of 16 × 8,192 tokens; warmup rounded to zero steps and
+  training diverged (final train loss 6.0, output was noise). `packing: false` gave 1,430 steps and a good model.
+  A warning when steps per epoch are very low would have saved us a run.
+- **The downloaded LoRA checkpoint doesn't load with PEFT as-is.** Its tensor names (`model.layers.0...lora_A.weight`)
+  lack the `base_model.model.` prefix PEFT expects, and its config sets `init_lora_weights: false`, so
+  `PeftModel.from_pretrained` loads no weights, keeps random adapters and gives no error. We merged the weights by
+  hand (`W += alpha/r · B·A`). Please save PEFT-compatible names, or document the format.
+
 ## Token Factory Sandboxes
 
 - **Our account had no permissions:** `/v1/whoami` returned every permission `false` (import, spawn, list,
