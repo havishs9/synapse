@@ -109,7 +109,7 @@ def match_task_fallback(text: str) -> str | None:
     t = text.lower()
     scores = {k: sum(bool(re.search(rf"\b{w}", t)) for w in ws) for k, ws in KEYWORDS.items()}
     best = max(scores, key=scores.get)
-    return best if scores[best] else None
+    return best if scores[best] >= 2 else None      # one generic word ("message") isn't enough to pick a dataset
 
 
 def _fmt_int(n: int) -> str:
@@ -257,14 +257,19 @@ def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
                            "three demo tasks: " + "; ".join(TASK_BLURB.values()) + "."}
     if not draft.get("feasible"):
         return {"task_id": None, "source": "llm", "questions": [],
-                "message": f"I can't build that as a specialist: {draft.get('why_not') or 'it is not a classification task'}. "
-                           "Synapse builds small models that sort one text into a fixed set of labels, e.g. \"flag spam "
-                           "messages\" or \"sort product reviews by sentiment\"."}
+                "message": f"I can't turn that into a specialist: {(draft.get('why_not') or 'no classification task fits it').rstrip('.')}. "
+                           "Synapse builds small, cheap models for work you'd otherwise send to a big model again and "
+                           "again, e.g. \"flag spam messages\", \"route support tickets\" or \"does this movie fit my "
+                           "tastes\". Describe a repetitive decision like that and I'll build it."}
     card = data_sourcing.card_from_draft(draft, samples)
     found = data_sourcing.find_datasets(card, draft, llm())
     options = found["options"]
     datasets = [o for o in options if o["kind"] == "hf"]
     where = "Hugging Face" + (" and the web" if found["searched"].get("web_query") else "")
+    lead = (draft.get("reframed_from") or "").strip()
+    lead = (lead.rstrip(".") + ". ") if lead else ""
+    if lead:
+        lead += f"If that works for you, here's the plan for the {card.task_name}. "
     if datasets:
         msg = (f"I'll build a {card.task_name.lower()}. I searched {where} and found {len(datasets)} labeled "
                f"dataset{'s' if len(datasets) > 1 else ''} with an allowed license that fit{'s' if len(datasets) == 1 else ''}; "
@@ -277,7 +282,7 @@ def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
     return {"task_id": card.task_id, "custom": True, "task_name": card.task_name, "source": "llm", "questions": qs,
             "categories": [lab.name for lab in card.labels], "card": card.model_dump(), "data_options": options,
             "data_choice": options[0]["id"], "data_rejected": found["rejected"][:10], "data_searched": found["searched"],
-            "message": msg,
+            "message": lead + msg, "reframed_from": draft.get("reframed_from") or None,
             "samples_hint": "Paste 10 to 20 sample rows of your real data (labels not needed): the build checks how "
                             "well the dataset matches them, and synthetic examples copy their style.",
             "replay": False}

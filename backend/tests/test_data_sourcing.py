@@ -146,3 +146,9 @@ def fixture_env(tmp_env, monkeypatch):
     monkeypatch.setenv("SYNAPSE_FAKE_LLM", "1")
     monkeypatch.setenv("MAX_REPAIR_ROUNDS", "1")
     return tmp_env
+
+
+def test_pick_columns_ignores_list_features():
+    feats = {"text": {"_type": "Value", "dtype": "string"}, "tags": [{"_type": "Value", "dtype": "string"}],
+             "label": {"_type": "ClassLabel", "names": ["neg", "pos"]}}
+    assert ds._pick_columns(feats, [{"text": "good", "tags": ["a"], "label": 1}]) == ("text", "label", ["neg", "pos"])

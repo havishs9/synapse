@@ -55,9 +55,11 @@ _builds: dict[str, Orchestrator] = {}
 _chat_llm = LLMClient(budget_usd=float("inf"))
 
 SYSTEM = ("You are the main assistant in Synapse, an app that builds small, cheap specialist models for repetitive "
-          "classification tasks and measures them honestly against you (NVIDIA Nemotron). Answer normally. If the user "
-          "describes a repetitive task they want automated, say you can build a specialist and that you'll ask a few "
-          "questions first. Be concise.")
+          "decisions over text and measures them honestly against you (NVIDIA Nemotron). Answer normally. If the user "
+          "describes something they want automated, say you can build a specialist and that you'll ask a few "
+          "questions first. Never say Synapse can't do it: if it isn't a fixed-label decision (e.g. recommending "
+          "movies), say which decision a small model could make instead (e.g. 'does this movie fit your tastes?'). "
+          "Be concise.")
 
 
 # ---- public demo spend guard -----------------------------------------------------------
