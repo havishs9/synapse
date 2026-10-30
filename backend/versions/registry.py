@@ -397,6 +397,7 @@ def ensure_bundle(sid: str, version: int, only: list[str] | None = None) -> Path
             if objects.sha256(tmp) != expected.get(name):
                 tmp.unlink(missing_ok=True)
                 raise objects.StorageError(f"{sid} v{version}/{name} doesn't match its recorded hash; not loading it")
+            (d / name).parent.mkdir(parents=True, exist_ok=True)     # bundles may have subfolders (rung G: model/)
             tmp.replace(d / name)
         return d
 
