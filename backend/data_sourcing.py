@@ -93,11 +93,12 @@ def hub_info(dataset_id: str) -> dict:
 DRAFT_SCHEMA = {
     "type": "json_schema", "json_schema": {"name": "task_draft", "strict": True, "schema": {
         "type": "object", "additionalProperties": False,
-        "required": ["feasible", "why_not", "task_name", "description", "output_type", "labels", "positive_label",
-                     "search_queries", "web_query", "input_hint"],
+        "required": ["feasible", "why_not", "reframed_from", "task_name", "description", "output_type", "labels",
+                     "positive_label", "search_queries", "web_query", "input_hint"],
         "properties": {
             "feasible": {"type": "boolean"},
             "why_not": {"type": "string"},
+            "reframed_from": {"type": "string"},
             "task_name": {"type": "string"},
             "description": {"type": "string"},
             "output_type": {"type": "string", "enum": ["binary", "multiclass"]},
@@ -118,8 +119,14 @@ def draft_task(text: str, samples: list[str], llm) -> dict:
         "text-classification tasks (one short text in, one label out). The user wrote:\n"
         f'"""{text[:2000]}"""\n'
         + ("Sample inputs they pasted:\n" + "\n".join(f"- {s[:200]}" for s in samples[:10]) + "\n" if samples else "")
-        + "\nDraft the task. Set feasible=false (and say why in why_not) only if it isn't a classification of a "
-        "text input into a fixed set of labels. task_name: 2 to 4 words in Title Case ending in a role noun "
+        + "\nDraft the task. If the request is already a classification of a text input into a fixed set of "
+        "labels, draft it and set reframed_from=\"\". If it is something else (recommending, ranking, predicting a "
+        "number, generating or extracting text, answering questions), do not refuse: draft the closest text "
+        "classification task that would still serve the user's goal, and in reframed_from say in one plain sentence "
+        "what a small classifier can't do directly and how this task helps instead (e.g. for 'recommend movies for "
+        "my tastes': 'A small specialist can't rank a whole catalogue, but it can read a movie's description and "
+        "say whether it fits your tastes'). Set feasible=false (and say why in why_not) only if no classification "
+        "task reasonably serves the goal (e.g. 'write me a poem', 'what's the weather'). task_name: 2 to 4 words in Title Case ending in a role noun "
         "(e.g. 'Spam Detector', 'Review Sentiment Classifier'). description: one sentence. labels: 2 to 20 short "
         "snake_case names with a one-sentence definition each; for a yes/no task use output_type=binary with "
         "exactly 2 labels and set positive_label to the one to detect (else positive_label=\"\"). "
@@ -219,6 +226,7 @@ def _is_text_classification(d: dict) -> bool:
 
 def _pick_columns(features: dict, rows: list[dict]) -> tuple[str | None, str | None, list[str] | None]:
     """Text column, label column, and the label names when the label is a ClassLabel (ints in the rows)."""
+    features = {k: f for k, f in features.items() if isinstance(f, dict)}   # list/Sequence columns aren't text or labels
     strings = [k for k, f in features.items() if f.get("_type") == "Value" and f.get("dtype") in ("string", "large_string")]
     label_col, names = None, None
     classlabels = [k for k, f in features.items() if f.get("_type") == "ClassLabel"]
@@ -358,8 +366,15 @@ def find_datasets(card: TaskCard, draft: dict, llm) -> dict:
                 continue
     pool = [d for d in hub + extra if _is_text_classification(d)]
     pool = sorted(pool, key=lambda d: -(d.get("downloads") or 0))[: cfg()["max_candidates_inspected"]]
+    def safe_inspect(d: dict) -> dict:      # one malformed dataset must not fail the whole search
+        try:
+            return inspect(d)
+        except Exception as exc:
+            return {"id": f"hf:{d.get('id')}", "kind": "hf", "name": d.get("id"), "usable": False,
+                    "reason": f"couldn't read its layout ({type(exc).__name__})"}
+
     with ThreadPoolExecutor(6) as ex:
-        inspected = list(ex.map(inspect, pool))
+        inspected = list(ex.map(safe_inspect, pool))
     usable = [c for c in inspected if c.get("usable")]
     try:
         picks = choose(card, usable, llm)
