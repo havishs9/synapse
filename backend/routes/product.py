@@ -264,6 +264,8 @@ def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
     try:
         _guard()
         draft = data_sourcing.draft_task(body.text, samples, llm())
+        if not draft.get("feasible") and EXPLICIT_BUILD.search(body.text):
+            draft = data_sourcing.draft_task(body.text, samples, llm(), insist=True)
     except HTTPException as exc:
         return {"task_id": None, "source": "fallback", "questions": [], "message": f"{exc.detail} I can still build "
                 "the three demo tasks: " + "; ".join(TASK_BLURB.values()) + "."}
@@ -280,8 +282,14 @@ def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
     found = data_sourcing.find_datasets(card, draft, llm())
     options = found["options"]
     datasets = [o for o in options if o["kind"] == "hf"]
+    apis = [o for o in options if o["kind"] == "api"]
     where = "Hugging Face" + (" and the web" if found["searched"].get("web_query") else "")
-    if datasets:
+    if apis and not datasets:
+        msg = (f"I'll build {_a(card.task_name.lower())}. I searched {where} and found no labeled dataset that fits, but "
+               f"{' and '.join(o['name'] for o in apis)} {'have' if len(apis) > 1 else 'has'} real items of this kind "
+               f"under an open license: {data_sourcing.teacher_name()} labels them for your task (the report says so). "
+               "Pick the training data below, then a few answers set the quality bar.")
+    elif datasets:
         msg = (f"I'll build {_a(card.task_name.lower())}. I searched {where} and found {len(datasets)} labeled "
                f"dataset{'s' if len(datasets) > 1 else ''} with an allowed license that fit{'s' if len(datasets) == 1 else ''}; "
                "pick the training data below (or synthetic data), then a few answers set the quality bar.")
@@ -290,6 +298,11 @@ def _custom_intake(body: "IntakeStartIn", out: dict) -> dict:
                "but found no labeled dataset with an allowed license that fits, so I'll generate synthetic training "
                "data with Nemotron. A few answers set the quality bar.")
     qs = _reworded(questions_for(card), out)
+    pref = str(draft.get("preference_question") or "").strip()
+    if pref and qs and qs[0]["id"] == "labels":
+        # A personal task: the answer (added to the task description) is what the teacher and synthetic data follow.
+        qs[0] = {**qs[0], "text": pref[:300], "options": [{"value": "keep", "label": "Skip: use the label definitions"}],
+                 "free_text_first": True}
     return {"task_id": card.task_id, "custom": True, "task_name": card.task_name, "source": "llm", "questions": qs,
             "categories": [lab.name for lab in card.labels], "card": card.model_dump(), "data_options": options,
             "data_choice": options[0]["id"], "data_rejected": found["rejected"][:10], "data_searched": found["searched"],
@@ -350,7 +363,8 @@ def apply_answers(card: TaskCard, answers: dict[str, Any], notes: dict[str, str]
     if notes.get("labels"):
         u["description"] = f"{card.description} User note: {notes['labels'][:500]}"
         change("labels", notes["labels"], "Your note is added to the task description the planner and teacher read; "
-               "categories still come from the dataset's label mapping")
+               + ("labels stay as defined" if card.task_id.startswith("custom_") else
+                  "categories still come from the dataset's label mapping"))
     elif binary:
         change("labels", "Use them", f"Positive case: {card.positive_definition}")
     else:
@@ -490,6 +504,9 @@ def intake_card(body: IntakeCardIn, user: User | None = Depends(current_user)):
         changes.insert(0, {"question": "data", "answer": src["name"], "change": (
             "Training, validation and the sealed test set are all synthetic; the report says so next to every score"
             if src["kind"] == "synthetic" else
+            f"Trains on real items from {src['name']} ({src['license']}), labeled by the teacher "
+            f"({data_sourcing.teacher_name()}) from this card; scores measure agreement with the teacher"
+            if src["kind"] == "api" else
             f"Trains on {src['name']} ({src['license']}); license checked again when the build starts"
             + ("; labels it lacks get synthetic training examples" if body.data_option.get("gap_labels") else ""))})
         card = card.model_copy(update={"plan_changes": [c["change"] for c in changes]})

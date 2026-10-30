@@ -387,3 +387,30 @@ Checked on the public endpoint (`synapse-api`) and locally in replay mode:
   and never rejects a task for lack of data. A Hub dataset with a list-typed column crashed the search with a 500;
   inspection now skips such columns and reports an unreadable candidate as rejected. Result: 5 candidates searched,
   all rejected (licenses `unknown`/`cc`, or no label column), synthetic data offered.
+
+## Public APIs as a data source (Havish, 2026-10-30)
+
+Licenses read on the official pages on 2026-10-30:
+
+- **TVmaze API** (https://www.tvmaze.com/api): "Use of the TVmaze API is licensed by CC BY-SA ... as long as TVmaze is
+  properly credited as source and your usage complies with the ShareAlike provision." No key. Rate limit "at least 20
+  calls every 10 seconds per IP"; 429 above it. Our fetcher waits 0.5 s between pages and backs off once on 429.
+- **Wikidata** (https://www.wikidata.org/wiki/Wikidata:Licensing): structured data is CC0. Query service: 60 s query
+  limit, a descriptive User-Agent is required (we send `sourcing.user_agent`). All 10 class ids in
+  `sourcing.apis.wikidata.classes` checked against their English labels on query.wikidata.org. A most-linked-first
+  query for 600 films took 20 s; the chat preview skips the sort.
+- **Open Library**: not added. Its licensing page names no license ("does not assert any new copyright ... There may
+  be existing rights issues on some contributions"), and its API guidelines ask clients not to bulk download.
+
+Measured locally (live Nemotron, live APIs):
+
+- "Make a model that recommends TV shows I would like" was refused before ("a retrieval/generation task"). It now gets
+  one re-draft that must frame it as classification (recommend / skip). Intake offered TVmaze (fit 1.0) and Wikidata
+  television series (0.9) with live previews, plus synthetic data, and asked which shows the user loves or avoids.
+- Anime request with a stated taste: Wikidata anime television series gave 599 items, teacher-labeled by
+  Nemotron-3-Nano-30B-A3B in 35 s for $0.0038 (156 recommend / 443 skip). TVmaze (Anime genre, Japanese) gave 458
+  items in 73 s for $0.0051 (71 / 387). The Data agent then split them normally (sealed test 87 rows at the natural
+  ratio; "recommend" oversampled in training only). The teacher isn't fully consistent (Hellsing: skip, Hellsing
+  Ultimate: recommend), which is why the report labels these scores as agreement with the teacher.
+- Not yet checked: a full build on the AI Job worker (outbound access to api.tvmaze.com and query.wikidata.org from
+  the worker).

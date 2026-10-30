@@ -4,15 +4,17 @@ export type RunEvent = {
 };
 
 export type QuestionOption = { value: any; label: string };
-export type Question = { id: string; text: string; options: QuestionOption[]; default: any };
+/** `free_text_first`: the answer is mainly free text (e.g. what a user likes for a recommender). */
+export type Question = { id: string; text: string; options: QuestionOption[]; default: any; free_text_first?: boolean };
 export type PlanChange = { question: string; answer: string; change: string };
 
 /** A training-data choice for a custom task (backend/data_sourcing.py): a Hugging Face dataset or synthetic. */
 export type DataOption = {
-  id: string; kind: "hf" | "synthetic"; name: string; url?: string; license: string; rows?: number; why?: string;
+  id: string; kind: "hf" | "api" | "synthetic"; name: string; url?: string; license: string; rows?: number; why?: string;
   fit?: number; found_by?: string; labels: string[]; gap_labels: string[]; label_map?: Record<string, string>;
   text_column?: string; label_column?: string; samples?: { text: string; label: string }[];
   format_match?: { score: number | null; explanation: string };
+  teacher?: string;                 // API items: the model that labels them
 };
 export type RejectedDataset = { name: string; url: string; license: string; reason: string };
 

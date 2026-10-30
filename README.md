@@ -109,7 +109,7 @@ per-specialist key that is stored hashed, shown once, and rejected on any other 
 | Specialist hosting | **Nebius Serverless** CPU endpoint (cpu-d3, 2 vCPU / 8 GB) | One shared server for every specialist's routes and keys | Live |
 | Artifact storage | **Nebius Object Storage** | Version bundles and run folders, hash-checked on load | Live in code (bucket `synapse-artifacts-…`) |
 | Training sandboxes | **Token Factory Sandboxes** | Planned for candidate training | **Not used:** our account has no spawn permission; training runs as local parallel processes (the documented fallback) |
-| Dataset search | Tavily | Live dataset search with license checks | **Not wired yet:** builds use the vetted registry (`config/datasets.yaml`) |
+| Dataset search | Tavily, Hugging Face Hub, public APIs (TVmaze, Wikidata) | For a task outside the demo datasets: Hub and Tavily search with license checks, or real items from a vetted public API labeled by the teacher (Nemotron Nano); synthetic data from Nemotron Ultra as the fallback | Used at intake for custom tasks; the demo tasks use the vetted registry (`config/datasets.yaml`) |
 
 Nemotron is never fine-tuned (Token Factory doesn't offer it). It plans, teaches, judges and serves as the
 expensive fallback; the cheap stages are trained models.
@@ -183,6 +183,15 @@ frontend deploys to Vercel from `vercel.json`.
 | [PSC manual](https://www.acquisition.gov/psc-manual) (acquisition.gov) | procurement category roll-up (`config/psc_categories.yaml`) | U.S. federal government work |
 | [LogHub HDFS_v1](https://github.com/logpai/loghub) | log anomalies | Research use; raw logs are not redistributed here (`make demo-data` downloads them). Cite Zhu et al., *Loghub*, ISSRE 2023, and Xu et al., *Detecting Large-Scale System Problems by Mining Console Logs*, SOSP 2009 |
 | [Banking77](https://huggingface.co/datasets/PolyAI/banking77) (PolyAI) | support routing | CC-BY-4.0. Casanueva et al., *Efficient Intent Detection with Dual Sentence Encoders*, 2020 |
+
+Custom tasks can also train on real items from these public APIs (`sourcing.apis` in `config/datasets.yaml`). Their
+items carry no labels for the user's task, so the teacher (Nemotron Nano) labels them from the task card and the
+report card says scores measure agreement with it.
+
+| API | Items | License |
+|---|---|---|
+| [TVmaze API](https://www.tvmaze.com/api) | TV shows, including anime: title, type, language, genres, summary | CC BY-SA 4.0; credit TVmaze (the report card cites it) |
+| [Wikidata](https://www.wikidata.org/wiki/Wikidata:Licensing) query service | Well-known works (anime, films, games, novels, ...): title, description, genres | CC0 1.0 (structured data) |
 
 The demo specialists in `artifacts/demo/specialists/` are models trained on these datasets and keep their terms.
 
