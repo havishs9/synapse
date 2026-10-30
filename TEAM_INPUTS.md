@@ -29,7 +29,7 @@ Claude Code: read this file together with the spec files in `spec/` (start with 
   - Qwen3-Embedding-8B: UNKNOWN
 - Sandboxes enabled on our account: UNKNOWN
 - Sandbox limits from whoami (timeout, CPU, memory): UNKNOWN
-- Serverless CPU endpoint created successfully: yes (2026-10-28, `aiendpoint-e04txwn4spe6v76nes`, https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud)
+- Serverless CPU endpoint: **`synapse-api`** (`aiendpoint-e04kwygdfc3j3fs6rv`, 2026-10-29, pre-built image) at https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud. The first endpoint `synapse` (`aiendpoint-e04txwn4spe6v76nes`, 2026-10-28) is stopped and can be deleted
 - Object Storage bucket created: yes (2026-10-28, `synapse-artifacts-e04crhvwbc`, eu-west2); Container Registry `registry-e04cjwm2bdv5k5b8hc`; service account `synapse-backend` created by Raj with `scripts/setup_service_account.sh` (2026-10-28; keys expire 2026-12-27); bucket default storage class set to ENHANCED_THROUGHPUT (eu-west2 has no standard-class quota)
 - Rate limits on our account: UNKNOWN
 - Answers received from Nebius Discord (paste with date):

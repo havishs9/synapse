@@ -285,6 +285,28 @@ machine's home folder); improve runs now drop them.
 | Ultra under `json_schema` | Issue found: Ultra sometimes fills `max_tokens` with whitespace, and the bad reply was cached, so the same request failed every time. Intake and sourcing calls now retry once uncached at temperature 0.4 (`data_sourcing.chat_json`). The keyword fallback matched "log" in "login"; now whole words |
 | Full builds offline (fake LLM) | `test_data_sourcing.py`: a Hub dataset with a synthetic gap-fill label (synthetic rows never in val or the sealed test) and an all-synthetic binary text task (report says every score is on synthetic data). No live custom build has been run yet |
 
+## Phase 3: pre-built image (2026-10-29)
+
+| Item | Result |
+|---|---|
+| Build path | No Docker on the laptop; the image is built by GitHub Actions (`.github/workflows/image.yml`, linux/amd64 like the Nebius CPU VMs, layer cache) on pushes to main and on demand, and pushed as `cr.eu-west2.nebius.cloud/e04cjwm2bdv5k5b8hc/synapse:main` and `:<sha>`. It contains the dependencies, the MiniLM model, the nebius CLI and the code (replaces the ~6 min install at startup) |
+| Registry login | Static key for CONTAINER_REGISTRY issued to the service account; `docker login cr.eu-west2.nebius.cloud --username iam --password <token>` (https://docs.nebius.com/container-registry/authentication). Claude's call to issue the key and store it as a GitHub secret was blocked by its permission check (secret-store writes), so `scripts/setup_registry_ci.sh` is for Raj to run |
+| Endpoint and jobs pulling the image | `--registry-username iam --registry-password <token>` on `ai endpoint create` and `ai job create`: **works** (below) |
+| Old Dockerfile | Replaced: it was a Phase 0 draft (frontend bundled, never built); the frontend is on Vercel now |
+
+## Phase 3: endpoint redeploy from the image (2026-10-29)
+
+| Item | Result |
+|---|---|
+| Image build | First workflow run (merge of #5): success in 7 m 58 s; pushed `synapse:main` and `:<sha>` |
+| New endpoint | `synapse-api` (`aiendpoint-e04kwygdfc3j3fs6rv`), cpu-d3 2vcpu-8gb, 40 GiB, from `synapse:main`, live mode, AI Job workers. `deploy.sh` create returned after 6.4 min; `/health` ok with 3 specialists (from Postgres) right after. URL https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud |
+| Checks on it | Support specialist with a key: 200 (A-11 1.36 s, B-02 0.74 s round trip from the laptop); same key on procurement: 403; `/admin/...` without the token: 401 |
+| Service account | The entrypoint's CLI profile from the injected credentials works: the endpoint's dispatcher created AI Jobs as the service account |
+| Compute quota | First endpoint build failed: `ResourceExhausted`, `compute.instance.count (limit 2, requested 3)`: the old and new endpoints held both VMs. Old endpoint stopped (deleting it was blocked by Claude's permission check; for Raj); retry succeeded. Fix (PR #6): a quota error puts the build back in the queue and the dispatcher waits 60 s |
+| Build on the endpoint | `20261029-234617-support_tickets-9ea1` (phase-1 profile): job created 23:46:24, container started 23:52:09 (5.7 min: cold pull of the image), worker running 28 s later (no install), done 23:56:34; 10 min from queue to done; Token Factory $0.32; gate rejected it (live v1 kept); test rows removed afterwards |
+| Restart | `nebius ai endpoint restart`: healthy again after 7.8 min, same URL, a key created before the restart still valid (200) |
+| Old endpoint | `synapse` (`aiendpoint-e04txwn4spe6v76nes`) stopped, not billed for compute; delete with `nebius ai endpoint delete aiendpoint-e04txwn4spe6v76nes` |
+
 ## Spec conflicts and issues found
 
 0. (2026-10-29) `backend/tests/test_builds_api.py::test_cancel_retry_not_yet_and_unknown` fails when `frontend/dist` exists: `POST /api/builds/..%2F..%2Fetc/cancel` normalizes to `/etc/cancel`, which hits the SPA's GET catch-all and returns 405 instead of 404. No path traversal happens; the assertion assumes no built frontend. Left for Raj (his test, shared `main.py`).

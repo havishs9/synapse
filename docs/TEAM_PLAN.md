@@ -12,7 +12,9 @@ Claude Code sessions: read this file, then work only on your own track's items.
 - Replay recordings of all three tasks are committed in `artifacts/demo/runs/` (`p2b-support-c`,
   `p2b-procurement-d`, `p2b-logs-d`; no raw HDFS lines; saved paths made relative), and the specialists in
   `artifacts/demo/specialists/`. `make replay` serves them with no dataset download.
-- The live Nebius endpoint serves the three specialists: https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud
+- The live Nebius endpoint (`synapse-api`, since 2026-10-29) serves the three specialists and the API: https://port8000-bwcm7xs18a6her4.tunnel.applications.eu-west2.nebius.cloud
+  (`VITE_API_BASE_URL`; Havish has it). It runs in live mode: `POST /api/builds` queues a real build on an AI Job,
+  so demo flows should send `"replay": true`.
 
 ## 1. Contracts (agree before coding; change only together)
 
@@ -26,6 +28,8 @@ caller's builds, newest first:
   "message": "Run complete", "specialist_id": "support-ticket-router", "version": 1}]
 ```
 
+- `POST /api/builds` takes `"replay": true` to play a demo task's recorded run instead of building (the public
+  endpoint runs in live mode now, so the video and "Try an example" should send it).
 - `POST /api/builds` returns `{"run_id", "status": "queued"}` with the database configured (the queue), or
   `"status": "running"` without it (local, starts at once). 429 when the user hit `MAX_BUILDS_PER_USER_PER_DAY`.
 - `POST /api/builds/{run_id}/cancel`, `POST /api/builds/{run_id}/retry`: 200 with the build object.
@@ -89,17 +93,20 @@ Order matters; each step is usable on its own.
    Object Storage volume). Worker heartbeats; a stale heartbeat marks the build failed. Cancel between rounds;
    retry button. Events written to `build_events`; the stream reads from there. VERIFY and record: job pricing,
    job start time, service-account permissions.
-4. **Pre-built image** in Nebius Container Registry for the endpoint and the workers (startup is ~10 min today,
+4. **Pre-built image** (**done 2026-10-29**, endpoint `synapse-api` redeployed from it: `Dockerfile`, `.github/workflows/image.yml` pushes `synapse:main` and
+   `synapse:<sha>`; one-time step for Raj: `bash scripts/setup_registry_ci.sh`; then the endpoint is recreated with
+   `make deploy`, which gives it a **new URL**) in Nebius Container Registry for the endpoint and the workers (startup is ~10 min today,
    mostly `pip install`). Fix `_reload_remote` (imports a missing `backend.serving.sync`). The running endpoint was created with `RUNS_DIR=./runs`; `deploy.sh` now sets `./artifacts/demo/runs`, so replay on the endpoint needs this redeploy.
-5. **Budgets.** Per-user training budget; cascade escalations on public predictions count against the daily
+5. **Budgets.** (**Builds part done 2026-10-29**: at enqueue, 429 when the caller's builds in the last 24 h reach
+   `MAX_BUILDS_PER_USER_PER_DAY` or `USER_DAILY_BUILD_BUDGET_USD`, all builds today reach `GLOBAL_DAILY_BUILD_BUDGET_USD`,
+   or all builds ever reach `TOKEN_FACTORY_TOTAL_BUDGET_USD`; callers without sign-in share one allowance. Still to do:
+   chat/compare spend in the total, escalations.) Per-user training budget; cascade escalations on public predictions count against the daily
    demo guard.
-6. **Data sourcing backend** (spec file 03 §1.1). **Moved to Havish 2026-10-29 (live search and synthetic done,
-   `backend/data_sourcing.py`; small hooks in `data_agent.py`, `orchestrator.py`, `evaluator_agent.py`; new
-   `TaskCard.data_source` field). Uploads still open.** Original scope: uploads saved as the user's own dataset (Object Storage) →
+6. **Data sourcing backend** (spec file 03 §1.1): uploads saved as the user's own dataset (Object Storage) →
    same dedupe / sealed split; unlabeled uploads get teacher labels from Nano; live Tavily + Hugging Face search
    with license check and format-match score; synthetic gap-filling reported separately. Havish builds the
    upload and approval UI against the routes Raj defines here (agree on them before step 6 starts).
-7. Update spec file 02 (Supabase and Object Storage replace SQLite; AI Jobs replace Sandboxes) and
+7. (**Done 2026-10-29**: spec file 02 §8.) Update spec file 02 (Supabase and Object Storage replace SQLite; AI Jobs replace Sandboxes) and
    `docs/VERIFICATION.md`.
 
 ## 3. Havish: product, frontend, hosting, demo
@@ -191,19 +198,22 @@ the hard totals matter most: when one is reached, live builds and chat pause and
 
 **Token Factory ($25).** Measured: Phase 2b builds cost $0.07 to $0.31 each (`docs/VERIFICATION.md`), **but those
 runs reused the laptop's response cache**. The first build on a fresh worker (logs, phase-1 profile) cost $0.80, almost
-all of it the Nemotron Ultra baseline (451 calls). Expect roughly $0.5 to $1 per new build: at $1 per build
-(`CREDIT_BUDGET_USD`) a full build can hit the cap. Decision pending (Raj): raise the per-build cap, or score
-the baseline on fewer records.
+all of it the Nemotron Ultra baseline (451 calls). Expect roughly $0.5 to $1 per new build. **Decided (Raj, 2026-10-29):** per-build cap raised to $2.50; the Ultra
+baseline stays at 300 sealed records (accuracy of the comparison first). The $17 total then covers ~20 typical builds.
 
 | Use | Limit | Variable |
 |---|---|---|
 | Kept for the final demo recordings and rehearsals | $8 (outside the app's total) | |
 | Hard total for everything live (builds, chat, compare, escalations) | $17 | `TOKEN_FACTORY_TOTAL_BUDGET_USD` |
-| One build | $1.00 | `CREDIT_BUDGET_USD` |
-| One user's builds per day | $1.00, at most 3 builds | `USER_DAILY_BUILD_BUDGET_USD`, `MAX_BUILDS_PER_USER_PER_DAY` |
-| All users' builds per day | $3.00 | `GLOBAL_DAILY_BUILD_BUDGET_USD` |
+| One build | $2.50 | `CREDIT_BUDGET_USD` |
+| One user's builds per day | $2.50, at most 3 builds | `USER_DAILY_BUILD_BUDGET_USD`, `MAX_BUILDS_PER_USER_PER_DAY` |
+| All users' builds per day | $5.00 | `GLOBAL_DAILY_BUILD_BUDGET_USD` |
 | Public chat, compare, cascade escalations per day | $1.00 | `DEMO_DAILY_BUDGET_USD` |
 | Builds running at once | 2 overall, 1 per user (rate limit is shared) | `MAX_CONCURRENT_BUILDS`, `MAX_CONCURRENT_BUILDS_PER_USER` |
+
+**Compute quota.** The tenant allows 2 compute VMs at once (`compute.instance.count`). The endpoint uses one, so
+builds run one at a time on AI Jobs; a second waits in the queue ("Waiting for a free machine"). Raise the quota in
+the console (Quotas) for parallel builds.
 
 **Nebius AI Cloud ($25).** Rates from `config/pricing.yaml` (`docs/VERIFICATION.md` §3): endpoint 2 vCPU / 8 GB
 $0.0699/h; a 4 vCPU / 16 GB worker $0.1359/h.

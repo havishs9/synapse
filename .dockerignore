@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+.git
+.venv
+data
+runs
+artifacts/*
+!artifacts/demo
+frontend
+**/__pycache__
+**/*.pyc
+.pytest_cache
+*.zip

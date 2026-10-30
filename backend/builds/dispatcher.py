@@ -80,17 +80,33 @@ def job_command(run_id: str) -> list[str]:
         "--timeout", spec["timeout"], "--restart-policy", "never", "--async", "--format", "json"]
     if config.env("NEBIUS_PROJECT_ID", "").startswith("project-"):
         cmd += ["--parent-id", config.env("NEBIUS_PROJECT_ID")]
+    image, registry_host = cmd[cmd.index("--image") + 1], (config.env("NEBIUS_REGISTRY") or "").split("/")[0]
+    if registry_host and image.startswith(registry_host) and config.env("NEBIUS_REGISTRY_TOKEN"):
+        cmd += ["--registry-username", "iam", "--registry-password", config.env("NEBIUS_REGISTRY_TOKEN")]
     for k, v in env.items():
         cmd += ["--env", f"{k}={v}"]
     return cmd
 
 
+class QuotaFull(RuntimeError):
+    """No compute quota for another VM right now (e.g. compute.instance.count); the build waits in the queue."""
+
+
+def _error_summary(text: str) -> str:
+    """The CLI's error lines without anything that could echo the request (it contains the env values)."""
+    keep = [l.strip() for l in text.splitlines()
+            if l.strip().startswith(("Error:", "compute.", "Quota", "Bad Request", "Permission", "Not Found"))
+            or "violations" in l]
+    return " | ".join(keep)[:400] or "no error details"
+
+
 def launch_job(run_id: str) -> str:
     out = subprocess.run(job_command(run_id), capture_output=True, text=True, timeout=180)
     if out.returncode != 0:
-        # The CLI echoes the request on some errors; never log it (it contains the env values).
-        raise RuntimeError(f"nebius ai job create failed (exit {out.returncode}): "
-                           f"{(out.stderr or out.stdout).strip().splitlines()[-1][:300] if (out.stderr or out.stdout) else ''}")
+        msg = _error_summary(out.stderr + "\n" + out.stdout)
+        if "ResourceExhausted" in msg or "Quota limit exceeded" in msg:
+            raise QuotaFull(msg)
+        raise RuntimeError(f"nebius ai job create failed (exit {out.returncode}): {msg}")
     d = json.loads(out.stdout)
     job_id = d.get("resource_id") or (d.get("metadata") or {}).get("id") or d.get("id")
     if not job_id:
@@ -119,6 +135,10 @@ def _launch(row: dict) -> None:
             return
         try:
             job_id = launch_job(run_id)
+        except QuotaFull as exc:
+            queue.requeue(run_id, "Waiting for a free machine (Nebius compute quota is full)")
+            print(f"[dispatcher] {run_id}: back in the queue, compute quota full: {exc}", flush=True)
+            raise
         except Exception as exc:
             queue.finish(run_id, "failed", f"Couldn't start a build worker: {exc}")
             return
@@ -143,11 +163,22 @@ def _check_jobs() -> None:
             queue.finish(row["run_id"], "failed", f"The build worker ended ({state.lower()}) before reporting a result.")
 
 
+_quota_until = 0.0
+QUOTA_BACKOFF_S = 60.0
+
+
 def tick() -> None:
+    global _quota_until
     for run_id in queue.reap_stale():
         print(f"[dispatcher] {run_id}: no heartbeat, marked failed", flush=True)
+    if time.time() < _quota_until:
+        return
     while (row := queue.claim(f"{backend()}:{uuid.uuid4().hex[:6]}")) is not None:
-        _launch(row)
+        try:
+            _launch(row)
+        except QuotaFull:
+            _quota_until = time.time() + QUOTA_BACKOFF_S      # try again in a minute
+            return
 
 
 def _loop() -> None:
@@ -180,5 +211,8 @@ def stop() -> None:
 def describe_job_command(run_id: str) -> str:
     """The job command with every env value masked (for logs and docs)."""
     cmd = job_command(run_id)
-    return " ".join(shlex.quote(a.split("=", 1)[0] + "=***" if i and cmd[i - 1] == "--env" else a)
-                    for i, a in enumerate(cmd))
+    def mask(i: int, a: str) -> str:
+        if i and cmd[i - 1] == "--env":
+            return a.split("=", 1)[0] + "=***"
+        return "***" if i and cmd[i - 1] == "--registry-password" else a
+    return " ".join(shlex.quote(mask(i, a)) for i, a in enumerate(cmd))
